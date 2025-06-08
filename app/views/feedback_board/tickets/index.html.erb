@@ -3,9 +3,9 @@
     <h1 class="text-2xl font-bold text-gray-900">Feedback Tickets</h1>
     <div class="flex items-center space-x-4">
       <div class="flex space-x-2">
-        <%= link_to "Recent", feedback_board.tickets_path(sort: 'recent'),
+        <%= link_to "Recent", feedback_board.tickets_path(sort: 'recent', search: params[:search], status: params[:status]),
             class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] != 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] == 'popular'}" %>
-        <%= link_to "Popular", feedback_board.tickets_path(sort: 'popular'),
+        <%= link_to "Popular", feedback_board.tickets_path(sort: 'popular', search: params[:search], status: params[:status]),
             class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] == 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] != 'popular'}" %>
       </div>
       <% if can_submit_tickets? %>
@@ -15,15 +15,54 @@
     </div>
   </div>
 
+  <!-- Search Form -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <%= form_with url: feedback_board.tickets_path, method: :get, local: true, class: "flex items-center space-x-4" do |form| %>
+      <div class="flex-1">
+        <%= form.text_field :search,
+            value: @search_query,
+            placeholder: "Search tickets by title, description, or comments...",
+            class: "w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+      <%= form.hidden_field :status, value: params[:status] %>
+      <%= form.hidden_field :sort, value: params[:sort] %>
+      <div class="flex space-x-2">
+        <%= form.submit "Search", class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+        <% if @search_query.present? %>
+          <%= link_to "Clear", feedback_board.tickets_path(status: params[:status], sort: params[:sort]),
+              class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
   <!-- Status Filter -->
   <div class="flex flex-wrap gap-2">
-    <%= link_to "All", feedback_board.tickets_path,
+    <%= link_to "All", feedback_board.tickets_path(search: params[:search], sort: params[:sort]),
         class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status].blank?}" %>
     <% @statuses.each do |status| %>
-      <%= link_to status.humanize, feedback_board.tickets_path(status: status),
+      <%= link_to status.humanize, feedback_board.tickets_path(status: status, search: params[:search], sort: params[:sort]),
           class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status] == status} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status] == status}" %>
     <% end %>
   </div>
+
+  <!-- Search Results Info -->
+  <% if @search_query.present? %>
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+      <div class="flex">
+        <div class="ml-3">
+          <p class="text-sm text-blue-700">
+            <span class="font-medium">Search results for:</span> "<%= @search_query %>"
+            <% if @tickets.respond_to?(:total_count) %>
+              • <%= pluralize(@tickets.total_count, 'ticket') %> found
+            <% else %>
+              • <%= pluralize(@tickets.count, 'ticket') %> found
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <!-- Tickets List -->
   <div class="space-y-4">
@@ -69,12 +108,21 @@
       <% end %>
     <% else %>
       <div class="text-center py-12">
-        <div class="text-gray-400 text-6xl mb-4">📝</div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets yet</h3>
-        <p class="text-gray-500 mb-4">Be the first to submit feedback!</p>
-        <% if can_submit_tickets? %>
-          <%= link_to "Create First Ticket", feedback_board.new_ticket_path,
-              class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+        <% if @search_query.present? %>
+          <div class="text-gray-400 text-6xl mb-4">🔍</div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets found</h3>
+          <p class="text-gray-500 mb-4">
+            No tickets match your search for "<%= @search_query %>".
+            <br>Try different keywords or <%= link_to "browse all tickets", feedback_board.tickets_path(status: params[:status], sort: params[:sort]), class: "text-blue-600 hover:text-blue-500" %>.
+          </p>
+        <% else %>
+          <div class="text-gray-400 text-6xl mb-4">📝</div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets yet</h3>
+          <p class="text-gray-500 mb-4">Be the first to submit feedback!</p>
+          <% if can_submit_tickets? %>
+            <%= link_to "Create First Ticket", feedback_board.new_ticket_path,
+                class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+          <% end %>
         <% end %>
       </div>
     <% end %>

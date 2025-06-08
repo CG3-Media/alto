@@ -4,16 +4,25 @@ module FeedbackBoard
     before_action :check_submit_permission, only: [:new, :create]
 
     def index
-      @tickets = Ticket.includes(:upvotes)
+      @tickets = Ticket.includes(:upvotes, :comments)
+
+      # Apply search filter
+      @tickets = @tickets.search(params[:search]) if params[:search].present?
+
+      # Apply status filter
       @tickets = @tickets.by_status(params[:status]) if params[:status].present?
+
+      # Apply sorting
       @tickets = case params[:sort]
                  when 'popular'
                    @tickets.popular
                  else
                    @tickets.recent
                  end
-      @tickets = @tickets.page(params[:page])
+
+      @tickets = @tickets.page(params[:page]) if respond_to?(:page)
       @statuses = Ticket::STATUSES
+      @search_query = params[:search]
     end
 
     def show

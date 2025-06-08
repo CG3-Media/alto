@@ -131,11 +131,21 @@ mount FeedbackBoard::Engine => "/feedback"
   - Multiple integration patterns and examples
 
 ### 🚧 IN PROGRESS / TODO
-- [ ] **Advanced Functionality**
-  - Real-time comment updates (Hotwire Turbo Streams)
+- [x] **Advanced Functionality**
+  - [x] Search
+    - ✅ search tickets by title, description, and comment content
+    - ✅ database-agnostic search (PostgreSQL ILIKE / SQLite & MySQL LIKE with LOWER)
+    - ✅ integrated with existing filtering and sorting
+    - ✅ performance optimizations with database indexes
+    - ✅ intuitive search UI with clear results feedback
   - Email notifications system
-  - Search functionality across tickets
-  - Advanced filtering and sorting options
+    - new comments send an email using the hosts app default config
+      - can be turned on/off
+      - can configure from: email in host app
+      - when a user submits a ticket, they receive all updates regarding that ticket (unless they disable)
+      - admin can configure whether they receive all tickets
+  - Advanced filtering and sorting options (recent, popular, date range)
+
 - [ ] **Admin Features**
   - Admin dashboard for ticket management
   - Bulk status updates
