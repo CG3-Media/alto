@@ -1,0 +1,101 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">Feedback Tickets</h1>
+    <div class="flex space-x-2">
+      <%= link_to "Recent", feedback_board.tickets_path(sort: 'recent'),
+          class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] != 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] == 'popular'}" %>
+      <%= link_to "Popular", feedback_board.tickets_path(sort: 'popular'),
+          class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] == 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] != 'popular'}" %>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div class="flex flex-wrap gap-2">
+    <%= link_to "All", feedback_board.tickets_path,
+        class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status].blank?}" %>
+    <% @statuses.each do |status| %>
+      <%= link_to status.humanize, feedback_board.tickets_path(status: status),
+          class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status] == status} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status] == status}" %>
+    <% end %>
+  </div>
+
+  <!-- Tickets List -->
+  <div class="space-y-4">
+    <% if @tickets.any? %>
+      <% @tickets.each do |ticket| %>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <h3 class="text-lg font-semibold text-gray-900">
+                  <%= link_to ticket.title, feedback_board.ticket_path(ticket), class: "hover:text-blue-600" %>
+                </h3>
+                <span class="px-2 py-1 text-xs font-medium rounded-full
+                  <%= case ticket.status
+                      when 'open' then 'bg-green-100 text-green-800'
+                      when 'planned' then 'bg-blue-100 text-blue-800'
+                      when 'in_progress' then 'bg-yellow-100 text-yellow-800'
+                      when 'complete' then 'bg-gray-100 text-gray-800'
+                      end %>">
+                  <%= ticket.status.humanize %>
+                </span>
+                <% if ticket.locked? %>
+                  <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    🔒 Locked
+                  </span>
+                <% end %>
+              </div>
+              <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                <%= truncate(ticket.description, length: 150) %>
+              </p>
+              <div class="flex items-center space-x-4 text-sm text-gray-500">
+                <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
+                <span><%= pluralize(ticket.comments.count, 'comment') %></span>
+              </div>
+            </div>
+
+            <!-- Upvote Button -->
+            <div class="flex flex-col items-center ml-4">
+              <% if can_vote? && ticket.can_be_voted_on? %>
+                <% if ticket.upvoted_by?(current_user) %>
+                  <%= link_to feedback_board.ticket_upvotes_path(ticket), method: :delete,
+                      class: "flex flex-col items-center p-2 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100" do %>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm font-medium"><%= ticket.upvotes_count %></span>
+                  <% end %>
+                <% else %>
+                  <%= link_to feedback_board.ticket_upvotes_path(ticket), method: :post,
+                      class: "flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50" do %>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm font-medium"><%= ticket.upvotes_count %></span>
+                  <% end %>
+                <% end %>
+              <% else %>
+                <div class="flex flex-col items-center p-2 text-gray-300">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  <span class="text-sm font-medium"><%= ticket.upvotes_count %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-12">
+        <div class="text-gray-400 text-6xl mb-4">📝</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets yet</h3>
+        <p class="text-gray-500 mb-4">Be the first to submit feedback!</p>
+        <% if can_submit_tickets? %>
+          <%= link_to "Create First Ticket", feedback_board.new_ticket_path,
+              class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
