@@ -1,4 +1,4 @@
-class CreateFeedbackBoardUpvotes < ActiveRecord::Migration[8.0]
+class CreateFeedbackBoardUpvotes < ActiveRecord::Migration[7.0]
   def change
     create_table :feedback_board_upvotes do |t|
       t.references :upvotable, polymorphic: true, null: false

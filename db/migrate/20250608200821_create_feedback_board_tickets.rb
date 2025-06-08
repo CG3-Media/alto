@@ -1,4 +1,4 @@
-class CreateFeedbackBoardTickets < ActiveRecord::Migration[8.0]
+class CreateFeedbackBoardTickets < ActiveRecord::Migration[7.0]
   def change
     create_table :feedback_board_tickets do |t|
       t.string :title, null: false

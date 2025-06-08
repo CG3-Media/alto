@@ -6,8 +6,11 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= stylesheet_link_tag "feedback_board/application", "data-turbo-track": "reload" %>
-    <%= javascript_importmap_tags %>
+    <!-- Use your app's Vite assets -->
+    <%= vite_client_tag if defined?(vite_client_tag) %>
+    <%= vite_javascript_tag 'application' if defined?(vite_javascript_tag) %>
+
+    <!-- Tailwind CSS for FeedbackBoard styling -->
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
 

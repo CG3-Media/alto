@@ -1,0 +1,112 @@
+<div class="space-y-6">
+  <!-- Ticket Header -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex items-start justify-between">
+      <div class="flex-1">
+        <div class="flex items-center space-x-3 mb-4">
+          <h1 class="text-2xl font-bold text-gray-900"><%= @ticket.title %></h1>
+          <span class="px-3 py-1 text-sm font-medium rounded-full
+            <%= case @ticket.status
+                when 'open' then 'bg-green-100 text-green-800'
+                when 'planned' then 'bg-blue-100 text-blue-800'
+                when 'in_progress' then 'bg-yellow-100 text-yellow-800'
+                when 'complete' then 'bg-gray-100 text-gray-800'
+                end %>">
+            <%= @ticket.status.humanize %>
+          </span>
+          <% if @ticket.locked? %>
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
+              🔒 Locked
+            </span>
+          <% end %>
+        </div>
+
+        <div class="prose max-w-none mb-4">
+          <p class="text-gray-700 whitespace-pre-wrap"><%= @ticket.description %></p>
+        </div>
+
+        <div class="flex items-center space-x-4 text-sm text-gray-500">
+          <span>Created <%= time_ago_in_words(@ticket.created_at) %> ago</span>
+          <span><%= pluralize(@comments.count, 'comment') %></span>
+        </div>
+      </div>
+
+      <!-- Upvote Button -->
+      <div class="flex flex-col items-center ml-6">
+        <%= upvote_button(@ticket, current_user, large: true) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comments Section -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">
+        Comments (<%= @comments.count %>)
+      </h2>
+    </div>
+
+    <!-- Comment Form -->
+    <% if can_comment? && @ticket.can_be_commented_on? %>
+      <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <%= form_with model: [@ticket, @comment], local: true, class: "space-y-4" do |form| %>
+          <div>
+            <%= form.text_area :content, placeholder: "Add a comment...", rows: 3,
+                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          <div class="flex justify-end">
+            <%= form.submit "Post Comment",
+                class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+          </div>
+        <% end %>
+      </div>
+    <% elsif @ticket.locked? %>
+      <div class="p-6 border-b border-gray-200 bg-red-50">
+        <p class="text-red-600 text-sm">🔒 This ticket is locked. No new comments can be added.</p>
+      </div>
+    <% end %>
+
+    <!-- Comments List -->
+    <div class="divide-y divide-gray-200">
+      <% if @comments.any? %>
+        <% @comments.each do |comment| %>
+          <div class="p-6">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="text-sm text-gray-500 mb-2">
+                  <span class="font-medium text-gray-700"><%= user_display_name(comment.user_id) %></span> · <%= time_ago_in_words(comment.created_at) %> ago
+                </div>
+                <div class="prose max-w-none mb-3">
+                  <p class="text-gray-700 whitespace-pre-wrap"><%= comment.content %></p>
+                </div>
+              </div>
+
+              <!-- Comment Upvote -->
+              <div class="flex items-center ml-4">
+                <%= upvote_button(comment, current_user) %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="p-6 text-center text-gray-500">
+          <div class="text-4xl mb-2">💬</div>
+          <p>No comments yet. Be the first to comment!</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Back Link -->
+  <div class="flex justify-between items-center">
+    <%= link_to "← Back to Feedback", feedback_board.tickets_path,
+        class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+
+    <% if can_edit_tickets? %>
+      <div class="space-x-2">
+        <%= link_to "Edit Ticket", feedback_board.edit_ticket_path(@ticket),
+            class: "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+      </div>
+    <% end %>
+  </div>
+</div>

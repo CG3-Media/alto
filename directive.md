@@ -82,64 +82,78 @@ mount FeedbackBoard::Engine => "/feedback"
   - Clean ticket cards with status badges
   - Empty state handling
 
-### 🚧 IN PROGRESS / TODO
+### ✅ COMPLETED
 
 #### Views & Forms
-- [ ] **Ticket Show Page**
+- [x] **Ticket Show Page**
   - Individual ticket view with full description
   - Comments section with threading
   - Upvote functionality for ticket and comments
   - Admin controls for status/lock changes
-- [ ] **Ticket Forms**
+- [x] **Ticket Forms**
   - New ticket form with title/description
   - Edit ticket form (admin only)
   - Form validation and error handling
-- [ ] **Comment Forms**
+- [x] **Comment Forms**
   - Inline comment creation
-  - Comment editing/deletion
+  - Comment editing/deletion (via controllers)
 
 #### Enhanced Features
-- [ ] **Helpers & Utilities**
+- [x] **Helpers & Utilities**
   - View helpers for common UI patterns
   - Permission helpers for cleaner templates
   - Status badge helpers
+  - Upvote button helpers
+
+### ✅ COMPLETED
+- [x] **Advanced Functionality**
+  - AJAX voting without page reload (Stimulus controller)
+  - Hotwire/Stimulus integration with install generator
+
+#### Configuration & Customization
+- [x] **Engine Configuration**
+  - Install generator with Stimulus controller copying
+  - Configurable user display name methods
+  - User model configuration (defaults to "User")
+  - Configuration initializer support
+- [x] **Integration Helpers**
+  - User model integration examples in README
+  - Authorization system examples (permission methods)
+  - Comprehensive documentation with examples
+
+#### Documentation & Polish
+- [x] **Complete Documentation**
+  - Comprehensive README with installation guide
+  - Configuration examples and customization instructions
+  - API documentation for models and routes
+  - Troubleshooting section
+  - Multiple integration patterns and examples
+
+### 🚧 IN PROGRESS / TODO
 - [ ] **Advanced Functionality**
-  - AJAX voting without page reload
-  - Real-time comment updates
-  - Email notifications
-  - Search functionality
+  - Real-time comment updates (Hotwire Turbo Streams)
+  - Email notifications system
+  - Search functionality across tickets
+  - Advanced filtering and sorting options
 - [ ] **Admin Features**
   - Admin dashboard for ticket management
   - Bulk status updates
   - User management integration
+  - Advanced moderation tools
 
-#### Testing & Documentation
+#### Testing & Quality
 - [ ] **Test Suite**
   - Model tests with factories
   - Controller tests with authentication
   - Integration tests for user flows
-- [ ] **Documentation**
-  - Installation guide
-  - Configuration examples
-  - Customization instructions
-  - API documentation
-
-#### Configuration & Customization
-- [ ] **Engine Configuration**
-  - Configurable permission methods
-  - Customizable status options
-  - Theme/styling overrides
-- [ ] **Integration Helpers**
-  - User model integration examples
-  - Authorization system examples
-  - Notification system hooks
+  - JavaScript/Stimulus tests
 
 ---
 
 ## 🎯 Next Steps
 
-1. **Complete Core Views** - Ticket show page and forms
-2. **Add AJAX Functionality** - Smooth voting and commenting
-3. **Implement Admin Features** - Status management and moderation
-4. **Write Tests** - Comprehensive test coverage
-5. **Documentation** - Installation and usage guides
+1. **Advanced Features** - Real-time updates with Turbo Streams
+2. **Admin Dashboard** - Centralized ticket management interface
+3. **Testing Suite** - Comprehensive test coverage
+4. **Enhanced Search** - Full-text search across tickets and comments
+5. **Email Notifications** - Configurable notification system
