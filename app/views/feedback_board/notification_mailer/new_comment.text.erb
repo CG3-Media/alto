@@ -1,0 +1,18 @@
+NEW COMMENT
+===========
+
+<%= @user_name %> has added a new comment to a feedback ticket.
+
+Ticket: <%= @ticket.title %>
+Status: <%= @ticket.status.humanize %>
+
+New Comment:
+<%= @comment.content %>
+
+Posted: <%= @comment.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+
+View the comment online:
+<%= feedback_board_url(anchor: "comment-#{@comment.id}") %>
+
+---
+You're receiving this email because you're configured to receive feedback board notifications.

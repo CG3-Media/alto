@@ -10,6 +10,10 @@ module FeedbackBoard
     validates :status, inclusion: { in: STATUSES }
     validates :user_id, presence: true
 
+    # Email notification callbacks
+    after_create :send_new_ticket_notifications
+    after_update :send_status_change_notifications, if: :saved_change_to_status?
+
     scope :by_status, ->(status) { where(status: status) }
     scope :unlocked, -> { where(locked: false) }
     scope :locked, -> { where(locked: true) }
@@ -74,6 +78,43 @@ module FeedbackBoard
 
     def can_be_commented_on?
       !locked?
+    end
+
+    private
+
+    def send_new_ticket_notifications
+      return unless FeedbackBoard.configuration.notifications_enabled
+
+      # Send to admin emails if configured
+      if FeedbackBoard.configuration.notify_admins_of_new_tickets &&
+         FeedbackBoard.configuration.admin_notification_emails.any?
+
+        FeedbackBoard.configuration.admin_notification_emails.each do |email|
+          NotificationMailer.new_ticket(self, email).deliver_later
+        end
+      end
+    end
+
+    def send_status_change_notifications
+      return unless FeedbackBoard.configuration.notifications_enabled
+      return unless FeedbackBoard.configuration.notify_ticket_author
+
+      # Get the user's email for notification
+      user_email = get_user_email(user_id)
+      return unless user_email
+
+      old_status = saved_changes['status'][0] if saved_changes['status']
+      NotificationMailer.status_changed(self, user_email, old_status).deliver_later
+    end
+
+    def get_user_email(user_id)
+      return nil unless user_id
+
+      user_class = FeedbackBoard.configuration.user_model.constantize rescue nil
+      return nil unless user_class
+
+      user = user_class.find_by(id: user_id)
+      user&.email if user&.respond_to?(:email)
     end
   end
 end

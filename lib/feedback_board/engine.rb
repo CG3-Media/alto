@@ -21,5 +21,21 @@ module FeedbackBoard
         end
       end
     end
+
+    # Load persistent settings from database after Rails initialization
+    initializer "feedback_board.load_settings", after: "active_record.initialize_database" do |app|
+      app.config.after_initialize do
+        # Load settings from database into configuration
+        # Use ActiveSupport::Reloader to handle development reloading
+        ActiveSupport::Reloader.to_prepare do
+          begin
+            FeedbackBoard::Setting.load_into_configuration! if FeedbackBoard::Setting.table_exists?
+          rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
+            # Database might not be ready yet (migrations pending, etc.)
+            Rails.logger.debug "FeedbackBoard: Database not ready, using default configuration"
+          end
+        end
+      end
+    end
   end
 end

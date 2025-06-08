@@ -9,4 +9,10 @@ FeedbackBoard::Engine.routes.draw do
   resources :comments, only: [] do
     resources :upvotes, only: [:create, :destroy]
   end
+
+  # Admin routes
+  namespace :admin do
+    root 'dashboard#index'
+    resource :settings, only: [:show, :update]
+  end
 end

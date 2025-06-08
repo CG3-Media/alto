@@ -83,6 +83,18 @@ module FeedbackBoard
       end
     end
 
+    def can_access_admin?
+      return false unless current_user
+
+      # Check if main app has overridden this method
+      if main_app_controller.respond_to?(:can_access_admin?, true)
+        main_app_controller.send(:can_access_admin?)
+      else
+        # Default implementation - secure by default, fallback to can_edit_tickets
+        can_edit_tickets?
+      end
+    end
+
     # Helper method to get main app controller for delegation
     def main_app_controller
       @main_app_controller ||= main_app.try(:application_controller) || ::ApplicationController.new

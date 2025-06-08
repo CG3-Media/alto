@@ -12,8 +12,10 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 - 💬 **Comments** - Threaded discussions on tickets with user name display
 - 👍 **Upvoting** - Users can vote on tickets and comments (with AJAX)
 - 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments
+- 📧 **Email Notifications** - Configurable email alerts for tickets, comments, and status changes
 - 📊 **Status Tracking** - `open`, `planned`, `in_progress`, `complete`
 - 🔒 **Moderation** - Lock tickets to prevent further discussion
+- 👑 **Admin Dashboard** - Statistics, recent activity, and email configuration
 - 🎨 **Beautiful UI** - Clean Tailwind CSS design with user-friendly forms
 - 🔐 **Permissions** - Flexible permission system
 - ⚡ **Performance** - Optimized queries and database indexes
@@ -320,44 +322,75 @@ end
 
 ### Email Notifications
 
+**Zero configuration required!** The engine includes built-in email notifications that work with your app's existing ActionMailer setup.
+
+#### Features
+- 📧 **New ticket notifications** - Admins get notified of new submissions
+- 💬 **Comment notifications** - Ticket authors and admins get notified of new comments
+- 📊 **Status change notifications** - Ticket authors get notified when status changes
+- 🎨 **Beautiful email templates** - Professional HTML and text email designs
+- ⚙️ **Admin configuration** - Toggle notifications and set admin emails via web interface
+- 🚀 **Background processing** - Uses `deliver_later` for performance
+
+#### Quick Setup
+
+The email system uses your existing ActionMailer configuration. Just ensure ActionMailer is set up in your Rails app:
+
 ```ruby
-# Create a mailer in your app
-class FeedbackNotificationMailer < ApplicationMailer
-  def new_ticket(ticket)
-    @ticket = ticket
-    mail(to: admin_emails, subject: "New Feedback: #{@ticket.title}")
-  end
+# config/environments/production.rb (or development.rb)
+config.action_mailer.delivery_method = :smtp
+config.action_mailer.smtp_settings = {
+  address: 'smtp.gmail.com',
+  port: 587,
+  user_name: ENV['GMAIL_USERNAME'],
+  password: ENV['GMAIL_PASSWORD'],
+  authentication: 'plain',
+  enable_starttls_auto: true
+}
+```
 
-  def new_comment(comment)
-    @comment = comment
-    @ticket = comment.ticket
-    mail(to: admin_emails, subject: "New Comment on: #{@ticket.title}")
-  end
+#### Admin Configuration
+
+1. **Access admin area**: Visit `/feedback/admin` (requires admin permissions)
+2. **Configure emails**: Go to Settings to set notification preferences
+3. **Add admin emails**: Comma-separated list of emails to notify
+4. **Toggle notifications**: Turn on/off different notification types
+5. **Persistent settings**: All admin settings are saved to database and persist across restarts
+
+#### Advanced Configuration
+
+For persistent settings, configure in your initializer:
+
+```ruby
+# config/initializers/feedback_board.rb
+FeedbackBoard.configure do |config|
+  # Email notification settings
+  config.notifications_enabled = true
+  config.notification_from_email = "feedback@yourdomain.com"
+  config.admin_notification_emails = ["admin@yourdomain.com", "support@yourdomain.com"]
+
+  # Control what gets sent
+  config.notify_ticket_author = true
+  config.notify_admins_of_new_tickets = true
+  config.notify_admins_of_new_comments = true
 end
+```
 
-# Hook into callbacks
-# app/models/concerns/feedback_board_notifications.rb
-module FeedbackBoardNotifications
-  extend ActiveSupport::Concern
+#### Admin Permissions
 
-  included do
-    after_create :send_notification
-  end
+Add admin access to your ApplicationController:
+
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  # ... existing code ...
 
   private
 
-  def send_notification
-    if self.is_a?(FeedbackBoard::Ticket)
-      FeedbackNotificationMailer.new_ticket(self).deliver_later
-    elsif self.is_a?(FeedbackBoard::Comment)
-      FeedbackNotificationMailer.new_comment(self).deliver_later
-    end
+  def can_access_admin?
+    current_user&.admin?  # or your admin logic
   end
 end
-
-# Include in the models
-FeedbackBoard::Ticket.include FeedbackBoardNotifications
-FeedbackBoard::Comment.include FeedbackBoardNotifications
 ```
 
 ## 🛠 API Reference

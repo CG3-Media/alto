@@ -1,0 +1,143 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">📊 Admin Dashboard</h1>
+    <div class="flex space-x-4">
+      <%= link_to "Settings", feedback_board.admin_settings_path,
+          class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+      <%= link_to "Back to Tickets", feedback_board.root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+            <span class="text-white text-lg">🎫</span>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Total Tickets</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @total_tickets %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+            <span class="text-white text-lg">📋</span>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Open Tickets</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @open_tickets %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+            <span class="text-white text-lg">📈</span>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">This Month</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @tickets_this_month %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+            <span class="text-white text-lg">💬</span>
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Comments</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @comments_this_month %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Tickets -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Recent Tickets</h3>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% if @recent_tickets.any? %>
+          <% @recent_tickets.each do |ticket| %>
+            <div class="p-4">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= link_to ticket.title, feedback_board.ticket_path(ticket),
+                        class: "hover:text-blue-600" %>
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    <%= time_ago_in_words(ticket.created_at) %> ago
+                  </p>
+                </div>
+                <span class="px-2 py-1 text-xs font-medium rounded-full
+                  <%= case ticket.status
+                      when 'open' then 'bg-green-100 text-green-800'
+                      when 'planned' then 'bg-blue-100 text-blue-800'
+                      when 'in_progress' then 'bg-yellow-100 text-yellow-800'
+                      when 'complete' then 'bg-gray-100 text-gray-800'
+                      end %>">
+                  <%= ticket.status.humanize %>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="p-4 text-center text-gray-500">
+            No recent tickets
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Recent Comments -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Recent Comments</h3>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% if @recent_comments.any? %>
+          <% @recent_comments.each do |comment| %>
+            <div class="p-4">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">
+                  <%= link_to comment.ticket.title, feedback_board.ticket_path(comment.ticket),
+                      class: "hover:text-blue-600" %>
+                </p>
+                <p class="text-sm text-gray-600 mt-1">
+                  <%= truncate(comment.content, length: 80) %>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                  <%= time_ago_in_words(comment.created_at) %> ago
+                </p>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="p-4 text-center text-gray-500">
+            No recent comments
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

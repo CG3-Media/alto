@@ -138,12 +138,16 @@ mount FeedbackBoard::Engine => "/feedback"
     - ✅ integrated with existing filtering and sorting
     - ✅ performance optimizations with database indexes
     - ✅ intuitive search UI with clear results feedback
-  - Email notifications system
-    - new comments send an email using the hosts app default config
-      - can be turned on/off
-      - can configure from: email in host app
-      - when a user submits a ticket, they receive all updates regarding that ticket (unless they disable)
-      - admin can configure whether they receive all tickets
+  - [x] Email notifications system
+    - ✅ new comments send emails using the host app's ActionMailer config
+    - ✅ can be turned on/off via admin interface
+    - ✅ configurable from: email address
+    - ✅ when a user submits a ticket, they receive all updates regarding that ticket
+    - ✅ admin can configure whether they receive all tickets/comments
+    - ✅ beautiful HTML and text email templates
+    - ✅ background job processing with deliver_later
+    - ✅ admin dashboard with stats and recent activity
+    - ✅ persistent database-backed configuration (no more memory-only settings)
   - Advanced filtering and sorting options (recent, popular, date range)
 
 - [ ] **Admin Features**

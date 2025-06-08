@@ -1,0 +1,141 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">⚙️ Email Settings</h1>
+    <div class="flex space-x-4">
+      <%= link_to "Dashboard", feedback_board.admin_root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
+      <%= link_to "Back to Tickets", feedback_board.root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Email Notification Settings</h3>
+      <p class="text-sm text-gray-500 mt-1">Configure when and where to send email notifications</p>
+    </div>
+
+    <%= form_with url: feedback_board.admin_settings_path, method: :patch, local: true, class: "p-6 space-y-6" do |form| %>
+
+      <!-- General Settings -->
+      <div class="space-y-4">
+        <h4 class="text-md font-medium text-gray-900">General Settings</h4>
+
+        <div class="flex items-center">
+          <input type="hidden" name="notifications_enabled" value="0">
+          <%= check_box_tag "notifications_enabled", "1", @config.notifications_enabled,
+              id: "notifications_enabled",
+              class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+          <label for="notifications_enabled" class="ml-2 block text-sm text-gray-900">
+            Enable email notifications
+          </label>
+        </div>
+
+        <div>
+          <label for="notification_from_email" class="block text-sm font-medium text-gray-700">From Email Address</label>
+          <%= text_field_tag "notification_from_email", @config.notification_from_email,
+              id: "notification_from_email",
+              placeholder: "noreply@example.com",
+              class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          <p class="mt-1 text-sm text-gray-500">The email address that notifications will be sent from</p>
+        </div>
+      </div>
+
+      <!-- Admin Notifications -->
+      <div class="space-y-4 border-t pt-6">
+        <h4 class="text-md font-medium text-gray-900">Admin Notifications</h4>
+
+        <div>
+          <label for="admin_notification_emails" class="block text-sm font-medium text-gray-700">Admin Email Addresses</label>
+          <%= text_area_tag "admin_notification_emails",
+              @config.admin_notification_emails.join(", "),
+              id: "admin_notification_emails",
+              rows: 3,
+              placeholder: "admin@example.com, support@example.com",
+              class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          <p class="mt-1 text-sm text-gray-500">Comma-separated list of email addresses to notify</p>
+        </div>
+
+        <div class="flex items-center">
+          <input type="hidden" name="notify_admins_of_new_tickets" value="0">
+          <%= check_box_tag "notify_admins_of_new_tickets", "1", @config.notify_admins_of_new_tickets,
+              id: "notify_admins_of_new_tickets",
+              class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+          <label for="notify_admins_of_new_tickets" class="ml-2 block text-sm text-gray-900">
+            Notify admins when new tickets are created
+          </label>
+        </div>
+
+        <div class="flex items-center">
+          <input type="hidden" name="notify_admins_of_new_comments" value="0">
+          <%= check_box_tag "notify_admins_of_new_comments", "1", @config.notify_admins_of_new_comments,
+              id: "notify_admins_of_new_comments",
+              class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+          <label for="notify_admins_of_new_comments" class="ml-2 block text-sm text-gray-900">
+            Notify admins when new comments are posted
+          </label>
+        </div>
+      </div>
+
+      <!-- User Notifications -->
+      <div class="space-y-4 border-t pt-6">
+        <h4 class="text-md font-medium text-gray-900">User Notifications</h4>
+
+        <div class="flex items-center">
+          <input type="hidden" name="notify_ticket_author" value="0">
+          <%= check_box_tag "notify_ticket_author", "1", @config.notify_ticket_author,
+              id: "notify_ticket_author",
+              class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+          <label for="notify_ticket_author" class="ml-2 block text-sm text-gray-900">
+            Notify ticket authors of comments and status changes
+          </label>
+        </div>
+      </div>
+
+      <!-- Persistence Info -->
+      <div class="bg-green-50 border-l-4 border-green-400 p-4">
+        <div class="flex">
+          <div class="ml-3">
+            <p class="text-sm text-green-700">
+              <strong>✅ Persistent Settings:</strong> These settings are saved to the database and will persist across application restarts.
+              You can also override them via Rails initializer if needed.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end border-t pt-6">
+        <%= submit_tag "Save Settings",
+            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Email Test Section -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Test Email Configuration</h3>
+      <p class="text-sm text-gray-500 mt-1">Make sure your ActionMailer is properly configured in your Rails app</p>
+    </div>
+    <div class="p-6">
+      <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+        <div class="flex">
+          <div class="ml-3">
+            <p class="text-sm text-blue-700">
+              <strong>Setup Required:</strong> Ensure ActionMailer is configured in your Rails application.
+              Add settings to <code>config/environments/production.rb</code> (or development.rb) for your email provider.
+            </p>
+            <pre class="mt-2 text-xs text-blue-800 bg-blue-100 p-2 rounded"><code># Example ActionMailer configuration:
+config.action_mailer.delivery_method = :smtp
+config.action_mailer.smtp_settings = {
+  address: 'smtp.gmail.com',
+  port: 587,
+  # ... your SMTP settings
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
