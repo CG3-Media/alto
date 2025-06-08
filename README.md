@@ -80,54 +80,66 @@ application.register("upvote", UpvoteController)
 
 ## 🔐 Permissions System
 
-Override these methods in your `ApplicationController` or in an engine concern:
+**Zero configuration required!** The engine works out of the box with sensible defaults.
+
+To customize permissions, simply add these methods to your `ApplicationController`:
 
 ```ruby
-# In your ApplicationController or create app/controllers/concerns/feedback_board_permissions.rb
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  # ... your existing code ...
+
+  private
+
+  # Optional: Control who can access the feedback board
+  def can_access_feedback_board?
+    user_signed_in?  # Default: true (if current_user exists)
+  end
+
+  # Optional: Control who can submit new tickets
+  def can_submit_tickets?
+    user_signed_in?  # Default: true (if current_user exists)
+  end
+
+  # Optional: Control who can comment on tickets
+  def can_comment?
+    user_signed_in?  # Default: true (if current_user exists)
+  end
+
+  # Optional: Control who can vote on tickets/comments
+  def can_vote?
+    user_signed_in?  # Default: true (if current_user exists)
+  end
+
+  # Optional: Control who can edit tickets (status, lock, etc.)
+  def can_edit_tickets?
+    current_user&.admin?  # Default: false (secure by default)
+  end
+end
+```
+
+### Alternative: Use a Concern (Optional)
+
+For better organization, you can also use a concern:
+
+```ruby
+# app/controllers/concerns/feedback_board_permissions.rb
 module FeedbackBoardPermissions
   extend ActiveSupport::Concern
 
   private
 
-  def can_access_feedback_board?
-    # Example: Only logged-in users
-    user_signed_in?
-
-    # Example: Users with specific permission
-    # current_user.can?(:access_feedback_board)
-
-    # Example: Everyone
-    # true
-  end
-
-  def can_submit_tickets?
-    # Example: Only logged-in users
-    user_signed_in?
-
-    # Example: Users with specific role
-    # current_user.role.in?(['user', 'admin'])
-  end
-
-  def can_comment?
-    user_signed_in?
-  end
-
-  def can_vote?
-    user_signed_in?
-  end
-
   def can_edit_tickets?
-    # Example: Only admins
     current_user&.admin?
-
-    # Example: Using CanCan
-    # can?(:manage, FeedbackBoard::Ticket)
   end
+
+  # ... other permission methods ...
 end
 
-# Include in your ApplicationController
+# app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
   include FeedbackBoardPermissions
+  # ... rest of your code ...
 end
 ```
 

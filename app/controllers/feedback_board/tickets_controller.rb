@@ -72,10 +72,6 @@ module FeedbackBoard
       end
     end
 
-    def can_edit_tickets?
-      # This should be overridden by the host application
-      # Example: current_user.admin? || current_user.can?(:edit_feedback_tickets)
-      false
-    end
+
   end
 end

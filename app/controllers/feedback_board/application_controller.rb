@@ -25,30 +25,67 @@ module FeedbackBoard
 
     def can_access_feedback_board?
       return false unless current_user
-      # Default implementation - override in host application
-      # Example: current_user.can?(:access_feedback_board)
-      true
+
+      # Check if main app has overridden this method
+      if main_app_controller.respond_to?(:can_access_feedback_board?, true)
+        main_app_controller.send(:can_access_feedback_board?)
+      else
+        # Default implementation
+        true
+      end
     end
 
     def can_submit_tickets?
       return false unless current_user
-      # Default implementation - override in host application
-      # Example: current_user.can?(:submit_feedback_tickets)
-      true
+
+      # Check if main app has overridden this method
+      if main_app_controller.respond_to?(:can_submit_tickets?, true)
+        main_app_controller.send(:can_submit_tickets?)
+      else
+        # Default implementation
+        true
+      end
     end
 
     def can_comment?
       return false unless current_user
-      # Default implementation - override in host application
-      # Example: current_user.can?(:comment_on_feedback)
-      true
+
+      # Check if main app has overridden this method
+      if main_app_controller.respond_to?(:can_comment?, true)
+        main_app_controller.send(:can_comment?)
+      else
+        # Default implementation
+        true
+      end
     end
 
     def can_vote?
       return false unless current_user
-      # Default implementation - override in host application
-      # Example: current_user.can?(:vote_on_feedback)
-      true
+
+      # Check if main app has overridden this method
+      if main_app_controller.respond_to?(:can_vote?, true)
+        main_app_controller.send(:can_vote?)
+      else
+        # Default implementation
+        true
+      end
+    end
+
+    def can_edit_tickets?
+      return false unless current_user
+
+      # Check if main app has overridden this method
+      if main_app_controller.respond_to?(:can_edit_tickets?, true)
+        main_app_controller.send(:can_edit_tickets?)
+      else
+        # Default implementation - secure by default
+        false
+      end
+    end
+
+    # Helper method to get main app controller for delegation
+    def main_app_controller
+      @main_app_controller ||= main_app.try(:application_controller) || ::ApplicationController.new
     end
   end
 end
