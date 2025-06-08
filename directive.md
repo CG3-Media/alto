@@ -8,7 +8,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 
 - Visit the feedback board (`/feedback`)
 - Submit a ticket with a title and description
-- Comment on any ticket
+- Comment on any ticket (with username display in comment form)
 - Upvote tickets and comments (1 vote per user)
 - View ticket statuses (`open`, `planned`, `in_progress`, `complete`)
 - See locked tickets (but cannot comment/vote on them)
@@ -95,8 +95,9 @@ mount FeedbackBoard::Engine => "/feedback"
   - Edit ticket form (admin only)
   - Form validation and error handling
 - [x] **Comment Forms**
-  - Inline comment creation
+  - Inline comment creation with user name display
   - Comment editing/deletion (via controllers)
+  - "Commenting as [username]" indicator for user clarity
 
 #### Enhanced Features
 - [x] **Helpers & Utilities**

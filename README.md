@@ -9,11 +9,11 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 ## ✨ Features
 
 - 🎫 **Ticket Management** - Create, view, and manage feedback tickets
-- 💬 **Comments** - Threaded discussions on tickets
+- 💬 **Comments** - Threaded discussions on tickets with user name display
 - 👍 **Upvoting** - Users can vote on tickets and comments (with AJAX)
 - 📊 **Status Tracking** - `open`, `planned`, `in_progress`, `complete`
 - 🔒 **Moderation** - Lock tickets to prevent further discussion
-- 🎨 **Beautiful UI** - Clean Tailwind CSS design
+- 🎨 **Beautiful UI** - Clean Tailwind CSS design with user-friendly forms
 - 🔐 **Permissions** - Flexible permission system
 - ⚡ **Performance** - Optimized queries and database indexes
 
