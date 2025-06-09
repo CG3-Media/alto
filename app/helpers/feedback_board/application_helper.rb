@@ -115,11 +115,11 @@ module FeedbackBoard
     end
 
     def user_display_name(user_id)
-      FeedbackBoard.config.user_display_name_method.call(user_id)
+      ::FeedbackBoard.config.user_display_name_method.call(user_id)
     end
 
     def app_name
-      FeedbackBoard.config.app_name
+      ::FeedbackBoard.config.app_name
     end
 
     def count_nested_replies(replies)

@@ -7,7 +7,7 @@ module FeedbackBoard
       mail(
         to: recipient_email,
         subject: "[Feedback] New ticket: #{@ticket.title}",
-        from: FeedbackBoard.configuration.notification_from_email
+        from: ::FeedbackBoard.configuration.notification_from_email
       )
     end
 
@@ -19,7 +19,7 @@ module FeedbackBoard
       mail(
         to: recipient_email,
         subject: "[Feedback] New comment on: #{@ticket.title}",
-        from: FeedbackBoard.configuration.notification_from_email
+        from: ::FeedbackBoard.configuration.notification_from_email
       )
     end
 
@@ -31,18 +31,18 @@ module FeedbackBoard
       mail(
         to: recipient_email,
         subject: "[Feedback] Status updated: #{@ticket.title}",
-        from: FeedbackBoard.configuration.notification_from_email
+        from: ::FeedbackBoard.configuration.notification_from_email
       )
     end
 
     private
 
     def user_display_name(user_id)
-      FeedbackBoard.configuration.user_display_name_method.call(user_id)
+      ::FeedbackBoard.configuration.user_display_name_method.call(user_id)
     end
 
     def app_name
-      FeedbackBoard.configuration.app_name
+      ::FeedbackBoard.configuration.app_name
     end
   end
 end

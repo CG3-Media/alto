@@ -35,7 +35,7 @@ module FeedbackBoard
 
     # Check if board can be safely deleted (no tickets)
     def can_be_deleted?
-      tickets_count == 0 || FeedbackBoard.configuration.allow_board_deletion_with_tickets
+      tickets_count == 0 || ::FeedbackBoard.configuration.allow_board_deletion_with_tickets
     end
 
     # Status-related methods

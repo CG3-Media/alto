@@ -47,7 +47,7 @@ module FeedbackBoard
 
     # Load all settings into the configuration
     def self.load_into_configuration!
-      config = FeedbackBoard.configuration
+      config = ::FeedbackBoard.configuration
 
       # Load email settings from database, fallback to defaults
       config.notifications_enabled = get('notifications_enabled', config.notifications_enabled)

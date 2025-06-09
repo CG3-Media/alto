@@ -4,7 +4,7 @@ module FeedbackBoard
       before_action :ensure_admin_access
 
       def show
-        @config = FeedbackBoard.configuration
+        @config = ::FeedbackBoard.configuration
       end
 
             def update

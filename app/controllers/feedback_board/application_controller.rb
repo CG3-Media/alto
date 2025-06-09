@@ -162,9 +162,9 @@ module FeedbackBoard
     # Falls back to provided block if method doesn't exist in config
     def check_configured_permission(method_name, *args, &fallback_block)
       # Check if the host app defined this permission in the initializer
-      if FeedbackBoard.config.has_permission?(method_name)
+      if ::FeedbackBoard.config.has_permission?(method_name)
         Rails.logger.debug "[FeedbackBoard] Using configured permission for #{method_name}"
-        return FeedbackBoard.config.call_permission(method_name, self, *args)
+        return ::FeedbackBoard.config.call_permission(method_name, self, *args)
       else
         Rails.logger.debug "[FeedbackBoard] No configured permission for #{method_name}, using default"
         fallback_block.call

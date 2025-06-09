@@ -117,21 +117,21 @@ module FeedbackBoard
     private
 
     def send_new_ticket_notifications
-      return unless FeedbackBoard.configuration.notifications_enabled
+      return unless ::FeedbackBoard.configuration.notifications_enabled
 
       # Send to admin emails if configured
-      if FeedbackBoard.configuration.notify_admins_of_new_tickets &&
-         FeedbackBoard.configuration.admin_notification_emails.any?
+      if ::FeedbackBoard.configuration.notify_admins_of_new_tickets &&
+         ::FeedbackBoard.configuration.admin_notification_emails.any?
 
-        FeedbackBoard.configuration.admin_notification_emails.each do |email|
+        ::FeedbackBoard.configuration.admin_notification_emails.each do |email|
           NotificationMailer.new_ticket(self, email).deliver_later
         end
       end
     end
 
     def send_status_change_notifications
-      return unless FeedbackBoard.configuration.notifications_enabled
-      return unless FeedbackBoard.configuration.notify_ticket_author
+          return unless ::FeedbackBoard.configuration.notifications_enabled
+    return unless ::FeedbackBoard.configuration.notify_ticket_author
 
       # Get the user's email for notification
       user_email = get_user_email(user_id)
@@ -144,7 +144,7 @@ module FeedbackBoard
     def get_user_email(user_id)
       return nil unless user_id
 
-      user_class = FeedbackBoard.configuration.user_model.constantize rescue nil
+      user_class = ::FeedbackBoard.configuration.user_model.constantize rescue nil
       return nil unless user_class
 
       user = user_class.find_by(id: user_id)
@@ -164,7 +164,7 @@ module FeedbackBoard
     def get_user_object(user_id)
       return nil unless user_id
 
-      user_class = FeedbackBoard.configuration.user_model.constantize rescue nil
+      user_class = ::FeedbackBoard.configuration.user_model.constantize rescue nil
       return nil unless user_class
 
       user_class.find_by(id: user_id)

@@ -38,7 +38,7 @@ module FeedbackBoard
     def get_user_object(user_id)
       return nil unless user_id
 
-      user_class = FeedbackBoard.configuration.user_model.constantize rescue nil
+      user_class = ::FeedbackBoard.configuration.user_model.constantize rescue nil
       return nil unless user_class
 
       user_class.find_by(id: user_id)
