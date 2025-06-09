@@ -2,6 +2,19 @@ module FeedbackBoard
   class Engine < ::Rails::Engine
     isolate_namespace FeedbackBoard
 
+    config.generators do |g|
+      g.test_framework :rspec
+      g.fixture_replacement :factory_bot
+      g.factory_bot dir: 'spec/factories'
+    end
+
+    # Auto-setup database schema when engine loads
+    initializer "feedback_board.setup_database", after: "active_record.initialize_database" do
+      ActiveSupport.on_load(:active_record) do
+        ::FeedbackBoard::DatabaseSetup.setup_if_needed
+      end
+    end
+
     # Configure importmaps for nobuild JavaScript
     initializer "feedback_board.importmap", before: "importmap" do |app|
       # Add our JavaScript files to the importmap
@@ -24,8 +37,6 @@ module FeedbackBoard
         feedback_board/application.css
       ]
     end
-
-
 
     # Load persistent settings from database after Rails initialization
     initializer "feedback_board.load_settings", after: "active_record.initialize_database" do |app|

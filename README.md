@@ -38,24 +38,22 @@ bundle install
 
 ## ⚙️ Setup
 
-### 1. Run the installer
-```bash
-rails generate feedback_board:install
-```
-
-### 2. Add routes
+### 1. Add routes
 Add to your `config/routes.rb`:
 ```ruby
 mount FeedbackBoard::Engine => "/feedback"
 ```
 
-### 3. Run migrations
+### 2. (Optional) Run the installer
 ```bash
-rails feedback_board:install:migrations
-rails db:migrate
+rails generate feedback_board:install
 ```
 
-**That's it!** ✨ AJAX voting functionality is included and works automatically - no JavaScript setup required!
+**That's it!** ✨
+
+**🎯 Zero Migration Hassle**: The engine automatically sets up its database schema when your app starts - no migrations to run!
+
+**✨ AJAX voting functionality is included and works automatically - no JavaScript setup required!**
 
 ### 4. (Optional) Customize configuration
 

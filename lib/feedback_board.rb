@@ -1,5 +1,6 @@
 require "feedback_board/version"
 require "feedback_board/engine"
+require "feedback_board/database_setup"
 require "feedback_board/configuration"
 
 # Require dependencies
