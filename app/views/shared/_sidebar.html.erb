@@ -84,7 +84,14 @@
 
     <!-- Boards Section -->
     <div>
-      <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
+      <% if can_access_admin? %>
+        <%= link_to feedback_board.admin_boards_path,
+            class: "text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 block hover:text-blue-600 transition-colors" do %>
+          Boards
+        <% end %>
+      <% else %>
+        <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
+      <% end %>
       <nav class="space-y-1">
         <% FeedbackBoard::Board.ordered.each do |board| %>
           <% ticket_count = board.tickets_count %>
@@ -161,7 +168,15 @@
       <div class="px-4 space-y-6">
         <!-- Mobile version uses simplified content for performance -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
+          <% if can_access_admin? %>
+            <%= link_to feedback_board.admin_boards_path,
+                class: "text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 block hover:text-blue-600 transition-colors",
+                onclick: "toggleMobileSidebar()" do %>
+              Boards
+            <% end %>
+          <% else %>
+            <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
+          <% end %>
           <nav class="space-y-1">
             <% FeedbackBoard::Board.ordered.each do |board| %>
               <%= link_to board.name, feedback_board.board_tickets_path(board),
