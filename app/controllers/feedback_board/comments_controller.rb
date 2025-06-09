@@ -30,7 +30,7 @@ module FeedbackBoard
                       alert: error_message
         else
           # This is a top-level comment that failed validation
-          @threaded_comments = FeedbackBoard::Comment.threaded_for_ticket(@ticket)
+          @threaded_comments = ::FeedbackBoard::Comment.threaded_for_ticket(@ticket)
           render 'feedback_board/tickets/show'
         end
       end
@@ -44,7 +44,7 @@ module FeedbackBoard
       @thread_comments = build_thread_for_comment(@root_comment)
 
       # Create a new comment for the reply form
-      @new_comment = FeedbackBoard::Comment.new
+      @new_comment = ::FeedbackBoard::Comment.new
     end
 
     def destroy
@@ -104,7 +104,7 @@ module FeedbackBoard
       # Build the threaded structure
       {
         comment: root_comment,
-        replies: FeedbackBoard::Comment.build_reply_tree(root_comment, all_comments)
+        replies: ::FeedbackBoard::Comment.build_reply_tree(root_comment, all_comments)
       }
     end
 

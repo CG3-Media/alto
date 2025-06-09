@@ -5,7 +5,7 @@ module FeedbackBoard
       before_action :set_status_set, only: [:show, :edit, :update, :destroy]
 
       def index
-        @status_sets = FeedbackBoard::StatusSet.includes(:statuses, :boards).ordered
+        @status_sets = ::FeedbackBoard::StatusSet.includes(:statuses, :boards).ordered
       end
 
       def show
@@ -13,12 +13,12 @@ module FeedbackBoard
       end
 
       def new
-        @status_set = FeedbackBoard::StatusSet.new
+        @status_set = ::FeedbackBoard::StatusSet.new
         @status_set.statuses.build # Start with one empty status
       end
 
       def create
-        @status_set = FeedbackBoard::StatusSet.new(status_set_params)
+        @status_set = ::FeedbackBoard::StatusSet.new(status_set_params)
 
         if @status_set.save
           redirect_to feedback_board.admin_status_set_path(@status_set),
@@ -55,7 +55,7 @@ module FeedbackBoard
       private
 
       def set_status_set
-        @status_set = FeedbackBoard::StatusSet.find(params[:id])
+        @status_set = ::FeedbackBoard::StatusSet.find(params[:id])
       end
 
       def status_set_params

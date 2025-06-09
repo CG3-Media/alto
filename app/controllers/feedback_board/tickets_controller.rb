@@ -37,8 +37,8 @@ module FeedbackBoard
       # Set this as the current board in session
       ensure_current_board_set(@board)
 
-      @comment = FeedbackBoard::Comment.new
-      @threaded_comments = FeedbackBoard::Comment.threaded_for_ticket(@ticket)
+      @comment = ::FeedbackBoard::Comment.new
+      @threaded_comments = ::FeedbackBoard::Comment.threaded_for_ticket(@ticket)
     end
 
     def new
@@ -82,7 +82,7 @@ module FeedbackBoard
     private
 
     def set_board
-      @board = FeedbackBoard::Board.find_by!(slug: params[:board_slug])
+      @board = ::FeedbackBoard::Board.find_by!(slug: params[:board_slug])
     end
 
     def set_ticket

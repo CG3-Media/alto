@@ -5,8 +5,8 @@ module FeedbackBoard
 
     def redirect_to_default
       # Find or create the default board
-      default_board = FeedbackBoard::Board.find_by(slug: 'feedback') ||
-                      FeedbackBoard::Board.create!(
+      default_board = ::FeedbackBoard::Board.find_by(slug: 'feedback') ||
+                      ::FeedbackBoard::Board.create!(
                         name: 'Feedback',
                         slug: 'feedback',
                         description: 'General feedback and feature requests'
@@ -19,11 +19,11 @@ module FeedbackBoard
     end
 
     def index
-      @boards = FeedbackBoard::Board.ordered.includes(:tickets)
+      @boards = ::FeedbackBoard::Board.ordered.includes(:tickets)
     end
 
     def show
-      @board = FeedbackBoard::Board.find_by!(slug: params[:slug])
+      @board = ::FeedbackBoard::Board.find_by!(slug: params[:slug])
 
       # Set this as the current board in session
       ensure_current_board_set(@board)
