@@ -1,14 +1,19 @@
 module FeedbackBoard
   class Status < ApplicationRecord
+    include Sluggable
+
     belongs_to :status_set
 
     validates :name, presence: true, length: { maximum: 50 }
-    validates :slug, presence: true, length: { maximum: 50 }
+    validates :slug, length: { maximum: 50 }, uniqueness: { scope: :status_set_id }
     validates :color, presence: true, inclusion: { in: %w[green blue yellow red gray purple orange pink] }
     validates :position, presence: true, numericality: { greater_than_or_equal_to: 0 }
-    validates :slug, uniqueness: { scope: :status_set_id }
 
     scope :ordered, -> { order(:position) }
+
+    def slug_uniqueness_scope
+      [:status_set_id]
+    end
 
     def color_classes
       case color
@@ -31,10 +36,6 @@ module FeedbackBoard
       else
         'bg-gray-100 text-gray-800'
       end
-    end
-
-    def to_param
-      slug
     end
   end
 end

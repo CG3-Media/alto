@@ -5,7 +5,16 @@
       type: :link,
       text: "New Ticket",
       path: feedback_board.new_board_ticket_path(@board),
-      class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+      button_type: :primary
+    } %>
+  <% end %>
+
+  <% if can_access_admin? %>
+    <% actions << {
+      type: :link,
+      text: "Modify Board",
+      path: feedback_board.edit_admin_board_path(@board.id),
+      button_type: :secondary
     } %>
   <% end %>
 

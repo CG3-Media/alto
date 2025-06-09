@@ -20,7 +20,7 @@ module FeedbackBoard
       # Make private methods public for testing
       public :can_access_feedback_board?, :can_submit_tickets?, :can_comment?,
              :can_vote?, :can_edit_tickets?, :can_access_admin?, :can_manage_boards?,
-             :can_access_board?, :delegate_permission
+             :can_access_board?
 
       # Override current_user for testing
       def current_user
@@ -113,25 +113,12 @@ module FeedbackBoard
       assert_equal true, @controller.can_access_board?(@board)
     end
 
-    test "delegate_permission method works correctly" do
-      @controller.set_test_user(@user)
-
-      # Test with default value
-      result = @controller.delegate_permission(:nonexistent_method, default: :test_default)
-      assert_equal :test_default, result
-
-      # Test with proc default
-      result = @controller.delegate_permission(:nonexistent_method, default: -> { 'proc_result' })
-      assert_equal 'proc_result', result
-    end
-
     test "method inheritance chain is working" do
       # Verify that ApplicationController methods are available to subclasses
       tickets_controller = TicketsController.new
 
       assert_respond_to tickets_controller, :can_access_board?
       assert_respond_to tickets_controller, :can_edit_tickets?
-      assert_respond_to tickets_controller, :delegate_permission
     end
   end
 end

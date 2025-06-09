@@ -161,7 +161,9 @@ module FeedbackBoard
       end
     end
 
-                            # Check for permission methods defined in the initializer configuration
+
+
+    # Check for permission methods defined in the initializer configuration
     # Falls back to provided block if method doesn't exist in config
     def check_configured_permission(method_name, *args, &fallback_block)
       # Check if the host app defined this permission in the initializer

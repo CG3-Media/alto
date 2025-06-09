@@ -1,0 +1,92 @@
+<%
+  # Default values
+  text ||= "Button"
+  button_type ||= :primary  # :primary, :secondary, :tertiary
+  size ||= "medium"  # small, medium, large
+  type ||= "button"   # button, submit
+  disabled ||= false
+  url ||= nil         # For link_to usage
+  method ||= nil      # For link_to usage
+  additional_classes ||= ""
+  html_options ||= {}
+
+  # Convert string to symbol for consistency
+  button_type = button_type.to_sym if button_type.respond_to?(:to_sym)
+
+  # Size classes
+  size_classes = case size
+                when "small"
+                  case button_type
+                  when :tertiary
+                    "px-2 py-1 text-xs"
+                  else
+                    "px-3 py-1.5 text-xs"
+                  end
+                when "large"
+                  case button_type
+                  when :tertiary
+                    "px-4 py-2 text-base"
+                  else
+                    "px-6 py-3 text-base"
+                  end
+                else
+                  case button_type
+                  when :tertiary
+                    "px-3 py-1.5 text-sm"
+                  else
+                    "px-4 py-2 text-sm"
+                  end
+                end
+
+  # Base classes
+  base_classes = "#{size_classes} font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200"
+
+  # Add border for secondary and tertiary
+  if [:secondary, :tertiary].include?(button_type)
+    base_classes += " border"
+  end
+
+  # State classes based on button type
+  if disabled
+    state_classes = case button_type
+                   when :primary
+                     "bg-gray-300 text-gray-500 cursor-not-allowed focus:ring-gray-300"
+                   when :secondary
+                     "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed focus:ring-gray-300"
+                   when :tertiary
+                     "border-gray-200 text-gray-400 cursor-not-allowed focus:ring-gray-300"
+                   else
+                     "bg-gray-300 text-gray-500 cursor-not-allowed focus:ring-gray-300"
+                   end
+  else
+    state_classes = case button_type
+                   when :primary
+                     "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+                   when :secondary
+                     "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 focus:ring-gray-500"
+                   when :tertiary
+                     "border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-gray-500"
+                   else
+                     "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+                   end
+  end
+
+  # Final classes
+  final_classes = "#{base_classes} #{state_classes} #{additional_classes}".strip
+%>
+
+<% if url %>
+  <%= link_to text, url,
+      method: method,
+      class: final_classes,
+      **html_options %>
+<% else %>
+  <button type="<%= type %>"
+          class="<%= final_classes %>"
+          <%= "disabled" if disabled %>
+          <% html_options.each do |key, value| %>
+            <%= key %>="<%= value %>"
+          <% end %>>
+    <%= text %>
+  </button>
+<% end %>

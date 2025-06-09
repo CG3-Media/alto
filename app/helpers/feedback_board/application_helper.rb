@@ -13,6 +13,20 @@ module FeedbackBoard
                   class: "px-2 py-1 text-xs font-medium rounded-full #{color_class}"
     end
 
+    # Unified button helper for consistent styling
+    def render_button(text, options = {})
+      render 'shared/button',
+        text: text,
+        button_type: options[:button_type] || :primary,
+        url: options[:url],
+        method: options[:method],
+        size: options[:size] || "medium",
+        type: options[:type] || "button",
+        disabled: options[:disabled] || false,
+        additional_classes: options[:class] || "",
+        html_options: options[:html_options] || {}
+    end
+
     def locked_badge
       content_tag :span, "🔒 Locked",
                   class: "px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800"
