@@ -13,7 +13,7 @@
     <% actions << {
       type: :link,
       text: "Modify Board",
-      path: feedback_board.edit_admin_board_path(@board.id),
+      path: feedback_board.edit_admin_board_path(@board.slug),
       button_type: :secondary
     } %>
   <% end %>

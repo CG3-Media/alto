@@ -29,7 +29,7 @@ module FeedbackBoard
     end
 
     def show
-      @board = ::FeedbackBoard::Board.find_by!(slug: params[:slug])
+      @board = ::FeedbackBoard::Board.find(params[:slug])
 
       # Set this as the current board in session
       ensure_current_board_set(@board)
@@ -76,7 +76,7 @@ module FeedbackBoard
     private
 
     def set_board
-      @board = Board.find_by!(slug: params[:slug])
+      @board = Board.find(params[:slug])
     end
 
     # Defensive method to handle potential NoMethodError with set_current_board

@@ -54,7 +54,7 @@ module FeedbackBoard
       private
 
       def set_board
-        @board = ::FeedbackBoard::Board.find(params[:id])
+        @board = ::FeedbackBoard::Board.find(params[:slug])
       end
 
       def board_params

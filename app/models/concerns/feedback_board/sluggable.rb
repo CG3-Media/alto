@@ -11,8 +11,75 @@ module FeedbackBoard
       scope :by_slug, ->(slug) { where(slug: slug) }
     end
 
+    class_methods do
+      # Smart finder that works with both slug and ID
+      # Tries slug first (most common case), falls back to ID if needed
+      def find_by_slug_or_id(param)
+        return nil if param.blank?
+
+        # Try finding by slug first (most common case)
+        record = find_by(slug: param)
+
+        # If not found by slug and param looks like an ID, try finding by ID
+        if record.nil? && param.to_s.match?(/\A\d+\z/)
+          record = find_by(id: param)
+        end
+
+        record
+      end
+
+      # Enhanced finder with exception (like find!)
+      def find_by_slug_or_id!(param)
+        record = find_by_slug_or_id(param)
+        raise ActiveRecord::RecordNotFound, "Couldn't find #{name} with slug or id=#{param}" if record.nil?
+        record
+      end
+
+      # Override find to transparently handle both slug and ID
+      def find(param)
+        return super if param.blank?
+
+        # Use our smart finder logic
+        record = find_by_slug_or_id(param)
+
+        # If still not found, raise the standard ActiveRecord exception
+        if record.nil?
+          raise ActiveRecord::RecordNotFound, "Couldn't find #{name} with slug or id=#{param}"
+        end
+
+        record
+      end
+
+      # For scoped lookups (like Status with status_set_id)
+      def find_by_slug_or_id_in_scope!(param, scope_conditions = {})
+        return nil if param.blank?
+
+        scope = where(scope_conditions)
+
+        # Try finding by slug first
+        record = scope.find_by(slug: param)
+
+        # If not found by slug and param looks like an ID, try finding by ID
+        if record.nil? && param.to_s.match?(/\A\d+\z/)
+          record = scope.find_by(id: param)
+        end
+
+        if record.nil?
+          scope_desc = scope_conditions.map { |k, v| "#{k}=#{v}" }.join(", ")
+          raise ActiveRecord::RecordNotFound, "Couldn't find #{name} with slug or id=#{param} in scope: #{scope_desc}"
+        end
+
+        record
+      end
+    end
+
     def to_param
       slug
+    end
+
+    # Helper to check if this record can be found by the given param
+    def matches_param?(param)
+      slug == param.to_s || id.to_s == param.to_s
     end
 
     private
@@ -31,7 +98,7 @@ module FeedbackBoard
       public_send("#{slug_source_attribute}_changed?")
     end
 
-        def generate_slug
+    def generate_slug
       return unless respond_to?(:slug_source_attribute)
       return unless public_send(slug_source_attribute).present?
 

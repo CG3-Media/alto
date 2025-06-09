@@ -27,7 +27,7 @@ FeedbackBoard::Engine.routes.draw do
   namespace :admin do
     root 'dashboard#index'
     resource :settings, only: [:show, :update]
-    resources :boards, except: [:show]
+    resources :boards, param: :slug, except: [:show]
     resources :status_sets
   end
 end

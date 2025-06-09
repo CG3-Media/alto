@@ -82,7 +82,7 @@ module FeedbackBoard
     private
 
     def set_board
-      @board = ::FeedbackBoard::Board.find_by!(slug: params[:board_slug])
+      @board = ::FeedbackBoard::Board.find(params[:board_slug])
     end
 
     def set_ticket

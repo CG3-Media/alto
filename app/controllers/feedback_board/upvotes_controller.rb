@@ -63,7 +63,7 @@ module FeedbackBoard
 
     def set_board_and_upvotable
       if params[:ticket_id]
-        @board = Board.find_by!(slug: params[:board_slug])
+        @board = Board.find(params[:board_slug])
         @upvotable = @board.tickets.find(params[:ticket_id])
       elsif params[:comment_id]
         @upvotable = Comment.find(params[:comment_id])
