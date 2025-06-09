@@ -1,3 +1,5 @@
+<img width="1663" alt="image" src="https://github.com/user-attachments/assets/4e17ab33-cb16-42ef-b514-725344b7ee0b" />
+
 # FeedbackBoard Rails Engine
 
 A mountable Rails engine for collecting user feedback with multiple boards, threaded comments, and voting.
