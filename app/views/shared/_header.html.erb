@@ -33,31 +33,90 @@
             </div>
             <%= form.hidden_field :status, value: params[:status] %>
             <%= form.hidden_field :sort, value: params[:sort] %>
-            <%= form.submit "Search", class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md text-sm font-medium border border-l-0 border-blue-600" %>
+            <%= render 'shared/buttons/secondary',
+                text: "Search",
+                type: "submit",
+                additional_classes: "rounded-r-md rounded-l-none border border-l-0 border-gray-300" %>
           <% end %>
         </div>
 
         <!-- New Ticket Button -->
         <% if can_submit_tickets? %>
-          <%= link_to feedback_board.new_board_ticket_path(current_board),
-              class: "flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 whitespace-nowrap" do %>
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            New Ticket
-          <% end %>
+          <%= render 'shared/buttons/primary',
+              text: "✚ New Ticket",
+              url: feedback_board.new_board_ticket_path(current_board),
+              additional_classes: "whitespace-nowrap" %>
         <% end %>
       </div>
     <% end %>
 
-    <!-- Right side: Admin access only -->
-    <nav class="flex space-x-4">
+    <!-- Right side: Mobile actions + Admin -->
+    <div class="flex items-center space-x-2">
+      <!-- Mobile Quick Actions (only show on ticket pages) -->
+      <% if defined?(current_board) && current_board %>
+        <div class="flex items-center space-x-2 md:hidden">
+          <!-- Mobile Search Button -->
+          <%= render 'shared/buttons/icon',
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>',
+              onclick: "toggleMobileSearch()" %>
+
+          <!-- Mobile New Ticket Button -->
+          <% if can_submit_tickets? %>
+            <%= render 'shared/buttons/icon',
+                icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>',
+                variant: "success",
+                url: feedback_board.new_board_ticket_path(current_board) %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Admin Button -->
       <% if can_access_admin? %>
         <%= render 'shared/buttons/primary',
             text: "Admin",
             url: feedback_board.admin_root_path,
-            additional_classes: "bg-purple-600 hover:bg-purple-700" %>
+            additional_classes: "bg-purple-600 hover:bg-purple-700 hidden sm:block" %>
+        <!-- Mobile Admin Button (icon only) -->
+        <%= render 'shared/buttons/icon',
+            icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
+            variant: "primary",
+            url: feedback_board.admin_root_path,
+            additional_classes: "sm:hidden bg-purple-600 hover:bg-purple-700" %>
       <% end %>
-    </nav>
+    </div>
   </div>
+
+  <!-- Mobile Search Dropdown (hidden by default) -->
+  <% if defined?(current_board) && current_board %>
+    <div id="mobile-search" class="hidden md:hidden bg-white border-t border-gray-200 px-4 py-3">
+      <%= form_with url: feedback_board.board_tickets_path(current_board), method: :get, local: true, class: "flex space-x-2" do |form| %>
+        <div class="flex-1">
+          <%= form.text_field :search,
+              value: params[:search],
+              placeholder: "Search tickets...",
+              class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm" %>
+        </div>
+        <%= form.hidden_field :status, value: params[:status] %>
+        <%= form.hidden_field :sort, value: params[:sort] %>
+        <%= render 'shared/buttons/primary',
+            text: "Search",
+            type: "submit",
+            size: "small",
+            additional_classes: "whitespace-nowrap" %>
+      <% end %>
+    </div>
+  <% end %>
 </header>
+
+<script>
+function toggleMobileSearch() {
+  const dropdown = document.getElementById('mobile-search');
+  dropdown.classList.toggle('hidden');
+
+  // Focus on search input when opened
+  if (!dropdown.classList.contains('hidden')) {
+    const input = dropdown.querySelector('input[name="search"]');
+    setTimeout(() => input.focus(), 100);
+  }
+}
+</script>
