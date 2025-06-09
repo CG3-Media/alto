@@ -27,7 +27,7 @@
 
         <div class="flex items-center space-x-4 text-sm text-gray-500">
           <span>Created <%= time_ago_in_words(@ticket.created_at) %> ago</span>
-          <span><%= pluralize(@comments.count, 'comment') %></span>
+          <span><%= pluralize(@ticket.comments.count, 'comment') %></span>
         </div>
       </div>
 
@@ -42,7 +42,7 @@
   <div class="bg-white rounded-lg shadow-sm border border-gray-200">
     <div class="p-6 border-b border-gray-200">
       <h2 class="text-lg font-semibold text-gray-900">
-        Comments (<%= @comments.count %>)
+        Comments (<%= @ticket.comments.count %>)
       </h2>
     </div>
 
@@ -69,27 +69,13 @@
       </div>
     <% end %>
 
-    <!-- Comments List -->
+    <!-- Threaded Comments List -->
     <div class="divide-y divide-gray-200">
-      <% if @comments.any? %>
-        <% @comments.each do |comment| %>
-          <div class="p-6">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <div class="text-sm text-gray-500 mb-2">
-                  <span class="font-medium text-gray-700"><%= user_display_name(comment.user_id) %></span> · <%= time_ago_in_words(comment.created_at) %> ago
-                </div>
-                <div class="prose max-w-none mb-3">
-                  <p class="text-gray-700 whitespace-pre-wrap"><%= comment.content %></p>
-                </div>
-              </div>
-
-              <!-- Comment Upvote -->
-              <div class="flex items-center ml-4">
-                <%= upvote_button(comment, current_user) %>
-              </div>
-            </div>
-          </div>
+      <% if @threaded_comments.any? %>
+        <% @threaded_comments.each do |comment_data| %>
+          <%= render 'feedback_board/comments/threaded_comment',
+              comment: comment_data[:comment],
+              replies: comment_data[:replies] %>
         <% end %>
       <% else %>
         <div class="p-6 text-center text-gray-500">

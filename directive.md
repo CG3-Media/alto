@@ -6,11 +6,14 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 
 ## ✅ What Users Can Do
 
-- Visit the feedback board (`/feedback`)
-- Submit a ticket with a title and description
-- Comment on any ticket (with username display in comment form)
+- Visit the feedback board (`/feedback`) with multiple board support
+- Submit tickets with title and description across different boards
+- Comment on tickets with **dedicated threaded discussions**
+- **Navigate to focused thread pages** for in-depth discussions
+- Reply to comments with **3-level threading** (Comments → Replies → Nested Replies)
 - Upvote tickets and comments (1 vote per user)
 - View ticket statuses (`open`, `planned`, `in_progress`, `complete`)
+- Search across tickets, descriptions, and comments within boards
 - See locked tickets (but cannot comment/vote on them)
 
 ---
@@ -72,7 +75,8 @@ mount FeedbackBoard::Engine => "/feedback"
 
 #### Frontend Core
 - [x] **Layout & Styling**
-  - Main application layout with Tailwind CSS
+  - Main application layout with Tailwind CSS (nobuild approach)
+  - Rails UJS integration via CDN for DELETE method handling
   - Responsive design with modern UI components
   - Navigation header with permission-based buttons
 - [x] **Tickets Index Page**
@@ -96,7 +100,8 @@ mount FeedbackBoard::Engine => "/feedback"
   - Form validation and error handling
 - [x] **Comment Forms**
   - Inline comment creation with user name display
-  - Comment editing/deletion (via controllers)
+  - Comment editing/deletion with proper DELETE method handling
+  - Rails UJS integration for seamless delete functionality
   - "Commenting as [username]" indicator for user clarity
 
 #### Enhanced Features
@@ -105,8 +110,24 @@ mount FeedbackBoard::Engine => "/feedback"
   - Permission helpers for cleaner templates
   - Status badge helpers
   - Upvote button helpers
+- [x] **JavaScript Integration**
+  - Nobuild approach using CDN-delivered assets
+  - Rails UJS via unpkg.com for DELETE method handling
+  - Custom JavaScript for upvote functionality
+  - Reply form toggling and interaction
 
 ### ✅ COMPLETED
+
+#### 🎯 MAJOR FEATURE: Dedicated Comment Threading System ✨ **COMPLETE**
+This major UX improvement replaces complex inline forms with clean, focused thread discussions:
+- ✅ **Simplified Architecture**: Dedicated thread pages at `/tickets/:id/comments/:comment_id`
+- ✅ **Enhanced Navigation**: "View Thread & Reply (X replies)" with activity indicators
+- ✅ **Clean User Flow**: Click → Navigate → Reply → Success (no complex JavaScript)
+- ✅ **Thread Previews**: Main ticket shows comment previews with reply counts
+- ✅ **Smart Redirects**: Context-aware navigation after replies/deletions
+- ✅ **Rails Callback Fix**: Proper `before_validation` vs `before_create` for depth setting
+- ✅ **3-Level Threading**: Comments → Replies → Nested Replies (depth 0, 1, 2)
+
 - [x] **Advanced Functionality**
   - AJAX voting without page reload (Stimulus controller)
   - Hotwire/Stimulus integration with install generator
@@ -174,6 +195,16 @@ This major architectural change transforms the feedback system from single-board
     - [x] Update configuration options for board-specific settings
     - [x] Update documentation and examples
 
+### ✅ RECENT BUG FIXES & IMPROVEMENTS
+
+- [x] **Comment Deletion Fix** *(December 2024)*
+  - ✅ Fixed comment delete functionality that was incorrectly sending GET requests
+  - ✅ Added Rails UJS via CDN (nobuild approach) to handle `method: :delete` properly
+  - ✅ Comments can now be deleted seamlessly with proper confirmation dialogs
+  - ✅ Maintained nobuild architecture without asset pipeline dependencies
+
+
+
 ### 🚧 IN PROGRESS / TODO
 
 - [x] **Advanced Functionality**
@@ -212,12 +243,13 @@ This major architectural change transforms the feedback system from single-board
 
 ## 🎯 Next Steps
 
-1. **🧪 Testing Suite** - Comprehensive test coverage for the new board functionality
-2. **🎨 Board Views** - Create dedicated board listing and board management views
-3. **⚡ Real-time Updates** - Turbo Streams for live ticket and comment updates
-4. **🔐 Advanced Permissions** - Per-board access control and moderation
-5. **📧 Board-specific Notifications** - Email settings per board
-6. **🎭 Board Customization** - Custom themes, logos, and settings per board
+1. **🧪 Testing Suite** - Comprehensive test coverage for comment threading and board functionality
+2. **⚡ Real-time Updates** - Turbo Streams for live ticket and comment updates
+3. **🔐 Advanced Permissions** - Per-board access control and comment moderation
+4. **📧 Board-specific Notifications** - Email settings per board
+5. **🎭 Board Customization** - Custom themes, logos, and settings per board
+6. **🔍 Enhanced Search** - Full-text search within comment threads
+7. **📱 Mobile Optimization** - Responsive design improvements for thread navigation
 
 ---
 

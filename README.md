@@ -1,6 +1,6 @@
 # FeedbackBoard Rails Engine
 
-A mountable Rails engine that replicates core Canny.io-style feedback functionality for your app. Users can submit tickets, comment, vote, and admins can manage status and moderation.
+A mountable Rails engine that replicates core Canny.io-style feedback functionality for your app. Users can submit tickets across multiple boards, engage in threaded discussions, vote on content, and admins can manage status and moderation.
 
 [![Ruby](https://img.shields.io/badge/ruby-3.0%2B-red.svg)](https://www.ruby-lang.org)
 [![Rails](https://img.shields.io/badge/rails-7.0%2B-red.svg)](https://rubyonrails.org)
@@ -10,7 +10,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 
 - 📋 **Multiple Boards** - Create and manage multiple feedback boards (Feature, Bug Reports, etc.)
 - 🎫 **Ticket Management** - Create, view, and manage feedback tickets within boards
-- 💬 **Comments** - Threaded discussions on tickets with user name display
+- 💬 **Threaded Comments** - Dedicated discussion pages for comment threads with nested replies (3 levels deep)
 - 👍 **Upvoting** - Users can vote on tickets and comments (with AJAX)
 - 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments (board-scoped)
 - 📧 **Email Notifications** - Configurable email alerts for tickets, comments, and status changes
@@ -187,6 +187,56 @@ end
 <%= link_to "Submit Feature Request",
     feedback_board.new_board_ticket_path("features"),
     class: "btn btn-primary" %>
+```
+
+### Comment Threading
+
+The engine includes a sophisticated comment threading system with dedicated discussion pages:
+
+**Features:**
+- 🧵 **3-Level Threading** - Comments → Replies → Nested Replies (depth 0, 1, 2)
+- 🎯 **Dedicated Thread Pages** - Each comment thread gets its own focused discussion page
+- 👀 **Thread Previews** - Main ticket shows comment previews with reply counts
+- 🔄 **Smart Navigation** - Seamless flow between ticket view and thread discussions
+- ✅ **Clean UX** - No complex JavaScript, just standard form submissions
+
+**URLs:**
+```
+/feedback/boards/features/tickets/123                  # Main ticket page
+/feedback/boards/features/tickets/123/comments/456     # Comment thread discussion
+```
+
+**How it works:**
+1. Users see comment previews on ticket pages with "View Thread & Reply (X replies)" links
+2. Clicking takes them to dedicated thread discussion page
+3. Users can reply directly in the focused thread environment
+4. After replying, they're returned to the thread view with their new reply highlighted
+5. Navigation breadcrumbs make it easy to return to the main ticket
+
+**Thread Structure:**
+```ruby
+# Top-level comment (depth: 0)
+comment = FeedbackBoard::Comment.create(
+  ticket: ticket,
+  content: "Great idea!",
+  user_id: user.id
+)
+
+# Reply (depth: 1)
+reply = FeedbackBoard::Comment.create(
+  ticket: ticket,
+  parent: comment,
+  content: "I agree!",
+  user_id: other_user.id
+)
+
+# Nested reply (depth: 2) - maximum depth
+nested_reply = FeedbackBoard::Comment.create(
+  ticket: ticket,
+  parent: reply,
+  content: "Same here!",
+  user_id: another_user.id
+)
 ```
 
 ### User Association
@@ -493,15 +543,25 @@ Ticket.for_board(board)      # Scope to specific board
 comment.content        # Text
 comment.user_id        # Integer
 comment.ticket_id      # Integer (belongs to ticket)
+comment.parent_id      # Integer (belongs to parent comment, optional)
+comment.depth          # Integer (0=top-level, 1=reply, 2=nested reply)
 
 # Associations
 comment.ticket         # BelongsTo ticket
+comment.parent         # BelongsTo parent comment (optional)
+comment.replies        # HasMany replies (child comments)
 comment.upvotes        # HasMany upvotes (polymorphic)
 
 # Methods
 comment.upvoted_by?(user)    # Boolean
 comment.upvotes_count        # Integer
 comment.can_be_voted_on?     # Boolean (checks if ticket is locked)
+comment.can_be_replied_to?   # Boolean (checks depth < 2 and ticket not locked)
+comment.is_reply?            # Boolean (has parent_id)
+comment.thread_root          # Returns root comment of the thread
+
+# Class Methods
+Comment.threaded_for_ticket(ticket)  # Returns threaded structure for display
 ```
 
 #### FeedbackBoard::Upvote
@@ -531,9 +591,10 @@ feedback_board.board_ticket_path(board, ticket)      # GET /feedback/boards/:slu
 feedback_board.edit_board_ticket_path(board, ticket) # GET /feedback/boards/:slug/tickets/:id/edit
 
 # Nested routes for comments and upvotes
-feedback_board.board_ticket_comments_path(board, ticket)    # POST /feedback/boards/:slug/tickets/:id/comments
-feedback_board.board_ticket_upvotes_path(board, ticket)     # POST /feedback/boards/:slug/tickets/:id/upvotes
-feedback_board.comment_upvotes_path(comment)                # POST /feedback/comments/:id/upvotes
+feedback_board.board_ticket_comments_path(board, ticket)           # POST /feedback/boards/:slug/tickets/:id/comments
+feedback_board.board_ticket_comment_path(board, ticket, comment)   # GET /feedback/boards/:slug/tickets/:id/comments/:id (thread view)
+feedback_board.board_ticket_upvotes_path(board, ticket)            # POST /feedback/boards/:slug/tickets/:id/upvotes
+feedback_board.comment_upvotes_path(comment)                       # POST /feedback/comments/:id/upvotes
 
 # Admin routes
 feedback_board.admin_root_path                       # GET /feedback/admin

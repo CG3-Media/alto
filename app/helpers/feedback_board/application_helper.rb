@@ -119,6 +119,10 @@ module FeedbackBoard
       FeedbackBoard.config.app_name
     end
 
+    def count_nested_replies(replies)
+      replies.sum { |r| 1 + count_nested_replies(r[:replies]) }
+    end
+
     # Current board helper method
     def current_board
       @current_board ||= begin

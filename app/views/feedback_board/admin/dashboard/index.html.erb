@@ -122,14 +122,20 @@
             <div class="p-4">
               <div class="flex-1">
                 <p class="text-sm font-medium text-gray-900">
-                  <%= link_to comment.ticket.title, feedback_board.board_ticket_path(comment.ticket.board, comment.ticket),
+                  <%= link_to comment.ticket.title, feedback_board.board_ticket_path(comment.ticket.board, comment.ticket, anchor: "comment-#{comment.id}"),
                       class: "hover:text-blue-600" %>
+                  <% if comment.is_reply? %>
+                    <span class="text-xs text-gray-500 ml-2">(reply)</span>
+                  <% end %>
                 </p>
                 <p class="text-sm text-gray-600 mt-1">
                   <%= truncate(comment.content, length: 80) %>
                 </p>
                 <p class="text-xs text-gray-500 mt-1">
                   <%= time_ago_in_words(comment.created_at) %> ago
+                  <% if comment.is_reply? %>
+                    • replying to <%= user_display_name(comment.parent.user_id) %>
+                  <% end %>
                 </p>
               </div>
             </div>

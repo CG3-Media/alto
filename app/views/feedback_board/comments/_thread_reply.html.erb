@@ -1,0 +1,39 @@
+<div class="<%= 'ml-6' if comment.depth > 1 %>">
+  <div class="flex items-start justify-between">
+    <div class="flex-1">
+      <div class="text-sm text-gray-500 mb-2">
+        <span class="font-medium text-gray-700"><%= user_display_name(comment.user_id) %></span>
+        replied · <%= time_ago_in_words(comment.created_at) %> ago
+      </div>
+      <div class="prose max-w-none mb-3">
+        <p class="text-gray-700 whitespace-pre-wrap"><%= comment.content %></p>
+      </div>
+
+      <!-- Delete button for comment owner/admin -->
+      <% if (defined?(current_user) && current_user&.id == comment.user_id) || (respond_to?(:can_moderate_comments?) && can_moderate_comments?) %>
+        <div class="mt-2">
+          <%= link_to "🗑️ Delete Reply", feedback_board.board_ticket_comment_path(@board, @ticket, comment),
+              method: :delete,
+              confirm: "Are you sure you want to delete this reply?",
+              class: "text-red-600 hover:text-red-800 text-xs font-medium" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Comment Upvote -->
+    <div class="flex items-center ml-4">
+      <%= upvote_button(comment, current_user) %>
+    </div>
+  </div>
+
+  <!-- Render nested replies if any -->
+  <% if replies.any? %>
+    <div class="mt-4 space-y-4">
+      <% replies.each do |reply_data| %>
+        <%= render 'feedback_board/comments/thread_reply',
+            comment: reply_data[:comment],
+            replies: reply_data[:replies] %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

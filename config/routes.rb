@@ -5,7 +5,7 @@ FeedbackBoard::Engine.routes.draw do
   # Board routes
   resources :boards, param: :slug, path: 'boards' do
     resources :tickets do
-      resources :comments, only: [:create, :destroy]
+      resources :comments, only: [:create, :destroy, :show]
       resources :upvotes, only: [:create, :destroy]
     end
   end

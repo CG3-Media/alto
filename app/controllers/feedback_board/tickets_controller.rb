@@ -34,8 +34,8 @@ module FeedbackBoard
       # Set this as the current board in session
       ensure_current_board_set(@board)
 
-      @comment = Comment.new
-      @comments = @ticket.comments.includes(:upvotes).recent
+      @comment = FeedbackBoard::Comment.new
+      @threaded_comments = FeedbackBoard::Comment.threaded_for_ticket(@ticket)
     end
 
     def new

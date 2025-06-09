@@ -6,12 +6,29 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <!-- Use your app's Vite assets -->
-    <%= vite_client_tag if defined?(vite_client_tag) %>
-    <%= vite_javascript_tag 'application' if defined?(vite_javascript_tag) %>
+    <!-- FeedbackBoard CSS -->
+    <%= stylesheet_link_tag 'feedback_board/application', 'data-turbo-track': 'reload' %>
 
     <!-- Tailwind CSS for FeedbackBoard styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Rails UJS for handling method: :delete links (nobuild approach) -->
+    <script src="https://cdn.jsdelivr.net/npm/@rails/ujs@7.1.3-4/app/assets/javascripts/rails-ujs.min.js"></script>
+    <script>Rails.start()</script>
+
+    <!-- FeedbackBoard JavaScript (nobuild approach) -->
+    <% if defined?(Importmap) %>
+      <%= javascript_importmap_tags %>
+      <script type="module">
+        import "feedback_board"
+      </script>
+    <% else %>
+      <%= javascript_include_tag 'feedback_board/application', 'data-turbo-track': 'reload' %>
+    <% end %>
+
+    <!-- Host app assets -->
+    <%= vite_client_tag if defined?(vite_client_tag) %>
+    <%= vite_javascript_tag 'application' if defined?(vite_javascript_tag) %>
   </head>
 
   <body class="bg-gray-50 min-h-screen">

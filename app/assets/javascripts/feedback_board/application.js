@@ -4,6 +4,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize upvote functionality
   initializeUpvoteButtons();
+
+  // Highlight newly created comments
+  highlightNewComment();
 });
 
 function initializeUpvoteButtons() {
@@ -102,4 +105,27 @@ function showNotification(message, type = 'info') {
   setTimeout(() => {
     notification.remove();
   }, 3000);
+}
+
+
+
+function highlightNewComment() {
+  // Check if there's a hash in the URL (anchor)
+  if (window.location.hash) {
+    const commentId = window.location.hash.substring(1); // Remove the #
+    const commentElement = document.getElementById(commentId);
+
+    if (commentElement && commentId.startsWith('comment-')) {
+      // Add highlight styling
+      const commentContainer = commentElement.querySelector('div');
+      if (commentContainer) {
+        commentContainer.classList.add('bg-blue-50', 'border-2', 'border-blue-200', 'rounded-md');
+
+        // Remove highlighting after 3 seconds
+        setTimeout(() => {
+          commentContainer.classList.remove('bg-blue-50', 'border-2', 'border-blue-200', 'rounded-md');
+        }, 3000);
+      }
+    }
+  }
 }
