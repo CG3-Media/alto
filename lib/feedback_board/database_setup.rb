@@ -6,7 +6,15 @@ module FeedbackBoard
       Rails.logger.info "[FeedbackBoard] Setting up database schema..."
 
       create_tables
-      create_default_data
+
+      Rails.logger.info "[FeedbackBoard] Database setup complete!"
+    end
+
+    # Force database setup regardless of existing tables
+    def self.force_setup!
+      Rails.logger.info "[FeedbackBoard] Force setting up database schema..."
+
+      create_tables
 
       Rails.logger.info "[FeedbackBoard] Database setup complete!"
     end
@@ -15,15 +23,30 @@ module FeedbackBoard
 
     def self.should_setup?
       # Only setup if we're connected to a database and tables don't exist
-      ActiveRecord::Base.connection.present? && !tables_exist?
+      ActiveRecord::Base.connection.present? && !all_tables_exist?
     rescue => e
       Rails.logger.warn "[FeedbackBoard] Could not check database: #{e.message}"
       false
     end
 
+    def self.all_tables_exist?
+      required_tables = [
+        'feedback_board_status_sets',
+        'feedback_board_statuses',
+        'feedback_board_boards',
+        'feedback_board_tickets',
+        'feedback_board_comments',
+        'feedback_board_upvotes',
+        'feedback_board_settings'
+      ]
+
+      connection = ActiveRecord::Base.connection
+      required_tables.all? { |table| connection.table_exists?(table) }
+    end
+
+    # Legacy method name for backward compatibility
     def self.tables_exist?
-      ActiveRecord::Base.connection.table_exists?('feedback_board_tickets') &&
-      ActiveRecord::Base.connection.table_exists?('feedback_board_status_sets')
+      all_tables_exist?
     end
 
     def self.create_tables
@@ -129,69 +152,6 @@ module FeedbackBoard
           t.timestamps
         end
         connection.add_index :feedback_board_settings, :key, unique: true
-      end
-    end
-
-    def self.create_default_data
-      return if ::FeedbackBoard::StatusSet.exists? # Don't recreate if data exists
-
-      now = Time.current
-
-      # Create default status sets
-      dev_set = ::FeedbackBoard::StatusSet.create!(
-        name: 'Development Lifecycle',
-        description: 'Full product development lifecycle with all stages',
-        is_default: true
-      )
-
-      simple_set = ::FeedbackBoard::StatusSet.create!(
-        name: 'Simple Open/Closed',
-        description: 'Basic open and closed statuses only'
-      )
-
-      no_status_set = ::FeedbackBoard::StatusSet.create!(
-        name: 'No Status Tracking',
-        description: 'Board without status tracking - just collect feedback'
-      )
-
-      # Create statuses for development lifecycle
-      [
-        ['Open', 'green', 0, 'open'],
-        ['Planned', 'blue', 1, 'planned'],
-        ['In Progress', 'yellow', 2, 'in_progress'],
-        ['Complete', 'gray', 3, 'complete']
-      ].each do |name, color, position, slug|
-        dev_set.statuses.create!(
-          name: name,
-          color: color,
-          position: position,
-          slug: slug
-        )
-      end
-
-      # Create statuses for simple set
-      [
-        ['Open', 'green', 0, 'open'],
-        ['Closed', 'gray', 1, 'closed']
-      ].each do |name, color, position, slug|
-        simple_set.statuses.create!(
-          name: name,
-          color: color,
-          position: position,
-          slug: slug
-        )
-      end
-
-      # No Status Tracking has no statuses (empty set)
-
-      # Create default board
-      unless ::FeedbackBoard::Board.exists?
-        ::FeedbackBoard::Board.create!(
-          name: 'Feedback',
-          slug: 'feedback',
-          description: 'General feedback and feature requests',
-          status_set: dev_set
-        )
       end
     end
   end

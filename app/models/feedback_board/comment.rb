@@ -132,11 +132,11 @@ module FeedbackBoard
     end
 
     def trigger_comment_created_callback
-      FeedbackBoard::CallbackManager.call(:comment_created, self, ticket, ticket.board, get_user_object(user_id))
+      ::FeedbackBoard::CallbackManager.call(:comment_created, self, ticket, ticket.board, get_user_object(user_id))
     end
 
     def trigger_comment_deleted_callback
-      FeedbackBoard::CallbackManager.call(:comment_deleted, self, ticket, ticket.board, get_user_object(user_id))
+      ::FeedbackBoard::CallbackManager.call(:comment_deleted, self, ticket, ticket.board, get_user_object(user_id))
     end
 
     def get_user_object(user_id)

@@ -130,32 +130,27 @@ module FeedbackBoard
     def current_board
       @current_board ||= begin
         if session[:current_board_slug].present?
-          FeedbackBoard::Board.find_by(slug: session[:current_board_slug]) || default_board
+          ::FeedbackBoard::Board.find_by(slug: session[:current_board_slug]) || default_board || ::FeedbackBoard::Board.first
         else
-          default_board
+          default_board || ::FeedbackBoard::Board.first
         end
       end
     end
 
     # Default board helper method
     def default_board
-      @default_board ||= FeedbackBoard::Board.find_by(slug: 'feedback') ||
-                          FeedbackBoard::Board.create!(
-                            name: 'Feedback',
-                            slug: 'feedback',
-                            description: 'General feedback and feature requests'
-                          )
+      @default_board ||= ::FeedbackBoard::Board.find_by(slug: 'feedback')
     end
 
     private
 
     def upvote_path_for(upvotable)
       case upvotable
-      when FeedbackBoard::Ticket
+      when ::FeedbackBoard::Ticket
         # For tickets, we need the board context
         board = upvotable.board
         feedback_board.board_ticket_upvotes_path(board, upvotable)
-      when FeedbackBoard::Comment
+      when ::FeedbackBoard::Comment
         # For comments, we can still use the comment-specific route
         feedback_board.comment_upvotes_path(upvotable)
       end

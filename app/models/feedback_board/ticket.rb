@@ -152,13 +152,13 @@ module FeedbackBoard
     end
 
     def trigger_ticket_created_callback
-      FeedbackBoard::CallbackManager.call(:ticket_created, self, board, get_user_object(user_id))
+      ::FeedbackBoard::CallbackManager.call(:ticket_created, self, board, get_user_object(user_id))
     end
 
     def trigger_ticket_status_changed_callback
       old_status_slug = saved_changes['status_slug'][0]
       new_status_slug = saved_changes['status_slug'][1]
-      FeedbackBoard::CallbackManager.call(:ticket_status_changed, self, old_status_slug, new_status_slug, board, get_user_object(user_id))
+      ::FeedbackBoard::CallbackManager.call(:ticket_status_changed, self, old_status_slug, new_status_slug, board, get_user_object(user_id))
     end
 
     def get_user_object(user_id)

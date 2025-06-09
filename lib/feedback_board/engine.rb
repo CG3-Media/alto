@@ -14,12 +14,12 @@ module FeedbackBoard
       ::FeedbackBoard.configure {}
     end
 
-    # Auto-setup database schema when engine loads
-    initializer "feedback_board.setup_database", after: "active_record.initialize_database" do
-      ActiveSupport.on_load(:active_record) do
-        ::FeedbackBoard::DatabaseSetup.setup_if_needed
-      end
-    end
+    # Auto-setup database schema when engine loads (disabled - use install generator instead)
+    # initializer "feedback_board.setup_database", after: "active_record.initialize_database" do
+    #   ActiveSupport.on_load(:active_record) do
+    #     ::FeedbackBoard::DatabaseSetup.setup_if_needed
+    #   end
+    # end
 
     # Configure importmaps for nobuild JavaScript
     initializer "feedback_board.importmap", before: "importmap" do |app|

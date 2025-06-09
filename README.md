@@ -22,7 +22,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 - 🔐 **Permissions** - Flexible permission system with board-level access control
 - ⚡ **Performance** - Optimized queries and database indexes
 - 🚀 **Zero Setup** - All JavaScript functionality works immediately after mounting the engine
-- 🗄️ **Auto Database Setup** - Engine automatically creates all required tables when it loads (no migrations!)
+- 🗄️ **Controlled Database Setup** - Use the install generator to set up database tables safely
 
 ## 🚀 Installation
 
@@ -45,14 +45,23 @@ Add to your `config/routes.rb`:
 mount FeedbackBoard::Engine => "/feedback"
 ```
 
-### 2. (Optional) Run the installer
+### 2. Run the installer
 ```bash
 rails generate feedback_board:install
 ```
 
+**🎯 The install generator is completely idempotent and handles everything:**
+
+- ✅ **Checks existing state** - Won't recreate what already exists
+- ✅ **Database tables** - Creates missing tables, skips existing ones
+- ✅ **Configuration** - Creates initializer only if it doesn't exist
+- ✅ **Default boards** - Only offers to create if no boards exist
+- ✅ **Status summary** - Shows you exactly what's configured vs missing
+- ✅ **Safe to re-run** - Run it as many times as you want!
+
 **That's it!** ✨
 
-**🎯 Zero Migration Hassle**: The engine automatically sets up its database schema when your app starts - no migrations to run!
+**🎯 Smart Database Setup**: The install generator creates all required database tables for you - no separate migrations needed!
 
 **✨ AJAX voting functionality is included and works automatically - no JavaScript setup required!**
 
@@ -81,6 +90,44 @@ end
 ```
 
 **📖 Check the generated initializer for all available options and examples!**
+
+## 🗑️ Uninstallation
+
+Need to remove FeedbackBoard? We've got you covered! ✋
+
+### Quick Uninstall
+```bash
+rails generate feedback_board:uninstall
+```
+
+**🔐 Safe & Interactive**: The uninstall generator will:
+- ⚠️  Show data loss warnings and ask for confirmation
+- 🗑️  Remove the initializer file automatically
+- 🗄️  Optionally create a database cleanup migration
+- 🛤️  Provide instructions for route removal
+- 📋  Guide you through final cleanup steps
+- 💾  Offer to open your routes file for editing
+
+### What Gets Removed
+- ✅ Configuration file (`config/initializers/feedback_board.rb`)
+- ✅ Database tables (optional - with confirmation)
+  - `feedback_board_admin_settings`
+  - `feedback_board_boards`
+  - `feedback_board_status_sets`
+  - `feedback_board_statuses`
+  - `feedback_board_status_transitions`
+  - `feedback_board_tickets`
+  - `feedback_board_comments`
+  - `feedback_board_upvotes`
+
+### Manual Steps
+The generator will guide you to manually remove:
+1. **Routes**: `mount FeedbackBoard::Engine => "/feedback"`
+2. **Gemfile**: `gem 'feedback_board'`
+3. **Bundle**: Run `bundle install`
+4. **Custom overrides** (if any): Views, styles, callback methods
+
+**💡 Pro Tip**: The generator asks before doing anything destructive and provides clear instructions for each step!
 
 ## 🔐 Permissions System
 
@@ -650,6 +697,41 @@ feedback_board.admin_boards_path                     # GET /feedback/admin/board
 
 ## 🔧 Troubleshooting
 
+### Database Issues
+
+**Missing database tables (feedback_board_comments, etc.)**
+
+If you see errors like `relation "feedback_board_comments" does not exist`, the database tables weren't created properly.
+
+**🎯 Primary Fix - Re-run install generator:**
+```bash
+rails generate feedback_board:install
+```
+*The generator checks what exists and only creates what's missing - completely safe to re-run!*
+
+**🔍 Alternative - Check table status:**
+```bash
+rails feedback_board:status
+```
+
+**🛠️ Alternative - Direct database setup:**
+```bash
+rails feedback_board:setup
+```
+
+**🔄 Nuclear option - Reset everything (destroys data):**
+```bash
+rails feedback_board:reset
+```
+
+**💡 When database issues happen:**
+- After `rails db:drop` or `rails db:reset`
+- When switching between development environments
+- After engine updates or changes
+- During initial setup
+
+**The install generator is now smart enough to handle all these scenarios gracefully!** ✨
+
 ### Common Issues
 
 **1. Missing current_user method**
@@ -674,6 +756,11 @@ end
 - Ensure Tailwind CSS is available
 - Copy and customize views if needed
 - Check CSS load order
+
+**5. Need to remove FeedbackBoard?**
+- Use the uninstall generator: `rails generate feedback_board:uninstall`
+- It will safely guide you through the removal process
+- See the [Uninstallation](#-uninstallation) section above for details
 
 ### Development
 

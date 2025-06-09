@@ -4,13 +4,19 @@ module FeedbackBoard
     before_action :ensure_can_manage_boards, only: [:new, :create, :edit, :update, :destroy]
 
     def redirect_to_default
-      # Find or create the default board
+      # Find the default board or any board if default doesn't exist
       default_board = ::FeedbackBoard::Board.find_by(slug: 'feedback') ||
-                      ::FeedbackBoard::Board.create!(
-                        name: 'Feedback',
-                        slug: 'feedback',
-                        description: 'General feedback and feature requests'
-                      )
+                      ::FeedbackBoard::Board.first
+
+      # If no boards exist at all, redirect to boards index or admin
+      if default_board.nil?
+        if can_manage_boards?
+          redirect_to boards_path, notice: 'No boards exist yet. Create your first board!'
+        else
+          redirect_to main_app.root_path, alert: 'No feedback boards are available yet.'
+        end
+        return
+      end
 
       # Set as current board
       ensure_current_board_set(default_board)

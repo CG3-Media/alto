@@ -15,24 +15,13 @@ module FeedbackBoard
     private
 
     def trigger_upvote_created_callback
-      board = get_board_from_upvotable
-      FeedbackBoard::CallbackManager.call(:upvote_created, self, upvotable, board, get_user_object(user_id))
+      board = upvotable.respond_to?(:board) ? upvotable.board : upvotable.ticket&.board
+      ::FeedbackBoard::CallbackManager.call(:upvote_created, self, upvotable, board, get_user_object(user_id))
     end
 
     def trigger_upvote_removed_callback
-      board = get_board_from_upvotable
-      FeedbackBoard::CallbackManager.call(:upvote_removed, self, upvotable, board, get_user_object(user_id))
-    end
-
-    def get_board_from_upvotable
-      case upvotable
-      when FeedbackBoard::Ticket
-        upvotable.board
-      when FeedbackBoard::Comment
-        upvotable.ticket.board
-      else
-        nil
-      end
+      board = upvotable.respond_to?(:board) ? upvotable.board : upvotable.ticket&.board
+      ::FeedbackBoard::CallbackManager.call(:upvote_removed, self, upvotable, board, get_user_object(user_id))
     end
 
     def get_user_object(user_id)

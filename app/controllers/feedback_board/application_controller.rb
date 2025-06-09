@@ -93,9 +93,9 @@ module FeedbackBoard
     def current_board
       @current_board ||= begin
         if session[:current_board_slug].present?
-          ::FeedbackBoard::Board.find_by(slug: session[:current_board_slug]) || default_board
+          ::FeedbackBoard::Board.find_by(slug: session[:current_board_slug]) || default_board || ::FeedbackBoard::Board.first
         else
-          default_board
+          default_board || ::FeedbackBoard::Board.first
         end
       end
     end
@@ -106,12 +106,7 @@ module FeedbackBoard
     end
 
     def default_board
-      @default_board ||= ::FeedbackBoard::Board.find_by(slug: 'feedback') ||
-                          ::FeedbackBoard::Board.create!(
-                            name: 'Feedback',
-                            slug: 'feedback',
-                            description: 'General feedback and feature requests'
-                          )
+      @default_board ||= ::FeedbackBoard::Board.find_by(slug: 'feedback')
     end
 
     private
