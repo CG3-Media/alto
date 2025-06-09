@@ -12,6 +12,7 @@
   show_label ||= true
   show_errors ||= true
   model ||= nil  # For error checking
+  helper_text ||= nil
 
   # Error checking
   has_errors = model&.errors&.[](field_name)&.any? || false
