@@ -172,7 +172,7 @@ module FeedbackBoard
         return ::FeedbackBoard.config.call_permission(method_name, self, *args)
       else
         Rails.logger.debug "[FeedbackBoard] No configured permission for #{method_name}, using default"
-        fallback_block.call
+        return fallback_block.call
       end
     end
   end

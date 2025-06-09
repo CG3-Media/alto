@@ -113,8 +113,9 @@ module FeedbackBoard
       board_without_status = Board.create!(name: "No Status Board")
       assert_not board_without_status.has_status_tracking?
 
-      status_set = StatusSet.create!(name: "Test Status Set")
-      board_with_status = Board.create!(name: "Status Board", status_set: status_set)
+      # Use a unique name to avoid conflicts
+      status_set = StatusSet.create!(name: "Test Status Set #{Time.current.to_i}")
+      board_with_status = Board.create!(name: "Status Board #{Time.current.to_i}", status_set: status_set)
 
       # Will return false until status_set has statuses
       assert_not board_with_status.has_status_tracking?
