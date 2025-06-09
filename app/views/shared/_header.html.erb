@@ -1,0 +1,63 @@
+<header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-20">
+  <div class="flex justify-between items-center py-4 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center space-x-6">
+      <!-- Mobile menu button -->
+      <button onclick="toggleMobileSidebar()" class="lg:hidden -ml-2 mr-2 p-2 text-gray-600 hover:text-gray-900">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+
+      <!-- App Name/Logo -->
+      <%= link_to feedback_board.root_path, class: "text-xl font-semibold text-gray-900" do %>
+        🗣️ <%= app_name %>
+      <% end %>
+    </div>
+
+    <!-- Center: Search Bar & New Ticket (only show on ticket pages) -->
+    <% if defined?(current_board) && current_board %>
+      <div class="hidden md:flex items-center space-x-4 flex-1 max-w-2xl mx-8">
+        <!-- Search Bar -->
+        <div class="flex-1">
+          <%= form_with url: feedback_board.board_tickets_path(current_board), method: :get, local: true, class: "flex w-full" do |form| %>
+            <div class="relative flex-1">
+              <%= form.text_field :search,
+                  value: params[:search],
+                  placeholder: "Search tickets...",
+                  class: "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 text-sm" %>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <%= form.hidden_field :status, value: params[:status] %>
+            <%= form.hidden_field :sort, value: params[:sort] %>
+            <%= form.submit "Search", class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md text-sm font-medium border border-l-0 border-blue-600" %>
+          <% end %>
+        </div>
+
+        <!-- New Ticket Button -->
+        <% if can_submit_tickets? %>
+          <%= link_to feedback_board.new_board_ticket_path(current_board),
+              class: "flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 whitespace-nowrap" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            New Ticket
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- Right side: Admin access only -->
+    <nav class="flex space-x-4">
+      <% if can_access_admin? %>
+        <%= render 'shared/buttons/primary',
+            text: "Admin",
+            url: feedback_board.admin_root_path,
+            additional_classes: "bg-purple-600 hover:bg-purple-700" %>
+      <% end %>
+    </nav>
+  </div>
+</header>
