@@ -1,13 +1,15 @@
-class UpdateFeedbackBoardTicketStatus < ActiveRecord::Migration[7.2]
-  def change
+class UpdateFeedbackBoardTicketStatus < ActiveRecord::Migration[7.0]
+  def up
     # Rename the status column to status_slug for clarity
     rename_column :feedback_board_tickets, :status, :status_slug
 
-    # Remove the old status indexes if they exist (with different names)
-    remove_index :feedback_board_tickets, name: "index_feedback_board_tickets_on_status", if_exists: true
-    remove_index :feedback_board_tickets, name: "index_feedback_board_tickets_on_status_and_created_at", if_exists: true
+    # Add the composite index with new column name
+    add_index :feedback_board_tickets, [:status_slug, :created_at]
+  end
 
-    # Add the composite index with new column name (individual index should already exist from rename)
-    add_index :feedback_board_tickets, [:status_slug, :created_at], if_not_exists: true
+  def down
+    # Not needed since we're in dev mode, but here for completeness
+    remove_index :feedback_board_tickets, [:status_slug, :created_at]
+    rename_column :feedback_board_tickets, :status_slug, :status
   end
 end

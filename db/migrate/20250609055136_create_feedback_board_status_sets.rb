@@ -1,4 +1,4 @@
-class CreateFeedbackBoardStatusSets < ActiveRecord::Migration[7.2]
+class CreateFeedbackBoardStatusSets < ActiveRecord::Migration[7.0]
   def change
     create_table :feedback_board_status_sets do |t|
       t.string :name, null: false

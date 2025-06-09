@@ -1,4 +1,4 @@
-class AddStatusSetToFeedbackBoardBoards < ActiveRecord::Migration[7.2]
+class AddStatusSetToFeedbackBoardBoards < ActiveRecord::Migration[7.0]
   def change
     add_reference :feedback_board_boards, :status_set, null: true, foreign_key: { to_table: :feedback_board_status_sets }
 
