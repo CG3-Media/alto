@@ -22,6 +22,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 - 🔐 **Permissions** - Flexible permission system with board-level access control
 - ⚡ **Performance** - Optimized queries and database indexes
 - 🚀 **Zero Setup** - All JavaScript functionality works immediately after mounting the engine
+- 🗄️ **Auto Database Setup** - Engine automatically creates all required tables when it loads (no migrations!)
 
 ## 🚀 Installation
 
@@ -55,7 +56,7 @@ rails generate feedback_board:install
 
 **✨ AJAX voting functionality is included and works automatically - no JavaScript setup required!**
 
-### 4. (Optional) Customize configuration
+### 3. (Optional) Customize configuration
 
 The engine works immediately with smart defaults. **The install generator creates a comprehensive configuration file** at `config/initializers/feedback_board.rb` with all available options and examples.
 
