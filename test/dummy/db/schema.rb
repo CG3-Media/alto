@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_09_164410) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_09_230759) do
   create_table "feedback_board_boards", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -71,6 +71,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_09_164410) do
     t.index ["status_set_id"], name: "index_feedback_board_statuses_on_status_set_id"
   end
 
+  create_table "feedback_board_subscriptions", force: :cascade do |t|
+    t.string "email"
+    t.integer "ticket_id"
+    t.datetime "last_viewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_feedback_board_subscriptions_on_email"
+    t.index ["ticket_id", "email"], name: "index_feedback_board_subscriptions_on_ticket_id_and_email", unique: true
+    t.index ["ticket_id"], name: "index_feedback_board_subscriptions_on_ticket_id"
+  end
+
   create_table "feedback_board_tickets", force: :cascade do |t|
     t.string "title", null: false
     t.text "description"
@@ -105,5 +116,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_09_164410) do
   add_foreign_key "feedback_board_comments", "feedback_board_comments", column: "parent_id"
   add_foreign_key "feedback_board_comments", "feedback_board_tickets", column: "ticket_id"
   add_foreign_key "feedback_board_statuses", "feedback_board_status_sets", column: "status_set_id"
+  add_foreign_key "feedback_board_subscriptions", "feedback_board_tickets", column: "ticket_id"
   add_foreign_key "feedback_board_tickets", "feedback_board_boards", column: "board_id"
 end

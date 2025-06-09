@@ -52,7 +52,6 @@ module FeedbackBoard
       @ticket.user_id = current_user.id
 
       if @ticket.save
-        @ticket.subscriptions.create(email: current_user.email)
         redirect_to [@board, @ticket], notice: 'Ticket was successfully created.'
       else
         render :new

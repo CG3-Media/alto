@@ -1,5 +1,7 @@
 module FeedbackBoard
   class Comment < ApplicationRecord
+    include ::FeedbackBoard::Subscribable
+
     belongs_to :ticket
     belongs_to :parent, class_name: 'FeedbackBoard::Comment', optional: true
     has_many :replies, class_name: 'FeedbackBoard::Comment', foreign_key: 'parent_id', dependent: :destroy
@@ -111,6 +113,26 @@ module FeedbackBoard
       return nil unless user_class
 
       user_class.find_by(id: user_id)
+    end
+
+    # Subscribable concern implementation
+    def subscribable_ticket
+      ticket
+    end
+
+    def user_email
+      user = get_user_object(user_id)
+      return nil unless user
+
+      if user.respond_to?(:email)
+        user.email
+      elsif user.respond_to?(:email_address)
+        user.email_address
+      else
+        # Fallback: try the configured display method
+        display_method = ::FeedbackBoard.configuration.user_display_method || :email
+        user.respond_to?(display_method) ? user.send(display_method) : nil
+      end
     end
   end
 end

@@ -1,5 +1,7 @@
 module FeedbackBoard
   class Ticket < ApplicationRecord
+    include ::FeedbackBoard::Subscribable
+
     belongs_to :board
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
@@ -130,6 +132,26 @@ module FeedbackBoard
       return nil unless user_class
 
       user_class.find_by(id: user_id)
+    end
+
+    # Subscribable concern implementation
+    def subscribable_ticket
+      self
+    end
+
+    def user_email
+      user = get_user_object(user_id)
+      return nil unless user
+
+      if user.respond_to?(:email)
+        user.email
+      elsif user.respond_to?(:email_address)
+        user.email_address
+      else
+        # Fallback: try the configured display method
+        display_method = ::FeedbackBoard.configuration.user_display_method || :email
+        user.respond_to?(display_method) ? user.send(display_method) : nil
+      end
     end
 
     def status_slug_valid_for_board

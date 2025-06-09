@@ -18,8 +18,8 @@ class CreateFeedbackBoardBoards < ActiveRecord::Migration[7.0]
         # Use Ruby's Time.current for database compatibility
         now = Time.current
         execute <<-SQL
-          INSERT INTO feedback_board_boards (name, slug, description, item_label_singular, created_at, updated_at)
-          VALUES ('Feedback', 'feedback', 'General feedback and feature requests', 'ticket', '#{now}', '#{now}')
+          INSERT INTO feedback_board_boards (name, slug, description, created_at, updated_at)
+          VALUES ('Feedback', 'feedback', 'General feedback and feature requests', '#{now}', '#{now}')
         SQL
       end
     end

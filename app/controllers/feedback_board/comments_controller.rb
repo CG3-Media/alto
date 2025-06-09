@@ -11,7 +11,6 @@ module FeedbackBoard
       @comment.user_id = current_user.id
 
       if @comment.save
-        @ticket.subscriptions.find_or_create_by(email: current_user.email)
         if @comment.is_reply?
           # Redirect to the thread view of the root comment
           root_comment = @comment.thread_root
