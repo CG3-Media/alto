@@ -20,13 +20,13 @@
                 end
 
   # Base classes
-  base_classes = "#{size_classes} font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+  base_classes = "#{size_classes} font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200"
 
-  # State classes
+  # State classes (modern dark primary)
   if disabled
-    state_classes = "bg-gray-300 text-gray-500 cursor-not-allowed"
+    state_classes = "bg-gray-300 text-gray-500 cursor-not-allowed focus:ring-gray-300"
   else
-    state_classes = "bg-blue-600 hover:bg-blue-700 text-white"
+    state_classes = "bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-500"
   end
 
   # Final classes

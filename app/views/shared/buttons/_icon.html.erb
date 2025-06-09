@@ -1,0 +1,73 @@
+<%
+  # Default values
+  icon ||= nil        # SVG icon content
+  size ||= "medium"   # small, medium, large
+  variant ||= "secondary"  # primary, secondary, tertiary
+  disabled ||= false
+  url ||= nil         # For link_to usage
+  method ||= nil      # For link_to usage
+  additional_classes ||= ""
+  html_options ||= {}
+  onclick ||= nil     # For JavaScript onclick
+
+  # Size classes
+  size_classes = case size
+                when "small"
+                  "p-1.5"
+                when "large"
+                  "p-3"
+                else
+                  "p-2"
+                end
+
+  # Icon size classes
+  icon_size = case size
+             when "small"
+               "w-4 h-4"
+             when "large"
+               "w-6 h-6"
+             else
+               "w-5 h-5"
+             end
+
+  # Base classes
+  base_classes = "#{size_classes} rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200"
+
+  # Variant classes
+  variant_classes = case variant
+                   when "primary"
+                     "bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-500"
+                   when "tertiary"
+                     "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-gray-500"
+                   else # secondary
+                     "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500"
+                   end
+
+  # State classes
+  state_classes = disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : variant_classes
+
+  # Final classes
+  final_classes = "#{base_classes} #{state_classes} #{additional_classes}".strip
+
+  # Icon content with size
+  icon_html = icon&.gsub(/class="[^"]*"/, "class=\"#{icon_size}\"")
+%>
+
+<% if url %>
+  <%= link_to url,
+      method: method,
+      class: final_classes,
+      **html_options do %>
+    <%= icon_html.html_safe if icon_html %>
+  <% end %>
+<% else %>
+  <button type="button"
+          class="<%= final_classes %>"
+          <%= "onclick=\"#{onclick}\"" if onclick %>
+          <%= "disabled" if disabled %>
+          <% html_options.each do |key, value| %>
+            <%= key %>="<%= value %>"
+          <% end %>>
+    <%= icon_html.html_safe if icon_html %>
+  </button>
+<% end %>
