@@ -128,13 +128,21 @@ module FeedbackBoard
         end
       end
 
-      # Default: redirect to root
-      redirect_to main_app.root_path
+      # Default: redirect to root with fallback for test environment
+      if defined?(main_app) && main_app.respond_to?(:root_path)
+        redirect_to main_app.root_path
+      else
+        redirect_to feedback_board.root_path
+      end
     end
 
     def check_feedback_board_access!
       unless can_access_feedback_board?
-        redirect_to main_app.root_path, alert: 'You do not have access to the feedback board'
+        if defined?(main_app) && main_app.respond_to?(:root_path)
+          redirect_to main_app.root_path, alert: 'You do not have access to the feedback board'
+        else
+          redirect_to feedback_board.root_path, alert: 'You do not have access to the feedback board'
+        end
       end
     end
 

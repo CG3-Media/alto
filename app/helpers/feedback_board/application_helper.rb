@@ -26,7 +26,6 @@ module FeedbackBoard
 
     def ajax_upvote_button(upvotable, current_user, options = {})
       upvoted = upvotable.upvoted_by?(current_user)
-      path = upvote_path_for(upvotable)
 
       css_classes = if options[:large]
         "flex flex-col items-center p-3 rounded-lg"
@@ -41,14 +40,19 @@ module FeedbackBoard
         css_classes += " text-gray-400 hover:text-blue-600 hover:bg-blue-50"
       end
 
-      css_classes += " transition-colors duration-200"
+      css_classes += " transition-colors duration-200 cursor-pointer"
 
-      link_to path,
+      # Use the toggle path for unified upvote handling
+      toggle_path = upvote_toggle_path_for(upvotable)
+
+      link_to toggle_path,
               class: css_classes,
-              method: upvoted ? :delete : :post,
+              method: :delete,
               data: {
                 upvote_button: true,
-                method: upvoted ? 'DELETE' : 'POST'
+                upvoted: upvoted,
+                upvotable_id: upvotable.id,
+                upvotable_type: upvotable.class.name
               } do
         content = ""
         if options[:large]
@@ -153,6 +157,18 @@ module FeedbackBoard
       when ::FeedbackBoard::Comment
         # For comments, we can still use the comment-specific route
         feedback_board.comment_upvotes_path(upvotable)
+      end
+    end
+
+    def upvote_toggle_path_for(upvotable)
+      case upvotable
+      when ::FeedbackBoard::Ticket
+        # For tickets, use the toggle action within board context
+        board = upvotable.board
+        feedback_board.toggle_board_ticket_upvotes_path(board, upvotable)
+      when ::FeedbackBoard::Comment
+        # For comments, use the toggle action
+        feedback_board.toggle_comment_upvotes_path(upvotable)
       end
     end
   end

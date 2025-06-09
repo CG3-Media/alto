@@ -35,6 +35,30 @@ module FeedbackBoard
       end
     end
 
+    def toggle
+      @upvote = @upvotable.upvotes.find_by(user_id: current_user.id)
+
+      if @upvote
+        # User has already upvoted, remove it
+        @upvote.destroy
+        upvoted = false
+      else
+        # User hasn't upvoted, create new upvote
+        @upvote = @upvotable.upvotes.create!(user_id: current_user.id)
+        upvoted = true
+      end
+
+      respond_to do |format|
+        format.html { redirect_back(fallback_location: fallback_path) }
+        format.json { render json: { upvotes_count: @upvotable.upvotes_count, upvoted: upvoted } }
+      end
+    rescue ActiveRecord::RecordInvalid => e
+      respond_to do |format|
+        format.html { redirect_back(fallback_location: fallback_path, alert: 'Unable to toggle upvote') }
+        format.json { render json: { error: e.message }, status: :unprocessable_entity }
+      end
+    end
+
     private
 
     def set_board_and_upvotable

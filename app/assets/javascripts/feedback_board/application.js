@@ -26,6 +26,15 @@ function handleUpvoteClick(button) {
   const upvotableId = button.dataset.upvotableId;
   const upvotableType = button.dataset.upvotableType;
 
+  // Debug logging (uncomment for troubleshooting)
+  // console.log('🎯 Upvote click detected:', {
+  //   url: url,
+  //   method: method,
+  //   upvotableId: upvotableId,
+  //   upvotableType: upvotableType,
+  //   buttonElement: button
+  // });
+
   // Disable button during request
   button.style.pointerEvents = 'none';
   button.style.opacity = '0.6';
@@ -38,17 +47,36 @@ function handleUpvoteClick(button) {
       'Accept': 'application/json'
     }
   })
-  .then(response => response.json())
+    .then(response => {
+    // Debug logging (uncomment for troubleshooting)
+    // console.log('🌐 Response received:', {
+    //   status: response.status,
+    //   statusText: response.statusText,
+    //   url: response.url
+    // });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  })
   .then(data => {
+    // Debug logging (uncomment for troubleshooting)
+    // console.log('📦 Response data:', data);
+
     if (data.error) {
       throw new Error(data.error);
     }
 
     updateUpvoteButton(button, data.upvoted, data.upvotes_count);
     updateUpvoteUrl(button, data.upvoted);
+
+    // Debug logging (uncomment for troubleshooting)
+    // console.log('✅ Upvote update completed successfully');
   })
   .catch(error => {
-    console.error('Upvote error:', error);
+    console.error('🚨 Upvote error:', error);
     showNotification('Error updating vote. Please try again.', 'error');
   })
   .finally(() => {
@@ -71,19 +99,28 @@ function updateUpvoteButton(button, isUpvoted, upvotesCount) {
   if (isUpvoted) {
     button.classList.remove('text-gray-400', 'hover:text-blue-600', 'hover:bg-blue-50');
     button.classList.add('bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
-    button.dataset.method = 'DELETE';
   } else {
     button.classList.remove('bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
     button.classList.add('text-gray-400', 'hover:text-blue-600', 'hover:bg-blue-50');
-    button.dataset.method = 'POST';
   }
+
+  // Always use DELETE for toggle URLs - the backend toggle action handles both add/remove
+  button.dataset.method = 'DELETE';
 }
 
 function updateUpvoteUrl(button, isUpvoted) {
-  const url = button.href;
-  // The URL structure should already be correct from the backend
-  // We just need to update the method
-  button.dataset.method = isUpvoted ? 'DELETE' : 'POST';
+  // For toggle URLs, we always use DELETE method since toggle handles both add/remove
+  // The URL stays the same - it's always the toggle endpoint
+  button.dataset.method = 'DELETE';
+
+  // Debug logging (uncomment for troubleshooting)
+  // console.log('Updated upvote button:', {
+  //   url: button.href,
+  //   method: button.dataset.method,
+  //   upvotableId: button.dataset.upvotableId,
+  //   upvotableType: button.dataset.upvotableType,
+  //   isUpvoted: isUpvoted
+  // });
 }
 
 function getCSRFToken() {
