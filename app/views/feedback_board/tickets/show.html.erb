@@ -1,7 +1,8 @@
 <div class="space-y-6">
   <!-- Ticket Header -->
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    <div class="flex items-start justify-between">
+    <!-- Top row: Title/Description + Voting -->
+    <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
         <div class="flex items-center space-x-3 mb-4">
           <h1 class="text-2xl font-bold text-gray-900"><%= @ticket.title %></h1>
@@ -21,16 +22,8 @@
           <% end %>
         </div>
 
-        <div class="prose max-w-none mb-4">
+        <div class="prose max-w-none">
           <p class="text-gray-700 whitespace-pre-wrap"><%= @ticket.description %></p>
-        </div>
-
-        <div class="flex items-center space-x-4 text-sm text-gray-500">
-          <span>By <span class="font-medium text-gray-700"><%= user_display_name(@ticket.user_id) %></span></span>
-          <span><%= time_ago_in_words(@ticket.created_at) %> ago</span>
-          <span><%= link_to pluralize(@ticket.comments.count, 'comment'),
-              '#comments',
-              class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
         </div>
       </div>
 
@@ -38,6 +31,15 @@
       <div class="flex flex-col items-center ml-6">
         <%= upvote_button(@ticket, current_user, large: true) %>
       </div>
+    </div>
+
+    <!-- Bottom row: Metadata -->
+    <div class="flex items-center space-x-4 text-sm text-gray-500">
+      <span>By <span class="font-medium text-gray-700"><%= user_display_name(@ticket.user_id) %></span></span>
+      <span><%= time_ago_in_words(@ticket.created_at) %> ago</span>
+      <span><%= link_to pluralize(@ticket.comments.count, 'comment'),
+          '#comments',
+          class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
     </div>
   </div>
 

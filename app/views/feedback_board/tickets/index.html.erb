@@ -71,7 +71,8 @@
     <% if @tickets.any? %>
       <% @tickets.each do |ticket| %>
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div class="flex items-start justify-between">
+          <!-- Top row: Title/Description + Voting -->
+          <div class="flex items-start justify-between mb-3">
             <div class="flex-1">
               <div class="flex items-center space-x-3 mb-2">
                 <h3 class="text-lg font-semibold text-gray-900">
@@ -92,22 +93,24 @@
                   </span>
                 <% end %>
               </div>
-              <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+              <p class="text-gray-600 text-sm line-clamp-2">
                 <%= truncate(ticket.description, length: 150) %>
               </p>
-              <div class="flex items-center space-x-4 text-sm text-gray-500">
-                <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
-                <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
-                <span><%= link_to pluralize(ticket.comments.count, 'comment'),
-                    feedback_board.board_ticket_path(@board, ticket, anchor: 'comments'),
-                    class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
-              </div>
             </div>
 
             <!-- Upvote Button -->
             <div class="flex flex-col items-center ml-4">
               <%= upvote_button(ticket, current_user) %>
             </div>
+          </div>
+
+          <!-- Bottom row: Metadata -->
+          <div class="flex items-center space-x-4 text-sm text-gray-500">
+            <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
+            <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
+            <span><%= link_to pluralize(ticket.comments.count, 'comment'),
+                feedback_board.board_ticket_path(@board, ticket, anchor: 'comments'),
+                class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
           </div>
         </div>
       <% end %>
