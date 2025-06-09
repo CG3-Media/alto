@@ -98,7 +98,9 @@
               <div class="flex items-center space-x-4 text-sm text-gray-500">
                 <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
                 <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
-                <span><%= pluralize(ticket.comments.count, 'comment') %></span>
+                <span><%= link_to pluralize(ticket.comments.count, 'comment'),
+                    feedback_board.board_ticket_path(@board, ticket, anchor: 'comments'),
+                    class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
               </div>
             </div>
 
