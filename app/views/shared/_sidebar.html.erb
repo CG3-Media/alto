@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<div class="w-64 bg-white shadow-sm border-r border-gray-200 h-full fixed left-0 top-0 pt-20 overflow-y-auto z-10 hidden lg:block">
+<div class="w-64 bg-white shadow-sm border-r border-gray-200 h-full fixed left-0 top-0 pt-20 overflow-y-auto z-10 hidden lg:block sleek-scrollbar">
   <div class="p-4 space-y-6">
 
     <!-- Status Filters -->
@@ -185,7 +185,7 @@
       <h2 class="text-lg font-medium text-gray-900">Navigation</h2>
     </div>
 
-    <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+    <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto sleek-scrollbar">
       <div class="px-4 space-y-6">
         <!-- Mobile version uses simplified content for performance -->
         <div>
@@ -210,6 +210,48 @@
     </div>
   </div>
 </div>
+
+<style>
+/* Sleek custom scrollbar styling */
+.sleek-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.sleek-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 1024px) {
+  .sleek-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sleek-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+</style>
 
 <script>
 function toggleMobileSidebar() {
