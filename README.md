@@ -4,6 +4,9 @@
 
 A mountable Rails engine for collecting user feedback with multiple boards, threaded comments, and voting.
 
+> **⚠️ AI-Generated Code Disclaimer**
+> This entire engine was coded by AI with human oversight. While we've taken precautions during development and thoroughly tested the functionality, please use at your own risk and conduct your own testing before deploying to production.
+
 [![Ruby](https://img.shields.io/badge/ruby-3.0%2B-red.svg)](https://www.ruby-lang.org)
 [![Rails](https://img.shields.io/badge/rails-7.0%2B-red.svg)](https://rubyonrails.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](MIT-LICENSE)
