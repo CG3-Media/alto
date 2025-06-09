@@ -7,6 +7,9 @@ module FeedbackBoard
                   :default_board_name, :default_board_slug,
                   :allow_board_deletion_with_tickets
 
+    # Permission method blocks - much cleaner than delegation!
+    attr_accessor :permission_methods
+
     def initialize
       # Default configuration: try common name fields, fallback to email
       @user_display_name_method = default_user_display_name_method
@@ -27,6 +30,28 @@ module FeedbackBoard
       @default_board_name = "Feedback"
       @default_board_slug = "feedback"
       @allow_board_deletion_with_tickets = false
+
+      # Initialize permission methods hash
+      @permission_methods = {}
+    end
+
+    # Define permission methods with blocks or procs
+    def permission(method_name, proc_or_block = nil, &block)
+      @permission_methods[method_name.to_sym] = proc_or_block || block
+    end
+
+    # Check if a permission method is defined
+    def has_permission?(method_name)
+      @permission_methods.key?(method_name.to_sym)
+    end
+
+            # Call a permission method block or proc
+    def call_permission(method_name, controller_context, *args)
+      block_or_proc = @permission_methods[method_name.to_sym]
+      return nil unless block_or_proc
+
+      # Call the block/proc in the context of the controller
+      controller_context.instance_exec(*args, &block_or_proc)
     end
 
     # Database-backed app_name with fallback to default

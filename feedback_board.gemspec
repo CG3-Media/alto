@@ -24,5 +24,5 @@ Gem::Specification.new do |spec|
 
     spec.add_dependency "rails", ">= 7.0.1", "< 8.0"
   spec.add_dependency "kaminari", "~> 1.2"
-  spec.add_dependency "stimulus-rails", ">= 1.0"
+
 end

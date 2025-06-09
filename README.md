@@ -11,7 +11,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 - 📋 **Multiple Boards** - Create and manage multiple feedback boards (Feature, Bug Reports, etc.)
 - 🎫 **Ticket Management** - Create, view, and manage feedback tickets within boards
 - 💬 **Threaded Comments** - Dedicated discussion pages for comment threads with nested replies (3 levels deep)
-- 👍 **Upvoting** - Users can vote on tickets and comments (with AJAX)
+- 👍 **Upvoting** - Users can vote on tickets and comments (with built-in AJAX - no setup required!)
 - 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments (board-scoped)
 - 📧 **Email Notifications** - Configurable email alerts for tickets, comments, and status changes
 - 🎣 **Callback Hooks** - Simple callback methods to integrate with Slack, analytics, external APIs, and more
@@ -21,6 +21,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 - 🎨 **Beautiful UI** - Clean Tailwind CSS design with user-friendly forms
 - 🔐 **Permissions** - Flexible permission system with board-level access control
 - ⚡ **Performance** - Optimized queries and database indexes
+- 🚀 **Zero Setup** - All JavaScript functionality works immediately after mounting the engine
 
 ## 🚀 Installation
 
@@ -28,7 +29,6 @@ Add this line to your application's Gemfile:
 
 ```ruby
 gem 'feedback_board'
-gem 'stimulus-rails', '>= 1.0'  # Required for AJAX voting
 ```
 
 And then execute:
@@ -55,109 +55,41 @@ rails feedback_board:install:migrations
 rails db:migrate
 ```
 
-### 4. Setup Stimulus (for AJAX voting)
+**That's it!** ✨ AJAX voting functionality is included and works automatically - no JavaScript setup required!
 
-#### For Vite Apps:
-Copy the Stimulus controller:
-```bash
-cp $(bundle show feedback_board)/app/assets/javascripts/feedback_board/controllers/upvote_controller.js app/frontend/controllers/
+### 4. (Optional) Customize configuration
+
+The engine works immediately with smart defaults. **The install generator creates a comprehensive configuration file** at `config/initializers/feedback_board.rb` with all available options and examples.
+
+```ruby
+# config/initializers/feedback_board.rb (created by generator)
+FeedbackBoard.configure do |config|
+  # All configuration options with examples and documentation!
+  # Just uncomment and customize what you need.
+
+  # Example: Restrict access to signed-in users only
+  config.permission :can_access_feedback_board? do
+    user_signed_in?
+  end
+
+  # Example: Only admins can edit tickets
+  config.permission :can_edit_tickets? do
+    current_user&.admin?
+  end
+
+  # ... many more options with full documentation
+end
 ```
 
-Register it in `app/frontend/controllers/index.js`:
-```javascript
-import UpvoteController from "./upvote_controller"
-application.register("upvote", UpvoteController)
-```
-
-#### For Asset Pipeline Apps:
-Copy the Stimulus controller:
-```bash
-cp $(bundle show feedback_board)/app/assets/javascripts/feedback_board/controllers/upvote_controller.js app/javascript/controllers/
-```
-
-Register it in `app/javascript/controllers/index.js`:
-```javascript
-import UpvoteController from "./upvote_controller"
-application.register("upvote", UpvoteController)
-```
-
-### 5. Configure permissions (see below)
+**📖 Check the generated initializer for all available options and examples!**
 
 ## 🔐 Permissions System
 
 **Zero configuration required!** The engine works out of the box with sensible defaults.
 
-To customize permissions, simply add these methods to your `ApplicationController`:
+**The install generator creates a comprehensive initializer** at `config/initializers/feedback_board.rb` with all permission options pre-configured and documented. Simply uncomment and customize the permissions you want to change.
 
-```ruby
-# app/controllers/application_controller.rb
-class ApplicationController < ActionController::Base
-  # ... your existing code ...
-
-  private
-
-  # Optional: Control who can access the feedback board
-  def can_access_feedback_board?
-    user_signed_in?  # Default: true (if current_user exists)
-  end
-
-  # Optional: Control who can submit new tickets
-  def can_submit_tickets?
-    user_signed_in?  # Default: true (if current_user exists)
-  end
-
-  # Optional: Control who can comment on tickets
-  def can_comment?
-    user_signed_in?  # Default: true (if current_user exists)
-  end
-
-  # Optional: Control who can vote on tickets/comments
-  def can_vote?
-    user_signed_in?  # Default: true (if current_user exists)
-  end
-
-  # Optional: Control who can edit tickets (status, lock, etc.)
-  def can_edit_tickets?
-    current_user&.admin?  # Default: false (secure by default)
-  end
-
-  # Optional: Control who can manage boards (create, edit, delete)
-  def can_manage_boards?
-    current_user&.admin?  # Default: false (secure by default)
-  end
-
-  # Optional: Control access to specific boards
-  def can_access_board?(board)
-    true  # Default: true (all boards accessible)
-    # Example: current_user&.can_access_board?(board.slug)
-  end
-end
-```
-
-### Alternative: Use a Concern (Optional)
-
-For better organization, you can also use a concern:
-
-```ruby
-# app/controllers/concerns/feedback_board_permissions.rb
-module FeedbackBoardPermissions
-  extend ActiveSupport::Concern
-
-  private
-
-  def can_edit_tickets?
-    current_user&.admin?
-  end
-
-  # ... other permission methods ...
-end
-
-# app/controllers/application_controller.rb
-class ApplicationController < ActionController::Base
-  include FeedbackBoardPermissions
-  # ... rest of your code ...
-end
-```
+**Smart defaults provided for everything** - the engine handles authentication gracefully whether you're using Devise, custom auth, or no authentication at all.
 
 ## 📱 Usage Examples
 
@@ -334,59 +266,16 @@ cp $(bundle show feedback_board)/app/views/feedback_board/tickets/* app/views/fe
 
 ### Configuration Options
 
-```ruby
-# config/initializers/feedback_board.rb (create this file)
-FeedbackBoard.configure do |config|
-  # Specify your user model (defaults to "User")
-  config.user_model = "User"  # or "Account", "Member", etc.
+**The install generator creates a comprehensive configuration file** at `config/initializers/feedback_board.rb` with all available options, examples, and documentation.
 
-  # Customize how user names are displayed in comments
-  # This proc receives a user_id and should return a display name string
-  config.user_display_name_method = proc do |user_id|
-    user = User.find_by(id: user_id)
-    return "Anonymous" unless user
+**All options are pre-configured with smart defaults** - just uncomment and customize what you need:
 
-    # Your custom logic here - try name fields, fallback to email
-    if user.full_name.present?
-      user.full_name
-    elsif user.first_name.present? || user.last_name.present?
-      "#{user.first_name} #{user.last_name}".strip
-    elsif user.email.present?
-      user.email
-    else
-      "User ##{user_id}"
-    end
-  end
+- **User & Permission Management** - Authentication, authorization, user display names
+- **Email Notifications** - Admin emails, notification preferences
+- **Board Configuration** - Default boards, deletion policies
+- **Advanced Features** - Custom user models, display name logic, callback hooks
 
-  # Other examples for different user models:
-
-  # For Devise with display_name field:
-  # config.user_display_name_method = proc do |user_id|
-  #   user = User.find_by(id: user_id)
-  #   user&.display_name || user&.email || "Anonymous"
-  # end
-
-  # For username-based systems:
-  # config.user_display_name_method = proc do |user_id|
-  #   user = User.find_by(id: user_id)
-  #   user&.username || "Anonymous"
-  # end
-
-  # For systems with profile models:
-  # config.user_display_name_method = proc do |user_id|
-  #   user = User.find_by(id: user_id)
-  #   return "Anonymous" unless user
-  #   user.profile&.display_name || user.email
-  # end
-
-  # Board configuration
-  config.default_board_name = "Feedback"  # Name for the default board
-  config.default_board_slug = "feedback"  # URL slug for the default board
-
-  # Allow admins to delete boards with tickets (use with caution!)
-  config.allow_board_deletion_with_tickets = false
-end
-```
+**Check the generated initializer file for the complete reference!** 📖
 
 ### Status Customization
 
@@ -448,22 +337,7 @@ config.action_mailer.smtp_settings = {
 
 #### Advanced Configuration
 
-For persistent settings, configure in your initializer:
-
-```ruby
-# config/initializers/feedback_board.rb
-FeedbackBoard.configure do |config|
-  # Email notification settings
-  config.notifications_enabled = true
-  config.notification_from_email = "feedback@yourdomain.com"
-  config.admin_notification_emails = ["admin@yourdomain.com", "support@yourdomain.com"]
-
-  # Control what gets sent
-  config.notify_ticket_author = true
-  config.notify_admins_of_new_tickets = true
-  config.notify_admins_of_new_comments = true
-end
-```
+**Email settings are pre-configured in the generated initializer** at `config/initializers/feedback_board.rb`. All email notification options are documented and ready to customize - just uncomment what you need!
 
 #### Admin Permissions
 
@@ -788,11 +662,10 @@ def current_user
 end
 ```
 
-**2. Stimulus not working**
-- Ensure `stimulus-rails` is in your Gemfile
-- Verify the controller is copied and registered
+**2. AJAX voting not working**
 - Check browser console for JavaScript errors
 - Ensure `csrf_meta_tags` is in your layout
+- Verify Rails UJS is loaded (included automatically)
 
 **3. Permission errors**
 - Implement the permission methods shown above
@@ -833,7 +706,7 @@ The gem is available as open source under the terms of the [MIT License](MIT-LIC
 - Inspired by [Canny.io](https://canny.io) feedback functionality
 - Built with Rails Engines best practices
 - UI powered by Tailwind CSS
-- AJAX interactions via Stimulus
+- AJAX interactions via built-in vanilla JavaScript
 
 ---
 

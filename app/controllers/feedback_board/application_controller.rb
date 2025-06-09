@@ -1,56 +1,92 @@
 module FeedbackBoard
-  class ApplicationController < ActionController::Base
+  # Inherit from host app's ApplicationController if it exists, otherwise ActionController::Base
+  superclass = defined?(::ApplicationController) ? ::ApplicationController : ActionController::Base
+  class ApplicationController < superclass
     protect_from_forgery with: :exception
 
     before_action :authenticate_user!
     before_action :check_feedback_board_access!
 
-    # Make these methods available to views
-    helper_method :can_access_feedback_board?, :can_submit_tickets?, :can_comment?,
-                  :can_vote?, :can_edit_tickets?, :can_access_admin?, :can_manage_boards?,
-                  :can_access_board?, :current_board, :default_board
+    # Auto-detect and register permission methods from host app as helpers
+    PERMISSION_METHODS = [
+      :can_access_feedback_board?, :can_submit_tickets?, :can_comment?,
+      :can_vote?, :can_edit_tickets?, :can_access_admin?, :can_manage_boards?,
+      :can_access_board?
+    ].freeze
+
+    # Make engine methods available to views
+    helper_method :current_board, :default_board
+
+    # Auto-register host app permission methods as helpers
+    PERMISSION_METHODS.each do |method_name|
+      if defined?(::ApplicationController) &&
+         (::ApplicationController.instance_methods(true).include?(method_name) ||
+          ::ApplicationController.private_instance_methods(true).include?(method_name))
+        helper_method method_name
+      end
+    end
+
+    # Always make engine versions available as helpers too
+    helper_method *PERMISSION_METHODS
 
     # Permission methods with sensible defaults
-    # Host apps can override these methods to customize behavior
+    # These methods delegate to the host app's ApplicationController if available
+    # Otherwise they use sensible defaults
 
     def can_access_feedback_board?
-      return false unless current_user
-      true # Default: allow access if user is logged in
+      check_configured_permission(:can_access_feedback_board?) do
+        return false unless current_user
+        true # Default: allow access if user is logged in
+      end
     end
 
     def can_submit_tickets?
-      return false unless current_user
-      true # Default: allow ticket submission if user is logged in
+      check_configured_permission(:can_submit_tickets?) do
+        return false unless current_user
+        true # Default: allow ticket submission if user is logged in
+      end
     end
 
     def can_comment?
-      return false unless current_user
-      true # Default: allow commenting if user is logged in
+      check_configured_permission(:can_comment?) do
+        return false unless current_user
+        true # Default: allow commenting if user is logged in
+      end
     end
 
     def can_vote?
-      return false unless current_user
-      true # Default: allow voting if user is logged in
+      check_configured_permission(:can_vote?) do
+        return false unless current_user
+        true # Default: allow voting if user is logged in
+      end
     end
 
     def can_edit_tickets?
-      return false unless current_user
-      false # Default: secure by default - only admins should edit
+      check_configured_permission(:can_edit_tickets?) do
+        return false unless current_user
+        false # Default: secure by default - only admins should edit
+      end
     end
 
     def can_access_admin?
-      return false unless current_user
-      can_edit_tickets? # Default: fallback to edit permission
+      check_configured_permission(:can_access_admin?) do
+        return false unless current_user
+        can_edit_tickets? # Default: fallback to edit permission
+      end
     end
 
     def can_manage_boards?
-      return false unless current_user
-      can_edit_tickets? # Default: fallback to edit permission
+      check_configured_permission(:can_manage_boards?) do
+        return false unless current_user
+        can_edit_tickets? # Default: fallback to edit permission
+      end
     end
 
-    def can_access_board?(board)
-      return false unless current_user
-      true # Default: allow access to all boards if user is logged in
+    def can_access_board?(board = nil)
+      check_configured_permission(:can_access_board?, board) do
+        return false unless current_user
+        true # Default: allow access to all boards if user is logged in
+      end
     end
 
     # Current board session management
@@ -81,7 +117,24 @@ module FeedbackBoard
     private
 
     def authenticate_user!
-      redirect_to main_app.root_path unless current_user
+      # Only redirect if current_user is nil AND the host app doesn't have its own authentication
+      return if current_user
+
+      # Check if host app has its own authenticate_user! method
+      if defined?(::ApplicationController) &&
+         (::ApplicationController.instance_methods(true).include?(:authenticate_user!) ||
+          ::ApplicationController.private_instance_methods(true).include?(:authenticate_user!))
+        begin
+          # Call the host app's authentication method
+          super
+          return
+        rescue NoMethodError
+          # Host app method doesn't exist, fall through to default
+        end
+      end
+
+      # Default: redirect to root
+      redirect_to main_app.root_path
     end
 
     def check_feedback_board_access!
@@ -90,10 +143,32 @@ module FeedbackBoard
       end
     end
 
-    def current_user
-      # This should be overridden by the host application
-      # Default implementation looks for main_app's current_user
-      main_app.current_user if main_app.respond_to?(:current_user)
+        def current_user
+      # Since we inherit from the host app's ApplicationController,
+      # current_user should be available automatically.
+      # If not, try main_app as fallback
+      super
+    rescue NoMethodError
+      # Fallback: try main_app helper (for engines)
+      begin
+        main_app.current_user if main_app.respond_to?(:current_user)
+      rescue => e
+        Rails.logger.debug "[FeedbackBoard] Could not get current_user: #{e.message}"
+        nil
+      end
+    end
+
+                            # Check for permission methods defined in the initializer configuration
+    # Falls back to provided block if method doesn't exist in config
+    def check_configured_permission(method_name, *args, &fallback_block)
+      # Check if the host app defined this permission in the initializer
+      if FeedbackBoard.config.has_permission?(method_name)
+        Rails.logger.debug "[FeedbackBoard] Using configured permission for #{method_name}"
+        return FeedbackBoard.config.call_permission(method_name, self, *args)
+      else
+        Rails.logger.debug "[FeedbackBoard] No configured permission for #{method_name}, using default"
+        fallback_block.call
+      end
     end
   end
 end

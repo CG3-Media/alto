@@ -21,10 +21,10 @@ module FeedbackBoard
     def upvote_button(upvotable, current_user, options = {})
       return disabled_upvote_button(upvotable) unless can_vote? && upvotable.can_be_voted_on?
 
-      stimulus_upvote_button(upvotable, current_user, options)
+      ajax_upvote_button(upvotable, current_user, options)
     end
 
-    def stimulus_upvote_button(upvotable, current_user, options = {})
+    def ajax_upvote_button(upvotable, current_user, options = {})
       upvoted = upvotable.upvoted_by?(current_user)
       path = upvote_path_for(upvotable)
 
@@ -34,27 +34,30 @@ module FeedbackBoard
         "flex items-center space-x-1 px-2 py-1 rounded-md"
       end
 
-      # Add base hover classes
-      css_classes += " hover:bg-blue-50 transition-colors duration-200"
+      # Add styling based on upvote state
+      if upvoted
+        css_classes += " bg-blue-50 text-blue-600 hover:bg-blue-100"
+      else
+        css_classes += " text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+      end
 
-      content_tag :button,
-                  class: css_classes,
-                  data: {
-                    controller: "upvote",
-                    upvote_target: "button",
-                    upvote_url_value: path,
-                    upvote_upvoted_value: upvoted,
-                    upvote_count_value: upvotable.upvotes_count,
-                    action: "click->upvote#toggle"
-                  } do
+      css_classes += " transition-colors duration-200"
+
+      link_to path,
+              class: css_classes,
+              method: upvoted ? :delete : :post,
+              data: {
+                upvote_button: true,
+                method: upvoted ? 'DELETE' : 'POST'
+              } do
         content = ""
         if options[:large]
-          content += content_tag(:div, upvote_svg(size: :large), data: { upvote_target: "icon" })
-          content += content_tag(:span, upvotable.upvotes_count, class: "text-lg font-bold", data: { upvote_target: "count" })
+          content += content_tag(:div, upvote_svg(size: :large))
+          content += content_tag(:span, upvotable.upvotes_count, class: "text-lg font-bold", data: { upvote_count: true })
           content += content_tag(:span, "votes", class: "text-xs")
         else
-          content += content_tag(:div, upvote_svg, data: { upvote_target: "icon" })
-          content += content_tag(:span, upvotable.upvotes_count, class: "text-sm font-medium", data: { upvote_target: "count" })
+          content += content_tag(:div, upvote_svg)
+          content += content_tag(:span, upvotable.upvotes_count, class: "text-sm font-medium", data: { upvote_count: true })
         end
         content.html_safe
       end
