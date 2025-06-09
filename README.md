@@ -100,7 +100,7 @@ One of FeedbackBoard's most powerful features is its callback hook system. The e
 
 ### ⚙️ How It Works
 
-Simply define methods in your `ApplicationController` and they'll be called automatically with full context:
+Define callback methods in your **ApplicationController** (not config) - they need access to controller context like `current_user`:
 
 ```ruby
 # app/controllers/application_controller.rb
@@ -146,6 +146,45 @@ end
 - **📊 Rich Context** - Every callback receives the object, board, and user
 - **🛡️ Error Isolation** - Callback failures don't break the main flow
 - **🔌 Flexible Integration** - Works with any external service or internal logic
+
+### 📍 Where to Define Callbacks
+
+**✅ ApplicationController (Recommended)** - Callbacks need controller context:
+```ruby
+# app/controllers/application_controller.rb - ✅ YES
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    # Has access to current_user, request, session, etc.
+  end
+end
+```
+
+**❌ NOT in config/initializers** - No access to request context:
+```ruby
+# config/initializers/feedback_board.rb - ❌ NO
+# This won't work - no access to current_user or controller helpers
+```
+
+**🗂️ Alternative: Use a Concern for organization:**
+```ruby
+# app/controllers/concerns/feedback_board_callbacks.rb
+module FeedbackBoardCallbacks
+  extend ActiveSupport::Concern
+
+  private
+
+  def ticket_created(ticket, board, user)
+    FeedbackIntegrationService.handle_new_ticket(ticket, board, user)
+  end
+end
+
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  include FeedbackBoardCallbacks
+end
+```
 
 ### 🚀 Common Use Cases
 
