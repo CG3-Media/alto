@@ -60,8 +60,12 @@ module FeedbackBoard
           t.boolean :is_default, default: false, null: false
           t.timestamps
         end
-        connection.add_index :feedback_board_status_sets, :name
-        connection.add_index :feedback_board_status_sets, :is_default
+      end
+
+      # Add indexes for status sets table (check existence first)
+      if connection.table_exists?('feedback_board_status_sets')
+        add_index_if_not_exists(connection, :feedback_board_status_sets, :name)
+        add_index_if_not_exists(connection, :feedback_board_status_sets, :is_default)
       end
 
       # Create statuses table
@@ -74,9 +78,13 @@ module FeedbackBoard
           t.string :slug, null: false
           t.timestamps
         end
-        connection.add_index :feedback_board_statuses, :slug
-        connection.add_index :feedback_board_statuses, [:status_set_id, :position]
-        connection.add_index :feedback_board_statuses, [:status_set_id, :slug], unique: true
+      end
+
+      # Add indexes for statuses table (check existence first)
+      if connection.table_exists?('feedback_board_statuses')
+        add_index_if_not_exists(connection, :feedback_board_statuses, :slug)
+        add_index_if_not_exists(connection, :feedback_board_statuses, [:status_set_id, :position])
+        add_index_if_not_exists(connection, :feedback_board_statuses, [:status_set_id, :slug], { unique: true })
       end
 
       # Create boards table
@@ -89,8 +97,12 @@ module FeedbackBoard
           t.references :status_set, null: true, foreign_key: { to_table: :feedback_board_status_sets }
           t.timestamps
         end
-        connection.add_index :feedback_board_boards, :slug, unique: true
-        connection.add_index :feedback_board_boards, :name
+      end
+
+      # Add indexes for boards table (check existence first)
+      if connection.table_exists?('feedback_board_boards')
+        add_index_if_not_exists(connection, :feedback_board_boards, :slug, { unique: true })
+        add_index_if_not_exists(connection, :feedback_board_boards, :name)
       end
 
       # Create tickets table
@@ -104,14 +116,18 @@ module FeedbackBoard
           t.references :board, null: false, foreign_key: { to_table: :feedback_board_boards }
           t.timestamps
         end
-        connection.add_index :feedback_board_tickets, :status_slug
-        connection.add_index :feedback_board_tickets, [:status_slug, :created_at]
-        connection.add_index :feedback_board_tickets, :locked
-        connection.add_index :feedback_board_tickets, :user_id
-        connection.add_index :feedback_board_tickets, :created_at
-        connection.add_index :feedback_board_tickets, :board_id
-        connection.add_index :feedback_board_tickets, :title
-        connection.add_index :feedback_board_tickets, :description
+      end
+
+      # Add indexes for tickets table (check existence first)
+      if connection.table_exists?('feedback_board_tickets')
+        add_index_if_not_exists(connection, :feedback_board_tickets, :status_slug)
+        add_index_if_not_exists(connection, :feedback_board_tickets, [:status_slug, :created_at])
+        add_index_if_not_exists(connection, :feedback_board_tickets, :locked)
+        add_index_if_not_exists(connection, :feedback_board_tickets, :user_id)
+        add_index_if_not_exists(connection, :feedback_board_tickets, :created_at)
+        add_index_if_not_exists(connection, :feedback_board_tickets, :board_id)
+        add_index_if_not_exists(connection, :feedback_board_tickets, :title)
+        add_index_if_not_exists(connection, :feedback_board_tickets, :description)
       end
 
       # Create comments table
@@ -124,10 +140,14 @@ module FeedbackBoard
           t.integer :depth, default: 0, null: false
           t.timestamps
         end
-        connection.add_index :feedback_board_comments, :ticket_id
-        connection.add_index :feedback_board_comments, :user_id
-        connection.add_index :feedback_board_comments, :parent_id
-        connection.add_index :feedback_board_comments, :content
+      end
+
+      # Add indexes for comments table (check existence first)
+      if connection.table_exists?('feedback_board_comments')
+        add_index_if_not_exists(connection, :feedback_board_comments, :ticket_id)
+        add_index_if_not_exists(connection, :feedback_board_comments, :user_id)
+        add_index_if_not_exists(connection, :feedback_board_comments, :parent_id)
+        add_index_if_not_exists(connection, :feedback_board_comments, :content)
       end
 
       # Create upvotes table
@@ -138,10 +158,14 @@ module FeedbackBoard
           t.integer :user_id, null: false
           t.timestamps
         end
-        connection.add_index :feedback_board_upvotes, [:upvotable_type, :upvotable_id]
-        connection.add_index :feedback_board_upvotes, :user_id
-        connection.add_index :feedback_board_upvotes, [:upvotable_type, :upvotable_id, :user_id],
-                           unique: true, name: 'index_upvotes_on_upvotable_and_user'
+      end
+
+      # Add indexes for upvotes table (check existence first)
+      if connection.table_exists?('feedback_board_upvotes')
+        add_index_if_not_exists(connection, :feedback_board_upvotes, [:upvotable_type, :upvotable_id])
+        add_index_if_not_exists(connection, :feedback_board_upvotes, :user_id)
+        add_index_if_not_exists(connection, :feedback_board_upvotes, [:upvotable_type, :upvotable_id, :user_id],
+                              { unique: true, name: 'index_upvotes_on_upvotable_and_user' })
       end
 
       # Create settings table
@@ -152,8 +176,32 @@ module FeedbackBoard
           t.string :value_type, default: 'string'
           t.timestamps
         end
-        connection.add_index :feedback_board_settings, :key, unique: true
       end
+
+      # Add indexes for settings table (check existence first)
+      if connection.table_exists?('feedback_board_settings')
+        add_index_if_not_exists(connection, :feedback_board_settings, :key, { unique: true })
+      end
+    end
+
+    def self.add_index_if_not_exists(connection, table_name, column_or_options, options = {})
+      # Handle both simple column names and complex options
+      if column_or_options.is_a?(Array) && options.present?
+        # Complex case: multiple columns with options
+        index_name = options[:name] || "index_#{table_name}_on_#{column_or_options.join('_and_')}"
+        return if connection.index_exists?(table_name, column_or_options, name: index_name)
+        connection.add_index(table_name, column_or_options, options)
+      elsif column_or_options.is_a?(Array)
+        # Simple case: multiple columns, no special options
+        return if connection.index_exists?(table_name, column_or_options)
+        connection.add_index(table_name, column_or_options)
+      else
+        # Simple case: single column
+        return if connection.index_exists?(table_name, column_or_options)
+        connection.add_index(table_name, column_or_options)
+      end
+    rescue => e
+      Rails.logger.warn "[FeedbackBoard] Could not add index: #{e.message}"
     end
   end
 end

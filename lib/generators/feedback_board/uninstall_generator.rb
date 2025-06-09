@@ -58,14 +58,13 @@ module FeedbackBoard
         say "🗄️  Database Cleanup", :cyan
         say "FeedbackBoard has created the following tables in your database:", :yellow
         say ""
-        say "  • feedback_board_admin_settings", :blue
-        say "  • feedback_board_boards", :blue
         say "  • feedback_board_status_sets", :blue
         say "  • feedback_board_statuses", :blue
-        say "  • feedback_board_status_transitions", :blue
+        say "  • feedback_board_boards", :blue
         say "  • feedback_board_tickets", :blue
         say "  • feedback_board_comments", :blue
         say "  • feedback_board_upvotes", :blue
+        say "  • feedback_board_settings", :blue
         say ""
         say "⚠️  WARNING: This will permanently delete ALL feedback data!", :red
         say "This includes all tickets, comments, upvotes, and configuration.", :red
@@ -89,29 +88,53 @@ module FeedbackBoard
         migration_content = <<~RUBY
           class RemoveFeedbackBoardTables < ActiveRecord::Migration[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]
             def up
-              # Remove FeedbackBoard tables in dependency order
-              drop_table :feedback_board_upvotes, if_exists: true
-              drop_table :feedback_board_comments, if_exists: true
-              drop_table :feedback_board_tickets, if_exists: true
-              drop_table :feedback_board_status_transitions, if_exists: true
-              drop_table :feedback_board_statuses, if_exists: true
-              drop_table :feedback_board_status_sets, if_exists: true
-              drop_table :feedback_board_boards, if_exists: true
-              drop_table :feedback_board_admin_settings, if_exists: true
+              # Disable foreign key checks for safe removal
+              connection = ActiveRecord::Base.connection
 
-              puts "✅ FeedbackBoard database tables removed successfully"
+              say "🗑️  Removing FeedbackBoard tables and indexes..."
+
+              # Remove tables in dependency order (children first)
+              remove_table_safely(:feedback_board_upvotes)
+              remove_table_safely(:feedback_board_comments)
+              remove_table_safely(:feedback_board_tickets)
+              remove_table_safely(:feedback_board_statuses)
+              remove_table_safely(:feedback_board_boards)
+              remove_table_safely(:feedback_board_status_sets)
+              remove_table_safely(:feedback_board_settings)
+
+              say "✅ FeedbackBoard database tables removed successfully"
             end
 
             def down
               # This migration is irreversible
               # To restore, you would need to:
               # 1. Reinstall the FeedbackBoard gem
-              # 2. Run: FeedbackBoard::DatabaseSetup.setup_if_needed
+              # 2. Run: rails generate feedback_board:install
               # 3. Restore data from backup (if available)
 
               raise ActiveRecord::IrreversibleMigration,
                     "Cannot restore FeedbackBoard tables automatically. " \\
                     "You must reinstall the gem and restore data from backup."
+            end
+
+            private
+
+            def remove_table_safely(table_name)
+              if table_exists?(table_name)
+                say "  • Removing #{table_name}..."
+
+                # Remove foreign key constraints first
+                foreign_keys(table_name).each do |fk|
+                  remove_foreign_key table_name, name: fk.name
+                end
+
+                # Remove the table (indexes are automatically removed)
+                drop_table table_name
+              else
+                say "  • #{table_name} not found (skipping)"
+              end
+            rescue => e
+              say "  ⚠️  Could not remove #{table_name}: #{e.message}", :yellow
             end
           end
         RUBY

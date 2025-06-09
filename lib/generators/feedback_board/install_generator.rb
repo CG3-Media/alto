@@ -1,7 +1,9 @@
 module FeedbackBoard
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      desc "Install FeedbackBoard"
+      desc "Install FeedbackBoard (automatically creates database tables by default)"
+
+      class_option :interactive, type: :boolean, default: false, desc: "Ask for confirmation before creating tables"
 
       def install_feedback_board
         say "Installing FeedbackBoard...", :green
@@ -34,15 +36,28 @@ module FeedbackBoard
         else
           say "📋 Missing tables: #{missing_tables.join(', ')}", :yellow
 
-          if yes?("Create missing database tables? (y/n)", :green)
-            say "🛠️  Creating database tables...", :blue
+          should_create = true
+          if options[:interactive]
+            should_create = yes?("Create missing database tables? (y/n)", :green)
+          else
+            say "🛠️  Creating database tables automatically...", :blue
+          end
+
+          if should_create
+            say "🛠️  Creating database tables...", :blue unless options[:interactive]
 
             begin
               ::FeedbackBoard::DatabaseSetup.force_setup!
               say "✅ Database tables created successfully!", :green
             rescue => e
               say "❌ Database setup failed: #{e.message}", :red
-              say "💡 Try running: rails feedback_board:setup", :yellow
+              say ""
+              say "🛑 Installation aborted due to database error.", :red
+              say "💡 Possible solutions:", :yellow
+              say "   • Drop and recreate database: rails db:drop db:create db:migrate", :blue
+              say "   • Or run setup manually: rails feedback_board:setup", :blue
+              say ""
+              exit(1)
             end
           else
             say "⏭️  Skipping database setup. Run 'rails feedback_board:setup' later if needed.", :yellow
