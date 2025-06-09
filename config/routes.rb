@@ -3,7 +3,7 @@ FeedbackBoard::Engine.routes.draw do
   root 'boards#redirect_to_default'
 
   # Global activity across all boards
-  get 'activity', to: 'global_activity#index'
+  get 'activity', to: 'activity#index'
 
   # Board routes
   resources :boards, param: :slug, path: 'boards' do

@@ -58,6 +58,9 @@
       <!-- Activity -->
       <span class="text-gray-500">Activity</span>
     <% end %>
+  <% elsif controller_name == 'activity' && !@board %>
+    <!-- Global Activity -->
+    <span class="text-gray-500">Global Activity</span>
   <% elsif controller_name == 'boards' %>
     <!-- All Boards -->
     <span class="text-gray-500">All Boards</span>

@@ -1,10 +1,28 @@
 module FeedbackBoard
   class ActivityController < ::FeedbackBoard::ApplicationController
-    before_action :set_board
+    before_action :set_board, if: -> { params[:board_slug].present? }
 
     def index
-      # Load recent tickets, comments, and upvotes for the board
-      # Use a union-like approach to get mixed activity types
+      if @board
+        # Board-specific activity
+        load_board_activity
+      else
+        # Global activity across all boards
+        load_global_activity
+      end
+
+      # Combine and sort all activity by timestamp
+      @activity_items = build_activity_timeline
+    end
+
+    private
+
+    def set_board
+      @board = ::FeedbackBoard::Board.find(params[:board_slug])
+      set_current_board(@board)
+    end
+
+    def load_board_activity
       @recent_tickets = @board.tickets
                               .includes(:comments, :upvotes)
                               .recent
@@ -23,20 +41,29 @@ module FeedbackBoard
                          .includes(:upvotable)
                          .order(created_at: :desc)
                          .limit(10)
-
-      # Combine and sort all activity by timestamp
-      @activity_items = build_activity_timeline
     end
 
-    private
+    def load_global_activity
+      @recent_tickets = ::FeedbackBoard::Ticket
+                         .includes(:board, :comments, :upvotes)
+                         .recent
+                         .limit(15)
 
-    def set_board
-      @board = ::FeedbackBoard::Board.find(params[:board_slug])
-      set_current_board(@board)
+      @recent_comments = ::FeedbackBoard::Comment
+                          .includes(ticket: :board, upvotes: [])
+                          .recent
+                          .limit(15)
+
+      @recent_upvotes = ::FeedbackBoard::Upvote
+                         .joins("JOIN feedback_board_tickets ON feedback_board_upvotes.upvotable_type = 'FeedbackBoard::Ticket' AND feedback_board_upvotes.upvotable_id = feedback_board_tickets.id")
+                         .includes(upvotable: :board)
+                         .order(created_at: :desc)
+                         .limit(15)
     end
 
     def build_activity_timeline
       items = []
+      limit = @board ? 20 : 30
 
       # Add ticket creation events
       @recent_tickets.each do |ticket|
@@ -44,6 +71,7 @@ module FeedbackBoard
           type: :ticket_created,
           timestamp: ticket.created_at,
           ticket: ticket,
+          board: ticket.board,
           user_id: ticket.user_id
         }
       end
@@ -55,6 +83,7 @@ module FeedbackBoard
           timestamp: comment.created_at,
           comment: comment,
           ticket: comment.ticket,
+          board: comment.ticket.board,
           user_id: comment.user_id
         }
       end
@@ -66,12 +95,13 @@ module FeedbackBoard
           timestamp: upvote.created_at,
           upvote: upvote,
           upvotable: upvote.upvotable,
+          board: upvote.upvotable.board,
           user_id: upvote.user_id
         }
       end
 
-      # Sort by timestamp descending and limit to recent 20 items
-      items.sort_by { |item| item[:timestamp] }.reverse.first(20)
+      # Sort by timestamp descending and limit items
+      items.sort_by { |item| item[:timestamp] }.reverse.first(limit)
     end
   end
 end
