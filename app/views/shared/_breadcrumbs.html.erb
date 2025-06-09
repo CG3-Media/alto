@@ -11,8 +11,12 @@
       </svg>
 
       <!-- Ticket Link -->
-      <%= link_to truncate(@ticket.title, length: 50), feedback_board.board_ticket_path(@board, @ticket),
-          class: "hover:text-blue-600 font-medium" %>
+      <% if @ticket.persisted? %>
+        <%= link_to truncate(@ticket.title, length: 50), feedback_board.board_ticket_path(@board, @ticket),
+            class: "hover:text-blue-600 font-medium" %>
+      <% else %>
+        <span class="text-gray-500"><%= truncate(@ticket.title.presence || "New Ticket", length: 50) %></span>
+      <% end %>
 
       <% if controller_name == 'comments' && action_name == 'show' %>
         <!-- Separator -->

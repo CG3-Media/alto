@@ -16,6 +16,10 @@ module FeedbackBoard
     after_create :send_new_ticket_notifications
     after_update :send_status_change_notifications, if: :saved_change_to_status?
 
+    # Host app callback hooks
+    after_create :trigger_ticket_created_callback
+    after_update :trigger_ticket_status_changed_callback, if: :saved_change_to_status?
+
     scope :by_status, ->(status) { where(status: status) }
     scope :unlocked, -> { where(locked: false) }
     scope :locked, -> { where(locked: true) }
@@ -118,6 +122,25 @@ module FeedbackBoard
 
       user = user_class.find_by(id: user_id)
       user&.email if user&.respond_to?(:email)
+    end
+
+    def trigger_ticket_created_callback
+      FeedbackBoard::CallbackManager.call(:ticket_created, self, board, get_user_object(user_id))
+    end
+
+    def trigger_ticket_status_changed_callback
+      old_status = saved_changes['status'][0]
+      new_status = saved_changes['status'][1]
+      FeedbackBoard::CallbackManager.call(:ticket_status_changed, self, old_status, new_status, board, get_user_object(user_id))
+    end
+
+    def get_user_object(user_id)
+      return nil unless user_id
+
+      user_class = FeedbackBoard.configuration.user_model.constantize rescue nil
+      return nil unless user_class
+
+      user_class.find_by(id: user_id)
     end
   end
 end

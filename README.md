@@ -14,6 +14,7 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 - 👍 **Upvoting** - Users can vote on tickets and comments (with AJAX)
 - 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments (board-scoped)
 - 📧 **Email Notifications** - Configurable email alerts for tickets, comments, and status changes
+- 🎣 **Callback Hooks** - Simple callback methods to integrate with Slack, analytics, external APIs, and more
 - 📊 **Status Tracking** - `open`, `planned`, `in_progress`, `complete`
 - 🔒 **Moderation** - Lock tickets to prevent further discussion
 - 👑 **Admin Dashboard** - Statistics, recent activity, board management, and email configuration
@@ -480,6 +481,179 @@ class ApplicationController < ActionController::Base
   end
 end
 ```
+
+## 🎣 Host App Callback Hooks
+
+**Hook into feedback board events with simple callback methods!** The engine automatically calls methods in your host app when events occur, giving you maximum integration flexibility.
+
+### 📁 Where To Put Callbacks
+
+Add these methods to your **host app's main ApplicationController**:
+
+**File:** `app/controllers/application_controller.rb` (in your main app, not the engine)
+
+### 🚀 Example Integration
+
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  private
+
+  # Example: Handle new tickets with board-specific logic
+  def ticket_created(ticket, board, user)
+    case board.slug
+    when 'bugs'
+      # Post to Slack dev channel
+      Slack.notify("#dev-bugs", "🐛 Bug reported: #{ticket.title} by #{user&.email}")
+      # Create issue in bug tracker
+      BugTracker.create_issue(ticket, user)
+      # Auto-assign to dev team
+      ticket.update(assigned_team: 'development')
+    when 'features'
+      # Notify product team
+      Slack.notify("#product", "💡 Feature request: #{ticket.title}")
+      # Track in analytics
+      Analytics.track(user&.id, 'feature_requested', board: board.name)
+    when 'support'
+      # Create Zendesk ticket
+      ZendeskAPI.create_ticket(ticket)
+      # Email support team
+      SupportMailer.new_ticket(ticket).deliver_later
+    end
+  end
+end
+```
+
+### 📋 All Available Callback Methods
+
+```ruby
+# Ticket Events
+def ticket_created(ticket, board, user)
+  # Called when a new ticket is submitted
+  # Use for: Slack notifications, analytics, auto-assignment
+end
+
+def ticket_status_changed(ticket, old_status, new_status, board, user)
+  # Called when ticket status changes (open → planned → in_progress → complete)
+  # Use for: Progress tracking, completion notifications, roadmap updates
+end
+
+# Comment Events
+def comment_created(comment, ticket, board, user)
+  # Called when someone adds a comment or reply
+  # Use for: Email notifications, @mention processing, engagement tracking
+end
+
+def comment_deleted(comment, ticket, board, user)
+  # Called when a comment is deleted
+  # Use for: Moderation logging, audit trails
+end
+
+# Upvote Events
+def upvote_created(upvote, votable, board, user)
+  # Called when someone upvotes a ticket or comment
+  # Use for: Popular content alerts, analytics, trending detection
+end
+
+def upvote_removed(upvote, votable, board, user)
+  # Called when someone removes their upvote
+  # Use for: Vote change tracking, analytics
+end
+```
+
+**Quick Reference:**
+- **Tickets**: `ticket_created`, `ticket_status_changed`
+- **Comments**: `comment_created`, `comment_deleted`
+- **Upvotes**: `upvote_created`, `upvote_removed`
+
+### 🛠 Setup Options
+
+#### Option 1: In ApplicationController (Recommended)
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    # Your integration code here
+  end
+
+  def comment_created(comment, ticket, board, user)
+    # Your integration code here
+  end
+
+  # Add other callbacks as needed...
+end
+```
+
+#### Option 2: In a Concern (For Complex Logic)
+```ruby
+# app/controllers/concerns/feedback_board_callbacks.rb
+module FeedbackBoardCallbacks
+  extend ActiveSupport::Concern
+
+  private
+
+  def ticket_created(ticket, board, user)
+    FeedbackIntegration.handle_new_ticket(ticket, board, user)
+  end
+
+  def comment_created(comment, ticket, board, user)
+    FeedbackIntegration.handle_new_comment(comment, ticket, board, user)
+  end
+end
+
+# Then include in ApplicationController:
+class ApplicationController < ActionController::Base
+  include FeedbackBoardCallbacks
+  # ... rest of your controller
+end
+```
+
+#### Option 3: Dedicated Service Class
+```ruby
+# app/services/feedback_integration.rb
+class FeedbackIntegration
+  def self.handle_new_ticket(ticket, board, user)
+    case board.slug
+    when 'bugs'
+      SlackNotifier.bug_reported(ticket, user)
+    when 'features'
+      ProductBoard.add_feature_request(ticket)
+    end
+  end
+end
+
+# In ApplicationController:
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    FeedbackIntegration.handle_new_ticket(ticket, board, user)
+  end
+end
+```
+
+### ✅ Safety Features
+
+- **Error Isolation**: If your callback method fails, it won't break ticket/comment creation
+- **Automatic Detection**: Only calls methods that exist - no configuration needed
+- **Logging**: Callback errors are logged for debugging
+- **Zero Setup**: Just define the methods you want, ignore the ones you don't need
+
+### 🧪 Quick Test
+
+To verify callbacks are working, add this simple test:
+
+```ruby
+# In ApplicationController
+def ticket_created(ticket, board, user)
+  Rails.logger.info "🎫 Callback working! New ticket: #{ticket.title}"
+  puts "🎫 Callback working! New ticket: #{ticket.title}"
+end
+```
+
+Then create a ticket and check your Rails console/logs!
 
 ## 🛠 API Reference
 

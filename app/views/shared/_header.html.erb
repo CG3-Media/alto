@@ -14,11 +14,11 @@
       <% end %>
     </div>
 
-    <!-- Center: Search Bar & New Ticket (only show on ticket pages) -->
+    <!-- Search Bar & New Ticket (only show on ticket pages) -->
     <% if defined?(current_board) && current_board %>
-      <div class="hidden md:flex items-center space-x-4 flex-1 max-w-2xl mx-8">
+      <div class="hidden md:flex items-center space-x-4 <%= can_access_admin? ? 'flex-1 max-w-2xl mx-8' : 'ml-auto' %>">
         <!-- Search Bar -->
-        <div class="flex-1">
+        <div class="<%= can_access_admin? ? 'flex-1' : 'w-80' %>">
           <%= form_with url: feedback_board.board_tickets_path(current_board), method: :get, local: true, class: "flex w-full" do |form| %>
             <div class="relative flex-1">
               <%= form.text_field :search,

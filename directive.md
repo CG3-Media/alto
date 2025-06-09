@@ -46,8 +46,177 @@ Mount in `routes.rb`:
 
 ```ruby
 mount FeedbackBoard::Engine => "/feedback"
-
 ```
+
+### 🎣 **Host App Callback Hooks**
+
+The feedback board automatically calls methods in your host app when events occur. Just define these methods and they'll be called with full context.
+
+## 📁 **Where To Put The Callbacks**
+
+Add these methods to your **host app's main ApplicationController**:
+
+**File:** `app/controllers/application_controller.rb` (in your main app, not the engine)
+
+```ruby
+# In your main app's ApplicationController
+class ApplicationController < ActionController::Base
+  private
+
+  # Example: Handle new tickets with board-specific logic
+  def ticket_created(ticket, board, user)
+    case board.slug
+    when 'bugs'
+      # Post to Slack dev channel
+      Slack.notify("#dev-bugs", "🐛 Bug reported: #{ticket.title} by #{user&.email}")
+      # Create issue in bug tracker
+      BugTracker.create_issue(ticket, user)
+      # Auto-assign to dev team
+      ticket.update(assigned_team: 'development')
+    when 'features'
+      # Notify product team
+      Slack.notify("#product", "💡 Feature request: #{ticket.title}")
+      # Track in analytics
+      Analytics.track(user&.id, 'feature_requested', board: board.name)
+    when 'support'
+      # Create Zendesk ticket
+      ZendeskAPI.create_ticket(ticket)
+      # Email support team
+      SupportMailer.new_ticket(ticket).deliver_later
+    end
+  end
+end
+```
+
+## 📋 **All Available Callback Methods**
+
+```ruby
+# Ticket Events
+def ticket_created(ticket, board, user)
+  # Called when a new ticket is submitted
+  # Use for: Slack notifications, analytics, auto-assignment
+end
+
+def ticket_status_changed(ticket, old_status, new_status, board, user)
+  # Called when ticket status changes (open → planned → in_progress → complete)
+  # Use for: Progress tracking, completion notifications, roadmap updates
+end
+
+# Comment Events
+def comment_created(comment, ticket, board, user)
+  # Called when someone adds a comment or reply
+  # Use for: Email notifications, @mention processing, engagement tracking
+end
+
+def comment_deleted(comment, ticket, board, user)
+  # Called when a comment is deleted
+  # Use for: Moderation logging, audit trails
+end
+
+# Upvote Events
+def upvote_created(upvote, votable, board, user)
+  # Called when someone upvotes a ticket or comment
+  # Use for: Popular content alerts, analytics, trending detection
+end
+
+def upvote_removed(upvote, votable, board, user)
+  # Called when someone removes their upvote
+  # Use for: Vote change tracking, analytics
+end
+```
+
+**Quick Reference:**
+- **Tickets**: `ticket_created`, `ticket_status_changed`
+- **Comments**: `comment_created`, `comment_deleted`
+- **Upvotes**: `upvote_created`, `upvote_removed`
+
+**Safety Features:**
+- ✅ **Error Isolation**: If your callback method fails, it won't break ticket/comment creation
+- ✅ **Automatic Detection**: Only calls methods that exist - no configuration needed
+- ✅ **Logging**: Callback errors are logged for debugging
+- ✅ **Zero Setup**: Just define the methods you want, ignore the ones you don't need
+
+## 🛠 **Setup Instructions**
+
+### Option 1: In ApplicationController (Recommended)
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    # Your integration code here
+  end
+
+  def comment_created(comment, ticket, board, user)
+    # Your integration code here
+  end
+
+  # Add other callbacks as needed...
+end
+```
+
+### Option 2: In a Concern (For Complex Logic)
+```ruby
+# app/controllers/concerns/feedback_board_callbacks.rb
+module FeedbackBoardCallbacks
+  extend ActiveSupport::Concern
+
+  private
+
+  def ticket_created(ticket, board, user)
+    FeedbackIntegration.handle_new_ticket(ticket, board, user)
+  end
+
+  def comment_created(comment, ticket, board, user)
+    FeedbackIntegration.handle_new_comment(comment, ticket, board, user)
+  end
+end
+
+# Then include in ApplicationController:
+class ApplicationController < ActionController::Base
+  include FeedbackBoardCallbacks
+  # ... rest of your controller
+end
+```
+
+### Option 3: Dedicated Service Class
+```ruby
+# app/services/feedback_integration.rb
+class FeedbackIntegration
+  def self.handle_new_ticket(ticket, board, user)
+    case board.slug
+    when 'bugs'
+      SlackNotifier.bug_reported(ticket, user)
+    when 'features'
+      ProductBoard.add_feature_request(ticket)
+    end
+  end
+end
+
+# In ApplicationController:
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    FeedbackIntegration.handle_new_ticket(ticket, board, user)
+  end
+end
+```
+
+## 🚀 **Quick Test**
+
+To verify callbacks are working, add this simple test:
+
+```ruby
+# In ApplicationController
+def ticket_created(ticket, board, user)
+  Rails.logger.info "🎫 Callback working! New ticket: #{ticket.title}"
+  puts "🎫 Callback working! New ticket: #{ticket.title}"
+end
+```
+
+Then create a ticket and check your Rails console/logs!
 
 ---
 
@@ -204,6 +373,31 @@ This major architectural change transforms the feedback system from single-board
   - ✅ Maintained nobuild architecture without asset pipeline dependencies
 
 
+
+### ✅ COMPLETED
+
+#### 🎯 MAJOR FEATURE: Host App Callback Hooks ✨ **COMPLETE**
+This powerful extensibility feature allows host apps to hook into feedback board events with simple, guessable callback methods:
+- ✅ **Simple Callback API**: Just define methods like `ticket_created` in your host app
+- ✅ **All Major Events**: Tickets, comments, upvotes creation/deletion/changes
+- ✅ **Rich Context Data**: Every callback receives the object, board, user, and relevant context
+- ✅ **Error Isolation**: Callback failures don't break the main feedback flow
+- ✅ **Zero Configuration**: Host app just defines methods and they get called automatically
+
+- [x] **🎯 MAJOR FEATURE: Host App Callback Hooks**
+  - [x] **CallbackManager System**
+    - [x] Safe callback execution with error handling
+    - [x] Automatic host app method detection
+    - [x] Graceful failure handling (logged but doesn't break main flow)
+  - [x] **Model Integration**
+    - [x] Ticket callbacks: `ticket_created`, `ticket_status_changed`
+    - [x] Comment callbacks: `comment_created`, `comment_deleted`
+    - [x] Upvote callbacks: `upvote_created`, `upvote_removed`
+    - [x] All callbacks include full context (object, board, user)
+  - [x] **Host App Integration**
+    - [x] Simple method-based API (no configuration needed)
+    - [x] Guessable callback names following Rails conventions
+    - [x] Rich context data for all integrations (Slack, analytics, etc.)
 
 ### 🚧 IN PROGRESS / TODO
 

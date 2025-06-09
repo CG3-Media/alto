@@ -5,6 +5,9 @@ module FeedbackBoard
     before_action :check_submit_permission, only: [:new, :create]
     before_action :check_board_access
 
+    # Make helper methods available to views
+    helper_method :can_user_edit_ticket?
+
     def index
       # Set this as the current board in session
       ensure_current_board_set(@board)
@@ -56,11 +59,14 @@ module FeedbackBoard
     end
 
     def edit
-      # Only admins should be able to edit tickets
-      redirect_to [@board, @ticket] unless can_edit_tickets?
+      # Users can edit their own tickets, admins can edit any ticket
+      redirect_to [@board, @ticket] unless can_user_edit_ticket?(@ticket)
     end
 
     def update
+      # Users can edit their own tickets, admins can edit any ticket
+      redirect_to [@board, @ticket] unless can_user_edit_ticket?(@ticket)
+
       if @ticket.update(ticket_params)
         redirect_to [@board, @ticket], notice: 'Ticket was successfully updated.'
       else
@@ -97,6 +103,7 @@ module FeedbackBoard
 
     def ticket_params
       permitted_params = [:title, :description]
+      # Only admins can edit status and locked fields
       permitted_params += [:status, :locked] if can_edit_tickets?
       params.require(:ticket).permit(*permitted_params)
     end
@@ -111,6 +118,12 @@ module FeedbackBoard
       unless can_access_board?(@board)
         redirect_to root_path, alert: 'You do not have permission to access this board.'
       end
+    end
+
+    def can_user_edit_ticket?(ticket)
+      return false unless current_user
+      # Users can edit their own tickets, or admins can edit any ticket
+      ticket.user_id == current_user.id || can_edit_tickets?
     end
 
   end

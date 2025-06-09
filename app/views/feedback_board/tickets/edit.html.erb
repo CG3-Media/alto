@@ -50,29 +50,31 @@
       </div>
 
       <!-- Admin Controls -->
-      <div class="border-t border-gray-200 pt-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Controls</h3>
+      <% if can_edit_tickets? %>
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Controls</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <%= form.label :status, class: "block text-sm font-medium text-gray-700 mb-2" %>
-            <%= form.select :status,
-                options_for_select(FeedbackBoard::Ticket::STATUSES.map { |status| [status.humanize, status] }, @ticket.status),
-                {},
-                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
-            <p class="mt-1 text-sm text-gray-500">Update the ticket status to reflect progress</p>
-          </div>
-
-          <div>
-            <%= form.label :locked, class: "block text-sm font-medium text-gray-700 mb-2" %>
-            <div class="flex items-center space-x-3">
-              <%= form.check_box :locked, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
-              <span class="text-sm text-gray-700">Lock ticket (prevents comments and votes)</span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <%= form.label :status, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.select :status,
+                  options_for_select(FeedbackBoard::Ticket::STATUSES.map { |status| [status.humanize, status] }, @ticket.status),
+                  {},
+                  class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+              <p class="mt-1 text-sm text-gray-500">Update the ticket status to reflect progress</p>
             </div>
-            <p class="mt-1 text-sm text-gray-500">Lock to prevent further discussion</p>
+
+            <div>
+              <%= form.label :locked, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <div class="flex items-center space-x-3">
+                <%= form.check_box :locked, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+                <span class="text-sm text-gray-700">Lock ticket (prevents comments and votes)</span>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Lock to prevent further discussion</p>
+            </div>
           </div>
         </div>
-      </div>
+      <% end %>
 
       <div class="flex items-center justify-between pt-4">
         <div class="flex space-x-3">

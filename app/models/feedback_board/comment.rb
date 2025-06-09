@@ -15,6 +15,10 @@ module FeedbackBoard
     after_create :send_new_comment_notifications
     before_validation :set_depth
 
+    # Host app callback hooks
+    after_create :trigger_comment_created_callback
+    after_destroy :trigger_comment_deleted_callback
+
     scope :recent, -> { order(created_at: :desc) }
     scope :popular, -> { left_joins(:upvotes).group(:id).order('count(feedback_board_upvotes.id) desc') }
     scope :top_level, -> { where(parent_id: nil) }
@@ -125,6 +129,23 @@ module FeedbackBoard
 
       user = user_class.find_by(id: user_id)
       user&.email if user&.respond_to?(:email)
+    end
+
+    def trigger_comment_created_callback
+      FeedbackBoard::CallbackManager.call(:comment_created, self, ticket, ticket.board, get_user_object(user_id))
+    end
+
+    def trigger_comment_deleted_callback
+      FeedbackBoard::CallbackManager.call(:comment_deleted, self, ticket, ticket.board, get_user_object(user_id))
+    end
+
+    def get_user_object(user_id)
+      return nil unless user_id
+
+      user_class = FeedbackBoard.configuration.user_model.constantize rescue nil
+      return nil unless user_class
+
+      user_class.find_by(id: user_id)
     end
   end
 end
