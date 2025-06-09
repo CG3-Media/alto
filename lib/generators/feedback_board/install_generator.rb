@@ -355,7 +355,7 @@ module FeedbackBoard
             config.user_model = "User"
 
             # User display name (customize for your user model)
-            # config.user_display_name_method = proc do |user_id|
+            # config.user_display_name do |user_id|
             #   user = User.find_by(id: user_id)
             #   user&.name || user&.email || "User #\#{user_id}"
             # end

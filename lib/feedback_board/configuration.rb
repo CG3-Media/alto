@@ -1,7 +1,6 @@
 module FeedbackBoard
   class Configuration
-    attr_accessor :user_display_name_method, :user_model,
-                  :default_board_name, :default_board_slug,
+    attr_accessor :user_model, :default_board_name, :default_board_slug,
                   :allow_board_deletion_with_tickets
 
     # Permission method blocks - much cleaner than delegation!
@@ -9,7 +8,7 @@ module FeedbackBoard
 
     def initialize
       # Default configuration: try common name fields, fallback to email
-      @user_display_name_method = default_user_display_name_method
+      @user_display_name_block = default_user_display_name_block
       @user_model = "User"
 
       # App branding default (fallback if database not available)
@@ -32,6 +31,12 @@ module FeedbackBoard
     # Check if a permission method is defined
     def has_permission?(method_name)
       @permission_methods.key?(method_name.to_sym)
+    end
+
+    # Set user display name method with a block (matches README documentation)
+    def user_display_name(&block)
+      @user_display_name_block = block if block_given?
+      @user_display_name_block
     end
 
             # Call a permission method block or proc
@@ -67,7 +72,7 @@ module FeedbackBoard
       false
     end
 
-    def default_user_display_name_method
+    def default_user_display_name_block
       proc do |user_id|
         return "Anonymous" unless user_id
 
