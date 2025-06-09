@@ -1,172 +1,334 @@
 # FeedbackBoard Rails Engine
 
-A mountable Rails engine that replicates core Canny.io-style feedback functionality for your app. Users can submit tickets across multiple boards, engage in threaded discussions, vote on content, and admins can manage status and moderation.
+A mountable Rails engine for collecting user feedback with multiple boards, threaded comments, and voting.
 
 [![Ruby](https://img.shields.io/badge/ruby-3.0%2B-red.svg)](https://www.ruby-lang.org)
 [![Rails](https://img.shields.io/badge/rails-7.0%2B-red.svg)](https://rubyonrails.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](MIT-LICENSE)
 
-## ✨ Features
+## Features
 
-- 📋 **Multiple Boards** - Create and manage multiple feedback boards (Feature, Bug Reports, etc.)
-- 🎫 **Ticket Management** - Create, view, and manage feedback tickets within boards
-- 💬 **Threaded Comments** - Dedicated discussion pages for comment threads with nested replies (3 levels deep)
-- 👍 **Upvoting** - Users can vote on tickets and comments (with built-in AJAX - no setup required!)
-- 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments (board-scoped)
-- 📧 **Email Notifications** - Configurable email alerts for tickets, comments, and status changes
-- 🎣 **Callback Hooks** - Simple callback methods to integrate with Slack, analytics, external APIs, and more
-- 📊 **Status Tracking** - `open`, `planned`, `in_progress`, `complete`
-- 🔒 **Moderation** - Lock tickets to prevent further discussion
-- 👑 **Admin Dashboard** - Statistics, recent activity, board management, and email configuration
-- 🎨 **Beautiful UI** - Clean Tailwind CSS design with user-friendly forms
-- 🔐 **Permissions** - Flexible permission system with board-level access control
-- ⚡ **Performance** - Optimized queries and database indexes
-- 🚀 **Zero Setup** - All JavaScript functionality works immediately after mounting the engine
-- 🗄️ **Controlled Database Setup** - Use the install generator to set up database tables safely
+- Multiple feedback boards (Bug Reports, Feature Requests, etc.)
+- Ticket creation with 3-level threaded comments and upvoting
+- Configurable status sets with custom statuses and colors
+- Admin dashboard with status management and analytics
+- Full-text search across tickets and comments
+- Email notifications with beautiful HTML templates
+- Callback hooks for integration with Slack, analytics, and external APIs
 
-## 🚀 Installation
+## Installation
 
-Add this line to your application's Gemfile:
+Add to your Gemfile:
 
 ```ruby
 gem 'feedback_board'
 ```
 
-And then execute:
 ```bash
 bundle install
 ```
 
-## ⚙️ Setup
+## Setup
 
-### 1. Add routes
-Add to your `config/routes.rb`:
+### 1. Mount the engine
+
+Add to `config/routes.rb`:
+
 ```ruby
 mount FeedbackBoard::Engine => "/feedback"
 ```
 
 ### 2. Run the installer
+
 ```bash
 rails generate feedback_board:install
 ```
 
-**🎯 The install generator is completely idempotent and handles everything:**
+This creates:
+- Database tables
+- Configuration file at `config/initializers/feedback_board.rb`
+- Stimulus controller (if using Hotwire)
 
-- ✅ **Checks existing state** - Won't recreate what already exists
-- ✅ **Database tables** - Creates missing tables, skips existing ones
-- ✅ **Configuration** - Creates initializer only if it doesn't exist
-- ✅ **Default boards** - Only offers to create if no boards exist
-- ✅ **Status summary** - Shows you exactly what's configured vs missing
-- ✅ **Safe to re-run** - Run it as many times as you want!
+**The installer is safe to run multiple times.**
 
-**That's it!** ✨
+### 3. Configure permissions (optional)
 
-**🎯 Smart Database Setup**: The install generator creates all required database tables for you - no separate migrations needed!
-
-**✨ AJAX voting functionality is included and works automatically - no JavaScript setup required!**
-
-### 3. (Optional) Customize configuration
-
-The engine works immediately with smart defaults. **The install generator creates a comprehensive configuration file** at `config/initializers/feedback_board.rb` with all available options and examples.
+Edit `config/initializers/feedback_board.rb`:
 
 ```ruby
-# config/initializers/feedback_board.rb (created by generator)
 FeedbackBoard.configure do |config|
-  # All configuration options with examples and documentation!
-  # Just uncomment and customize what you need.
-
-  # Example: Restrict access to signed-in users only
+  # Restrict access to signed-in users
   config.permission :can_access_feedback_board? do
     user_signed_in?
   end
 
-  # Example: Only admins can edit tickets
-  config.permission :can_edit_tickets? do
+  # Only admins can access admin area
+  config.permission :can_access_admin? do
     current_user&.admin?
   end
 
-  # ... many more options with full documentation
+  # Customize user display names
+  config.user_display_name do |user_id|
+    User.find(user_id)&.full_name || "User ##{user_id}"
+  end
 end
 ```
 
-**📖 Check the generated initializer for all available options and examples!**
+## Basic Usage
 
-## 🗑️ Uninstallation
+### Navigation
 
-Need to remove FeedbackBoard? We've got you covered! ✋
+```erb
+<!-- Link to feedback board -->
+<%= link_to "Feedback", feedback_board.root_path %>
 
-### Quick Uninstall
+<!-- Link to specific board -->
+<%= link_to "Bug Reports", feedback_board.board_path("bugs") %>
+```
+
+### Admin Access
+
+Visit `/feedback/admin` to:
+- Manage boards
+- Configure email notifications
+- View analytics
+- Change ticket statuses
+
+## 🎣 Callback Hooks
+
+One of FeedbackBoard's most powerful features is its callback hook system. The engine automatically calls methods in your host app when events occur, enabling seamless integration with external services.
+
+### ⚙️ How It Works
+
+Simply define methods in your `ApplicationController` and they'll be called automatically with full context:
+
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    # Called whenever a new ticket is submitted
+    case board.slug
+    when 'bugs'
+      SlackNotifier.notify("#dev-team", "🐛 New bug: #{ticket.title}")
+      BugTracker.create_issue(ticket, user)
+    when 'features'
+      Analytics.track(user&.id, 'feature_requested')
+      ProductBoard.add_request(ticket)
+    end
+  end
+
+  def comment_created(comment, ticket, board, user)
+    # Called whenever someone comments
+    NotificationMailer.new_comment(comment).deliver_later
+  end
+end
+```
+
+### 🔗 Available Hooks
+
+**🎫 Ticket Events:**
+- `ticket_created(ticket, board, user)` - New ticket submitted
+- `ticket_status_changed(ticket, old_status, new_status, board, user)` - Status updated
+
+**💬 Comment Events:**
+- `comment_created(comment, ticket, board, user)` - New comment or reply
+- `comment_deleted(comment, ticket, board, user)` - Comment removed
+
+**👍 Voting Events:**
+- `upvote_created(upvote, votable, board, user)` - Item upvoted
+- `upvote_removed(upvote, votable, board, user)` - Upvote removed
+
+### ✨ Why Callback Hooks?
+
+- **⚡ Zero Configuration** - Just define the methods you need
+- **📊 Rich Context** - Every callback receives the object, board, and user
+- **🛡️ Error Isolation** - Callback failures don't break the main flow
+- **🔌 Flexible Integration** - Works with any external service or internal logic
+
+### 🚀 Common Use Cases
+
+**💬 Slack/Discord Notifications:**
+```ruby
+def ticket_created(ticket, board, user)
+  SlackWebhook.post(
+    channel: board.slug == 'bugs' ? '#dev-team' : '#product',
+    text: "New #{board.name}: #{ticket.title}",
+    user: user&.email
+  )
+end
+```
+
+**📈 Analytics Tracking:**
+```ruby
+def ticket_created(ticket, board, user)
+  Analytics.track(user&.id, 'feedback_submitted', {
+    board: board.name,
+    category: board.slug
+  })
+end
+```
+
+**🎫 External Ticketing:**
+```ruby
+def ticket_created(ticket, board, user)
+  if board.slug == 'support'
+    ZendeskAPI.create_ticket(
+      subject: ticket.title,
+      description: ticket.description,
+      requester: user&.email
+    )
+  end
+end
+```
+
+## Configuration
+
+All configuration happens in `config/initializers/feedback_board.rb`. The installer creates this file with documented options.
+
+### Common Options
+
+```ruby
+FeedbackBoard.configure do |config|
+  # User model (default: "User")
+  config.user_model = "Account"
+
+  # User display names
+  config.user_display_name do |user_id|
+    User.find(user_id)&.name || "Anonymous"
+  end
+
+  # Permissions
+  config.permission :can_create_tickets? do
+    current_user.present?
+  end
+
+  config.permission :can_access_admin? do
+    current_user&.admin?
+  end
+
+  # Email notifications
+  config.notifications_enabled = true
+  config.notify_admins_of_new_tickets = true
+  config.admin_notification_emails = ["admin@example.com"]
+end
+```
+
+### Email Setup
+
+FeedbackBoard uses your app's existing ActionMailer configuration:
+
+```ruby
+# config/environments/production.rb
+config.action_mailer.delivery_method = :smtp
+config.action_mailer.smtp_settings = {
+  # your SMTP settings
+}
+```
+
+Configure notification preferences in the admin dashboard at `/feedback/admin/settings`.
+
+## Customization
+
+### Styling
+
+Override views by copying them to your app:
+
+```bash
+mkdir -p app/views/feedback_board/tickets
+cp $(bundle show feedback_board)/app/views/feedback_board/tickets/* app/views/feedback_board/tickets/
+```
+
+The engine uses Tailwind CSS via CDN. To use your own CSS framework, override the layout:
+
+```erb
+<!-- app/views/layouts/feedback_board/application.html.erb -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Feedback</title>
+    <%= csrf_meta_tags %>
+    <%= stylesheet_link_tag "your-styles" %>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>
+```
+
+### Integrations
+
+Add callback methods to your `ApplicationController` to integrate with external services:
+
+```ruby
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    # Post to Slack
+    SlackNotifier.new_ticket(ticket) if board.slug == 'bugs'
+
+    # Track in analytics
+    Analytics.track(user&.id, 'ticket_created', board: board.name)
+  end
+
+  def comment_created(comment, ticket, board, user)
+    # Email ticket author about new comment
+    NotificationMailer.new_comment(comment).deliver_later
+  end
+end
+```
+
+Available callbacks:
+- `ticket_created(ticket, board, user)`
+- `ticket_status_changed(ticket, old_status, new_status, board, user)`
+- `comment_created(comment, ticket, board, user)`
+- `comment_deleted(comment, ticket, board, user)`
+- `upvote_created(upvote, votable, board, user)`
+- `upvote_removed(upvote, votable, board, user)`
+
+## Troubleshooting
+
+### "undefined method 'humanize'" error
+
+This happens when ticket statuses are misconfigured. Run:
+
+```bash
+rails generate feedback_board:install
+```
+
+The installer will create any missing status configurations.
+
+### Emails not sending
+
+1. Verify ActionMailer is configured
+2. Check admin settings at `/feedback/admin/settings`
+3. Ensure `notifications_enabled = true` in your initializer
+
+### Permission denied errors
+
+Check your permission configuration in `config/initializers/feedback_board.rb`. The default permissions allow all access.
+
+### Search not working
+
+Ensure you've run the installer to create proper database indexes:
+
+```bash
+rails generate feedback_board:install
+```
+
+## Uninstall
+
 ```bash
 rails generate feedback_board:uninstall
 ```
 
-**🔐 Safe & Interactive**: The uninstall generator will:
-- ⚠️  Show data loss warnings and ask for confirmation
-- 🗑️  Remove the initializer file automatically
-- 🗄️  Optionally create a database cleanup migration
-- 🛤️  Provide instructions for route removal
-- 📋  Guide you through final cleanup steps
-- 💾  Offer to open your routes file for editing
+This will guide you through removing the engine and optionally cleaning up database tables.
 
-### What Gets Removed
-- ✅ Configuration file (`config/initializers/feedback_board.rb`)
-- ✅ Database tables (optional - with confirmation)
-  - `feedback_board_admin_settings`
-  - `feedback_board_boards`
-  - `feedback_board_status_sets`
-  - `feedback_board_statuses`
-  - `feedback_board_status_transitions`
-  - `feedback_board_tickets`
-  - `feedback_board_comments`
-  - `feedback_board_upvotes`
+## License
 
-### Manual Steps
-The generator will guide you to manually remove:
-1. **Routes**: `mount FeedbackBoard::Engine => "/feedback"`
-2. **Gemfile**: `gem 'feedback_board'`
-3. **Bundle**: Run `bundle install`
-4. **Custom overrides** (if any): Views, styles, callback methods
-
-**💡 Pro Tip**: The generator asks before doing anything destructive and provides clear instructions for each step!
-
-## 🔐 Permissions System
-
-**Zero configuration required!** The engine works out of the box with sensible defaults.
-
-**The install generator creates a comprehensive initializer** at `config/initializers/feedback_board.rb` with all permission options pre-configured and documented. Simply uncomment and customize the permissions you want to change.
-
-**Smart defaults provided for everything** - the engine handles authentication gracefully whether you're using Devise, custom auth, or no authentication at all.
-
-## 📱 Usage Examples
-
-### Basic Integration
-
-```erb
-<!-- In your app's navigation -->
-<%= link_to "Feedback", feedback_board.root_path, class: "nav-link" %>
-
-<!-- Link to specific board -->
-<%= link_to "Feature Requests", feedback_board.board_path("features"), class: "nav-link" %>
-<%= link_to "Bug Reports", feedback_board.board_path("bugs"), class: "nav-link" %>
-
-<!-- Or embed directly -->
-<iframe src="/feedback" width="100%" height="600"></iframe>
-```
-
-### Multiple Boards
-
-```erb
-<!-- List all boards -->
-<% FeedbackBoard::Board.all.each do |board| %>
-  <%= link_to board.name, feedback_board.board_path(board.slug),
-      class: "block p-4 border rounded hover:bg-gray-50" %>
-<% end %>
-
-<!-- Board-specific ticket creation -->
-<%= link_to "Submit Feature Request",
-    feedback_board.new_board_ticket_path("features"),
-    class: "btn btn-primary" %>
-```
+This gem is available under the MIT License.
 
 ### Comment Threading
 
