@@ -72,13 +72,12 @@
           <nav class="flex space-x-4">
             <%= link_to "All Tickets", feedback_board.board_tickets_path(current_board),
                 class: "text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-            <% if can_submit_tickets? %>
-              <%= link_to "New Ticket", feedback_board.new_board_ticket_path(current_board),
-                  class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-            <% end %>
+
             <% if can_access_admin? %>
-              <%= link_to "Admin", feedback_board.admin_root_path,
-                  class: "bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+              <%= render 'shared/buttons/primary',
+                  text: "Admin",
+                  url: feedback_board.admin_root_path,
+                  additional_classes: "bg-purple-600 hover:bg-purple-700" %>
             <% end %>
           </nav>
         </div>
