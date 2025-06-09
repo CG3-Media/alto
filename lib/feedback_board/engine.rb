@@ -8,6 +8,12 @@ module FeedbackBoard
       g.factory_bot dir: 'spec/factories'
     end
 
+    # Ensure configuration is available early
+    initializer "feedback_board.configuration", before: "active_record.initialize_database" do
+      # Initialize configuration early to avoid namespace issues
+      ::FeedbackBoard.configure {}
+    end
+
     # Auto-setup database schema when engine loads
     initializer "feedback_board.setup_database", after: "active_record.initialize_database" do
       ActiveSupport.on_load(:active_record) do

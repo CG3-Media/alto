@@ -8,18 +8,20 @@ require "rails"
 require "kaminari"
 
 module FeedbackBoard
-  class << self
-    attr_accessor :configuration
-  end
-
   def self.configure
-    self.configuration ||= Configuration.new
-    yield(configuration) if block_given?
+    @configuration ||= Configuration.new
+    yield(@configuration) if block_given?
+    @configuration
   end
 
   def self.config
-    self.configuration ||= Configuration.new
+    @configuration ||= Configuration.new
   end
 
-  # Configuration for the FeedbackBoard engine
+  def self.configuration
+    @configuration ||= Configuration.new
+  end
+
+  # Ensure configuration is available immediately
+  configure {}
 end
