@@ -73,6 +73,11 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-start justify-between">
             <div class="flex-1">
+              <!-- Creator attribution -->
+              <div class="text-sm text-gray-600 mb-2">
+                <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span> posted
+              </div>
+
               <div class="flex items-center space-x-3 mb-2">
                 <h3 class="text-lg font-semibold text-gray-900">
                   <%= link_to ticket.title, feedback_board.board_ticket_path(@board, ticket), class: "hover:text-blue-600" %>
