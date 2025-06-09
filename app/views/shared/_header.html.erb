@@ -39,14 +39,6 @@
                 additional_classes: "rounded-r-md rounded-l-none border border-l-0 border-gray-300" %>
           <% end %>
         </div>
-
-        <!-- New Ticket Button -->
-        <% if can_submit_tickets? %>
-          <%= render 'shared/buttons/primary',
-              text: "✚ New Ticket",
-              url: feedback_board.new_board_ticket_path(current_board),
-              additional_classes: "whitespace-nowrap" %>
-        <% end %>
       </div>
     <% end %>
 

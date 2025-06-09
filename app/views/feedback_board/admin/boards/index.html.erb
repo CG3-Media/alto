@@ -1,13 +1,20 @@
 <div class="space-y-6">
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-900">🗂️ Manage Boards</h1>
-    <div class="flex space-x-4">
-      <%= link_to "New Board", feedback_board.new_admin_board_path,
-          class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      <%= link_to "Dashboard", feedback_board.admin_root_path,
-          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
-    </div>
-  </div>
+  <%= render 'shared/page_header',
+      title: "🗂️ Manage Boards",
+      actions: [
+        {
+          type: :link,
+          text: "New Board",
+          path: feedback_board.new_admin_board_path,
+          class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        },
+        {
+          type: :link,
+          text: "Dashboard",
+          path: feedback_board.admin_root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+        }
+      ] %>
 
   <!-- Boards Table -->
   <div class="bg-white shadow rounded-lg overflow-hidden">

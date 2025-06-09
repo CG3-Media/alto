@@ -1,15 +1,26 @@
 <div class="space-y-6">
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-900">📊 Admin Dashboard</h1>
-    <div class="flex space-x-4">
-      <%= link_to "Manage Boards", feedback_board.admin_boards_path,
-          class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      <%= link_to "Settings", feedback_board.admin_settings_path,
-          class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      <%= link_to "Back to Feedback", feedback_board.root_path,
-          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
-    </div>
-  </div>
+  <%= render 'shared/page_header',
+      title: "📊 Admin Dashboard",
+      actions: [
+        {
+          type: :link,
+          text: "Manage Boards",
+          path: feedback_board.admin_boards_path,
+          class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        },
+        {
+          type: :link,
+          text: "Settings",
+          path: feedback_board.admin_settings_path,
+          class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        },
+        {
+          type: :link,
+          text: "Back to Feedback",
+          path: feedback_board.root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+        }
+      ] %>
 
   <!-- Stats Cards -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

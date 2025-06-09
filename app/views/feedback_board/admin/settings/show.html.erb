@@ -1,13 +1,20 @@
 <div class="space-y-6">
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-900">⚙️ App Settings</h1>
-    <div class="flex space-x-4">
-      <%= link_to "Dashboard", feedback_board.admin_root_path,
-          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
-      <%= link_to "Back to Tickets", feedback_board.root_path,
-          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
-    </div>
-  </div>
+  <%= render 'shared/page_header',
+      title: "⚙️ App Settings",
+      actions: [
+        {
+          type: :link,
+          text: "Dashboard",
+          path: feedback_board.admin_root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+        },
+        {
+          type: :link,
+          text: "Back to Tickets",
+          path: feedback_board.root_path,
+          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+        }
+      ] %>
 
   <div class="bg-white rounded-lg shadow">
     <div class="px-6 py-4 border-b border-gray-200">

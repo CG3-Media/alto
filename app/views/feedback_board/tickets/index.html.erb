@@ -1,13 +1,17 @@
 <div class="space-y-6">
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-900"><%= @board.name %> Tickets</h1>
-    <div class="flex items-center space-x-4">
-      <% if can_submit_tickets? %>
-        <%= link_to "New Ticket", feedback_board.new_board_ticket_path(@board),
-            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      <% end %>
-    </div>
-  </div>
+  <% actions = [] %>
+  <% if can_submit_tickets? %>
+    <% actions << {
+      type: :link,
+      text: "New Ticket",
+      path: feedback_board.new_board_ticket_path(@board),
+      class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+    } %>
+  <% end %>
+
+  <%= render 'shared/page_header',
+      title: "#{@board.name} Tickets",
+      actions: actions %>
 
 
 
