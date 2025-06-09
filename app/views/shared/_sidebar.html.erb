@@ -4,12 +4,13 @@
 
     <!-- Status Filters -->
     <% if defined?(current_board) %>
+      <% status_collapsed = cookies['sidebar-section-0'] == 'true' %>
       <div class="feedback-sidebar-section">
         <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
           <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Status</h3>
-          <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors">−</span>
+          <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors"><%= status_collapsed ? '+' : '−' %></span>
         </div>
-        <div class="section-content mt-3">
+        <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if status_collapsed %>>
           <nav class="space-y-1">
             <%= link_to feedback_board.board_tickets_path(current_board),
                 class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status].blank? ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
@@ -44,12 +45,13 @@
     <% end %>
 
     <!-- Recent Activity -->
+    <% activity_collapsed = cookies['sidebar-section-1'] == 'true' %>
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
         <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Recent Activity</h3>
-        <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors">−</span>
+        <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors"><%= activity_collapsed ? '+' : '−' %></span>
       </div>
-      <div class="section-content mt-3">
+      <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if activity_collapsed %>>
         <div class="space-y-3">
           <% recent_tickets = FeedbackBoard::Ticket.includes(:board, :comments).recent.limit(5) %>
           <% recent_tickets.each do |ticket| %>
@@ -93,6 +95,7 @@
     </div>
 
     <!-- Boards Section -->
+    <% boards_collapsed = cookies['sidebar-section-2'] == 'true' %>
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
         <% if can_access_admin? %>
@@ -103,9 +106,9 @@
         <% else %>
           <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Boards</h3>
         <% end %>
-        <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors ml-2">−</span>
+        <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors ml-2"><%= boards_collapsed ? '+' : '−' %></span>
       </div>
-      <div class="section-content mt-3">
+      <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if boards_collapsed %>>
         <nav class="space-y-1">
           <% FeedbackBoard::Board.ordered.each do |board| %>
             <% ticket_count = board.tickets_count %>
@@ -130,12 +133,13 @@
 
     <!-- Admin Section -->
     <% if can_access_admin? %>
+      <% admin_collapsed = cookies['sidebar-section-3'] == 'true' %>
       <div class="feedback-sidebar-section">
         <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
           <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Admin</h3>
-          <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors">−</span>
+          <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors"><%= admin_collapsed ? '+' : '−' %></span>
         </div>
-        <div class="section-content mt-3">
+        <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if admin_collapsed %>>
           <nav class="space-y-1">
             <%= link_to feedback_board.admin_root_path,
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
@@ -274,40 +278,27 @@ function toggleSection(headerElement) {
   }
 }
 
-// Initialize sidebar state on page load
-document.addEventListener('DOMContentLoaded', function() {
-  // Restore collapsed state from localStorage
-  const sections = document.querySelectorAll('.feedback-sidebar-section');
-  sections.forEach(function(section, index) {
-    const sectionId = 'sidebar-section-' + index;
-    const isCollapsed = localStorage.getItem(sectionId) === 'true';
-    const content = section.querySelector('.section-content');
-    const icon = section.querySelector('.toggle-icon');
-
-    if (isCollapsed) {
-      content.style.display = 'none';
-      icon.textContent = '+';
-    }
-  });
-});
-
-// Enhanced toggle function with localStorage persistence
+// Enhanced toggle function with cookie persistence
 function toggleSection(headerElement) {
   const section = headerElement.parentElement;
   const content = section.querySelector('.section-content');
   const icon = headerElement.querySelector('.toggle-icon');
   const sections = Array.from(document.querySelectorAll('.feedback-sidebar-section'));
   const sectionIndex = sections.indexOf(section);
-  const sectionId = 'sidebar-section-' + sectionIndex;
+  const cookieName = 'sidebar-section-' + sectionIndex;
 
   if (content.style.display === 'none') {
     content.style.display = 'block';
     icon.textContent = '−';
-    localStorage.removeItem(sectionId);
+    // Remove cookie to indicate expanded state
+    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   } else {
     content.style.display = 'none';
     icon.textContent = '+';
-    localStorage.setItem(sectionId, 'true');
+    // Set cookie to indicate collapsed state (expires in 1 year)
+    const expiry = new Date();
+    expiry.setFullYear(expiry.getFullYear() + 1);
+    document.cookie = cookieName + '=true; expires=' + expiry.toUTCString() + '; path=/;';
   }
 }
 </script>
