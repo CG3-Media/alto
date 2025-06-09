@@ -49,9 +49,6 @@ module FeedbackBoard
     def self.load_into_configuration!
       config = FeedbackBoard.configuration
 
-      # Load app branding from database, fallback to defaults
-      config.app_name = get('app_name', config.app_name)
-
       # Load email settings from database, fallback to defaults
       config.notifications_enabled = get('notifications_enabled', config.notifications_enabled)
       config.notification_from_email = get('notification_from_email', config.notification_from_email)

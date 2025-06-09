@@ -8,10 +8,6 @@
         <%= link_to "Popular", feedback_board.board_tickets_path(@board, sort: 'popular', search: params[:search], status: params[:status]),
             class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] == 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] != 'popular'}" %>
       </div>
-      <% if can_access_admin? %>
-        <%= link_to "Admin", feedback_board.admin_root_path,
-            class: "bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      <% end %>
       <% if can_submit_tickets? %>
         <%= link_to "New Ticket", feedback_board.new_board_ticket_path(@board),
             class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>

@@ -60,8 +60,8 @@
                   class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
             <% end %>
             <% if can_access_admin? %>
-              <%= link_to "Manage Boards", feedback_board.admin_boards_path,
-                  class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+              <%= link_to "Admin", feedback_board.admin_root_path,
+                  class: "bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
             <% end %>
           </nav>
         </div>

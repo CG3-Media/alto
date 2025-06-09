@@ -1,7 +1,6 @@
 module FeedbackBoard
   class Configuration
     attr_accessor :user_display_name_method, :user_model,
-                  :app_name,
                   :notifications_enabled, :notification_from_email,
                   :admin_notification_emails, :notify_ticket_author,
                   :notify_admins_of_new_tickets, :notify_admins_of_new_comments,
@@ -13,8 +12,8 @@ module FeedbackBoard
       @user_display_name_method = default_user_display_name_method
       @user_model = "User"
 
-      # App branding
-      @app_name = "Feedback Board"
+      # App branding default (fallback if database not available)
+      @default_app_name = "Feedback Board"
 
       # Email notification defaults
       @notifications_enabled = true
@@ -30,7 +29,29 @@ module FeedbackBoard
       @allow_board_deletion_with_tickets = false
     end
 
+    # Database-backed app_name with fallback to default
+    def app_name
+      return @default_app_name unless database_available?
+      FeedbackBoard::Setting.get('app_name', @default_app_name)
+    end
+
+    def app_name=(value)
+      if database_available?
+        FeedbackBoard::Setting.set('app_name', value)
+      else
+        # During setup/migrations, just store in memory
+        @default_app_name = value
+      end
+    end
+
     private
+
+    def database_available?
+      return false unless defined?(FeedbackBoard::Setting)
+      FeedbackBoard::Setting.table_exists?
+    rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+      false
+    end
 
     def default_user_display_name_method
       proc do |user_id|
