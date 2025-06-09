@@ -8,7 +8,7 @@ module FeedbackBoard
 
         # Set up database
         say "Setting up database schema...", :blue
-        FeedbackBoard::DatabaseSetup.setup_if_needed
+        ::FeedbackBoard::DatabaseSetup.setup_if_needed
 
         # Create initializer
         create_initializer
