@@ -18,8 +18,7 @@ A mountable Rails engine for collecting user feedback with multiple boards, thre
 - Configurable status sets with custom statuses and colors
 - Admin dashboard with status management and analytics
 - Full-text search across tickets and comments
-- Email notifications with beautiful HTML templates
-- Callback hooks for integration with Slack, analytics, and external APIs
+- Callback hooks for integration with email notifications, Slack, analytics, and external APIs
 
 ## Installation
 
@@ -95,7 +94,6 @@ end
 
 Visit `/feedback/admin` to:
 - Manage boards
-- Configure email notifications
 - View analytics
 - Change ticket statuses
 
@@ -126,7 +124,8 @@ class ApplicationController < ActionController::Base
 
   def comment_created(comment, ticket, board, user)
     # Called whenever someone comments
-    NotificationMailer.new_comment(comment).deliver_later
+    # Send email notifications using your preferred method
+    UserMailer.new_comment_notification(comment, ticket, user).deliver_later
   end
 end
 ```
@@ -259,10 +258,8 @@ FeedbackBoard.configure do |config|
     current_user&.admin?  # Your admin logic here
   end
 
-  # Email notifications
-  config.notifications_enabled = true
-  config.notify_admins_of_new_tickets = true
-  config.admin_notification_emails = ["admin@example.com"]
+  # Board configuration
+  config.allow_board_deletion_with_tickets = false
 end
 ```
 
@@ -285,19 +282,24 @@ config.permission :can_create_tickets? do
 end
 ```
 
-### Email Setup
+### Email Notifications
 
-FeedbackBoard uses your app's existing ActionMailer configuration:
+Email notifications are handled through the callback system. Implement callback methods in your ApplicationController to send notifications using your preferred mailer:
 
 ```ruby
-# config/environments/production.rb
-config.action_mailer.delivery_method = :smtp
-config.action_mailer.smtp_settings = {
-  # your SMTP settings
-}
-```
+# app/controllers/application_controller.rb
+def ticket_created(ticket, board, user)
+  # Send email using your mailer
+  UserMailer.ticket_created(ticket, user).deliver_later
+end
 
-Configure notification preferences in the admin dashboard at `/feedback/admin/settings`.
+def comment_created(comment, ticket, board, user)
+  # Notify ticket author of new comments
+  if ticket.user_id != user&.id
+    UserMailer.new_comment(comment, ticket).deliver_later
+  end
+end
+```
 
 ## Customization
 
@@ -343,11 +345,16 @@ rails generate feedback_board:install
 
 The installer will create any missing status configurations.
 
-### Emails not sending
+### Email notifications not working
 
-1. Verify ActionMailer is configured
-2. Check admin settings at `/feedback/admin/settings`
-3. Ensure `notifications_enabled = true` in your initializer
+Email notifications are handled through callback methods in your ApplicationController. Ensure you've implemented the callback methods you need:
+
+```ruby
+# app/controllers/application_controller.rb
+def ticket_created(ticket, board, user)
+  # Your email notification logic here
+end
+```
 
 ### Permission denied errors
 

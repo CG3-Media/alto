@@ -8,22 +8,9 @@ module FeedbackBoard
       end
 
             def update
-        # Process admin emails (convert comma-separated string to array)
-        admin_emails = if params[:admin_notification_emails].present?
-          params[:admin_notification_emails].split(',').map(&:strip).reject(&:blank?)
-        else
-          []
-        end
-
         # Save settings to database
         settings = {
-          'app_name' => params[:app_name],
-          'notifications_enabled' => params[:notifications_enabled] == '1',
-          'notification_from_email' => params[:notification_from_email],
-          'notify_ticket_author' => params[:notify_ticket_author] == '1',
-          'notify_admins_of_new_tickets' => params[:notify_admins_of_new_tickets] == '1',
-          'notify_admins_of_new_comments' => params[:notify_admins_of_new_comments] == '1',
-          'admin_notification_emails' => admin_emails
+          'app_name' => params[:app_name]
         }
 
         Setting.update_settings(settings)

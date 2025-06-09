@@ -1,9 +1,6 @@
 module FeedbackBoard
   class Configuration
     attr_accessor :user_display_name_method, :user_model,
-                  :notifications_enabled, :notification_from_email,
-                  :admin_notification_emails, :notify_ticket_author,
-                  :notify_admins_of_new_tickets, :notify_admins_of_new_comments,
                   :default_board_name, :default_board_slug,
                   :allow_board_deletion_with_tickets
 
@@ -17,14 +14,6 @@ module FeedbackBoard
 
       # App branding default (fallback if database not available)
       @default_app_name = "Feedback Board"
-
-      # Email notification defaults
-      @notifications_enabled = true
-      @notification_from_email = "noreply@example.com"
-      @admin_notification_emails = []
-      @notify_ticket_author = true
-      @notify_admins_of_new_tickets = true
-      @notify_admins_of_new_comments = true
 
       # Board configuration defaults
       @default_board_name = "Feedback"

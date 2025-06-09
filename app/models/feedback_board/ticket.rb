@@ -10,10 +10,6 @@ module FeedbackBoard
     validates :board_id, presence: true
     validate :status_slug_valid_for_board
 
-    # Email notification callbacks
-    after_create :send_new_ticket_notifications
-    after_update :send_status_change_notifications, if: :saved_change_to_status_slug?
-
     # Host app callback hooks
     after_create :trigger_ticket_created_callback
     after_update :trigger_ticket_status_changed_callback, if: :saved_change_to_status_slug?
@@ -115,41 +111,6 @@ module FeedbackBoard
     end
 
     private
-
-    def send_new_ticket_notifications
-      return unless ::FeedbackBoard.configuration.notifications_enabled
-
-      # Send to admin emails if configured
-      if ::FeedbackBoard.configuration.notify_admins_of_new_tickets &&
-         ::FeedbackBoard.configuration.admin_notification_emails.any?
-
-        ::FeedbackBoard.configuration.admin_notification_emails.each do |email|
-          NotificationMailer.new_ticket(self, email).deliver_later
-        end
-      end
-    end
-
-    def send_status_change_notifications
-          return unless ::FeedbackBoard.configuration.notifications_enabled
-    return unless ::FeedbackBoard.configuration.notify_ticket_author
-
-      # Get the user's email for notification
-      user_email = get_user_email(user_id)
-      return unless user_email
-
-      old_status_slug = saved_changes['status_slug'][0] if saved_changes['status_slug']
-      NotificationMailer.status_changed(self, user_email, old_status_slug).deliver_later
-    end
-
-    def get_user_email(user_id)
-      return nil unless user_id
-
-      user_class = ::FeedbackBoard.configuration.user_model.constantize rescue nil
-      return nil unless user_class
-
-      user = user_class.find_by(id: user_id)
-      user&.email if user&.respond_to?(:email)
-    end
 
     def trigger_ticket_created_callback
       ::FeedbackBoard::CallbackManager.call(:ticket_created, self, board, get_user_object(user_id))

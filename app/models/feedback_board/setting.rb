@@ -49,13 +49,8 @@ module FeedbackBoard
     def self.load_into_configuration!
       config = ::FeedbackBoard.configuration
 
-      # Load email settings from database, fallback to defaults
-      config.notifications_enabled = get('notifications_enabled', config.notifications_enabled)
-      config.notification_from_email = get('notification_from_email', config.notification_from_email)
-      config.admin_notification_emails = get('admin_notification_emails', config.admin_notification_emails)
-      config.notify_ticket_author = get('notify_ticket_author', config.notify_ticket_author)
-      config.notify_admins_of_new_tickets = get('notify_admins_of_new_tickets', config.notify_admins_of_new_tickets)
-      config.notify_admins_of_new_comments = get('notify_admins_of_new_comments', config.notify_admins_of_new_comments)
+      # Currently no database settings to load
+      # App name is handled through the configuration object directly
     end
   end
 end

@@ -278,7 +278,7 @@ module FeedbackBoard
         say "🚀 Next Steps:", :yellow
         say "1. Visit /feedback in your app to see the feedback board"
         say "2. Customize permissions in config/initializers/feedback_board.rb"
-        say "3. Configure email settings if you want notifications"
+        say "3. Implement callback methods in your ApplicationController for notifications"
         say ""
       end
 
@@ -341,14 +341,6 @@ module FeedbackBoard
             #     current_user.present?
             #   end
             # end
-
-            # Email notification settings
-            config.notifications_enabled = true
-            config.notification_from_email = "noreply@example.com"
-            config.admin_notification_emails = []  # Add admin emails: ['admin@example.com']
-            config.notify_ticket_author = true
-            config.notify_admins_of_new_tickets = true
-            config.notify_admins_of_new_comments = true
 
             # Board configuration
             config.allow_board_deletion_with_tickets = false
