@@ -169,6 +169,8 @@ module FeedbackBoard
       board&.item_name || 'ticket'
     end
 
+
+
     private
 
     def upvote_path_for(upvotable)

@@ -2,8 +2,12 @@ FeedbackBoard::Engine.routes.draw do
   # Root redirects to default board
   root 'boards#redirect_to_default'
 
+  # Global activity across all boards
+  get 'activity', to: 'global_activity#index'
+
   # Board routes
   resources :boards, param: :slug, path: 'boards' do
+    get 'activity', to: 'activity#index'
     resources :tickets do
       resources :comments, only: [:create, :destroy, :show]
       resources :upvotes, only: [:create] do
