@@ -6,7 +6,7 @@
           type: :link,
           text: "← Back to Boards",
           path: feedback_board.admin_boards_path,
-          class: "text-gray-600 hover:text-gray-900"
+          button_type: :secondary
         }
       ] %>
 
@@ -20,10 +20,12 @@
       <p class="text-gray-600 mb-4">
         Deleting this board will permanently remove it and may affect associated tickets.
       </p>
-      <%= link_to "Delete Board", feedback_board.admin_board_path(@board),
+      <%= render 'shared/button',
+          text: "Delete Board",
+          url: feedback_board.admin_board_path(@board),
           method: :delete,
           confirm: "Are you sure you want to delete '#{@board.name}'? This action cannot be undone.",
-          class: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+          button_type: :danger %>
     </div>
   <% end %>
 </div>

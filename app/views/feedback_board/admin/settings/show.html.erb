@@ -6,13 +6,13 @@
           type: :link,
           text: "Dashboard",
           path: feedback_board.admin_root_path,
-          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+          button_type: :secondary
         },
         {
           type: :link,
           text: "Back to Tickets",
           path: feedback_board.root_path,
-          class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+          button_type: :secondary
         }
       ] %>
 
@@ -127,8 +127,10 @@
 
       <!-- Submit Button -->
       <div class="flex justify-end border-t pt-6">
-        <%= submit_tag "Save Settings",
-            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+        <%= render 'shared/button',
+            text: "Save Settings",
+            type: "submit",
+            button_type: :primary %>
       </div>
     <% end %>
   </div>
