@@ -55,7 +55,9 @@
         <% end %>
 
         <!-- Breadcrumbs -->
-        <%= render 'shared/breadcrumbs' %>
+        <% unless controller_name == 'tickets' && action_name == 'index' %>
+          <%= render 'shared/breadcrumbs' %>
+        <% end %>
 
         <%= yield %>
       </div>

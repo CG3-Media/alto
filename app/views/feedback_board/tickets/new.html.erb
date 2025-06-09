@@ -1,8 +1,8 @@
 <div class="max-w-2xl mx-auto">
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Submit New Feedback to <%= @board.name %></h1>
-      <p class="text-gray-600">Help us improve by sharing your suggestions, bug reports, or feature requests.</p>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Submit New <%= @board.item_name.capitalize %> to <%= @board.name %></h1>
+      <p class="text-gray-600">Share your ideas, feedback, or information with the community.</p>
     </div>
 
     <%= form_with model: [@board, @ticket], local: true, class: "space-y-6" do |form| %>
@@ -16,7 +16,7 @@
             </div>
             <div class="ml-3">
               <h3 class="text-sm font-medium text-red-800">
-                <%= pluralize(@ticket.errors.count, "error") %> prohibited this ticket from being saved:
+                <%= pluralize(@ticket.errors.count, "error") %> prohibited this <%= @board.item_name %> from being saved:
               </h3>
               <div class="mt-2 text-sm text-red-700">
                 <ul class="list-disc list-inside space-y-1">
@@ -33,17 +33,17 @@
       <%= render 'shared/forms/input',
           form: form,
           field_name: :title,
-          placeholder: "Brief, descriptive title of your feedback",
+          placeholder: "Brief, descriptive title for your " + @board.item_name,
           model: @ticket,
           required: true %>
 
       <%= render 'shared/forms/text_area',
           form: form,
           field_name: :description,
-          placeholder: "Provide detailed information about your feedback. What happened? What did you expect? Include steps to reproduce if it's a bug.",
+          placeholder: "Provide detailed information about your " + @board.item_name + ". Include relevant context, steps, examples, or background information.",
           rows: 6,
           model: @ticket,
-          helper_text: "Be as specific as possible. Good feedback helps us understand and address your needs better.",
+          helper_text: "Be as specific and clear as possible. Well-detailed " + @board.item_name.pluralize + " help others understand and respond effectively.",
           required: true %>
 
       <div class="flex items-center justify-between pt-4">
@@ -53,7 +53,7 @@
 
         <div class="flex space-x-3">
           <%= render 'shared/buttons/primary',
-              text: "Submit Feedback",
+              text: "Submit " + @board.item_name.capitalize,
               type: "submit",
               size: "medium",
               additional_classes: "px-6" %>
@@ -64,12 +64,12 @@
 
   <!-- Tips Card -->
   <div class="mt-6 bg-blue-50 rounded-lg p-4">
-    <h3 class="text-sm font-medium text-blue-800 mb-2">💡 Tips for great feedback</h3>
+    <h3 class="text-sm font-medium text-blue-800 mb-2">💡 Tips for great <%= @board.item_name.pluralize %></h3>
     <ul class="text-sm text-blue-700 space-y-1">
       <li>• Be specific and descriptive in your title</li>
-      <li>• Include steps to reproduce bugs</li>
-      <li>• Explain the expected vs actual behavior</li>
-      <li>• One idea per ticket for better tracking</li>
+      <li>• Include relevant details and context</li>
+      <li>• Provide examples or steps when applicable</li>
+      <li>• Keep one main idea per <%= @board.item_name %> for better organization</li>
     </ul>
   </div>
 </div>

@@ -19,7 +19,7 @@
   <% end %>
 
   <%= render 'shared/page_header',
-      title: "#{@board.name} #{board_item_name(@board).pluralize.capitalize}",
+      title: @board.name,
       actions: actions %>
 
 

@@ -14,34 +14,32 @@
       <% if @ticket.persisted? %>
         <%= link_to truncate(@ticket.title, length: 50), feedback_board.board_ticket_path(@board, @ticket),
             class: "hover:text-blue-600 font-medium" %>
-      <% else %>
-        <span class="text-gray-500"><%= truncate(@ticket.title.presence || "New #{current_board_item_name.capitalize}", length: 50) %></span>
-      <% end %>
 
-      <% if controller_name == 'comments' && action_name == 'show' %>
-        <!-- Separator -->
-        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-        </svg>
+        <% if controller_name == 'comments' && action_name == 'show' %>
+          <!-- Separator -->
+          <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+          </svg>
 
-        <!-- Comment Thread -->
-        <span class="text-gray-500">Discussion Thread</span>
+          <!-- Comment Thread -->
+          <span class="text-gray-500">Discussion Thread</span>
+        <% elsif controller_name == 'tickets' && action_name == 'edit' %>
+          <!-- Separator -->
+          <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+          </svg>
+
+          <!-- Edit Ticket -->
+          <span class="text-gray-500">Edit</span>
+        <% end %>
       <% elsif controller_name == 'tickets' && action_name == 'new' %>
         <!-- Separator -->
         <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
         </svg>
 
-              <!-- New Ticket -->
-      <span class="text-gray-500">New <%= current_board_item_name.capitalize %></span>
-      <% elsif controller_name == 'tickets' && action_name == 'edit' %>
-        <!-- Separator -->
-        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-        </svg>
-
-        <!-- Edit Ticket -->
-        <span class="text-gray-500">Edit</span>
+        <!-- New Ticket -->
+        <span class="text-gray-500">New <%= current_board_item_name.capitalize %></span>
       <% end %>
     <% elsif controller_name == 'tickets' && action_name == 'new' %>
       <!-- Separator -->
