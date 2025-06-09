@@ -28,14 +28,15 @@
       <div class="space-y-4">
         <h4 class="text-md font-medium text-gray-900">App Branding</h4>
 
-        <div>
-          <label for="app_name" class="block text-sm font-medium text-gray-700">Application Name</label>
-          <%= text_field_tag "app_name", @config.app_name,
+        <%= render 'shared/forms/input',
+            field_name: "app_name",
+            label_text: "Application Name",
+            placeholder: "Feedback Board",
+            html_options: {
               id: "app_name",
-              placeholder: "Feedback Board",
-              class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
-          <p class="mt-1 text-sm text-gray-500">The name that appears in the header and page title</p>
-        </div>
+              value: @config.app_name
+            } %>
+        <p class="mt-1 text-sm text-gray-500">The name that appears in the header and page title</p>
       </div>
 
       <!-- Persistence Info -->
