@@ -1,5 +1,5 @@
 <div class="space-y-6">
-  <%= render 'shared/page_header',
+        <%= render 'shared/page_header',
       title: "📊 Admin Dashboard",
       actions: [
         {
@@ -7,6 +7,12 @@
           text: "Manage Boards",
           path: feedback_board.admin_boards_path,
           class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        },
+        {
+          type: :link,
+          text: "Status Sets",
+          path: feedback_board.admin_status_sets_path,
+          class: "bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium"
         },
         {
           type: :link,

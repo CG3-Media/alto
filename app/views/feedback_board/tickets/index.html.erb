@@ -20,9 +20,11 @@
     <div class="flex flex-wrap gap-2">
       <%= link_to "All", feedback_board.board_tickets_path(@board, search: params[:search], sort: params[:sort]),
           class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status].blank?}" %>
-      <% @statuses.each do |status| %>
-        <%= link_to status.humanize, feedback_board.board_tickets_path(@board, status: status, search: params[:search], sort: params[:sort]),
-            class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status] == status} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status] == status}" %>
+      <% if @board.has_status_tracking? %>
+        <% @statuses.each do |status| %>
+          <%= link_to status.name, feedback_board.board_tickets_path(@board, status: status.slug, search: params[:search], sort: params[:sort]),
+              class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status] == status.slug} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status] == status.slug}" %>
+        <% end %>
       <% end %>
     </div>
     <div class="flex space-x-2">
@@ -60,22 +62,26 @@
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1">
               <!-- Status Badge -->
-              <div class="mb-2">
-                <span class="px-2 py-1 text-xs font-medium rounded-full
-                  <%= case ticket.status
-                      when 'open' then 'bg-green-100 text-green-800'
-                      when 'planned' then 'bg-blue-100 text-blue-800'
-                      when 'in_progress' then 'bg-yellow-100 text-yellow-800'
-                      when 'complete' then 'bg-gray-100 text-gray-800'
-                      end %>">
-                  <%= ticket.status.humanize %>
-                </span>
-                <% if ticket.locked? %>
-                  <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 ml-2">
-                    🔒 Locked
+              <% if @board.has_status_tracking? %>
+                <div class="mb-2">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full <%= ticket.status_color_classes %>">
+                    <%= ticket.status_name %>
                   </span>
+                  <% if ticket.locked? %>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 ml-2">
+                      🔒 Locked
+                    </span>
+                  <% end %>
+                </div>
+              <% else %>
+                <% if ticket.locked? %>
+                  <div class="mb-2">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                      🔒 Locked
+                    </span>
+                  </div>
                 <% end %>
-              </div>
+              <% end %>
 
               <!-- Title -->
               <div class="mb-2">

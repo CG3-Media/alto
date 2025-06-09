@@ -20,5 +20,6 @@ FeedbackBoard::Engine.routes.draw do
     root 'dashboard#index'
     resource :settings, only: [:show, :update]
     resources :boards, except: [:show]
+    resources :status_sets
   end
 end

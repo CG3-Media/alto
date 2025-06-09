@@ -55,14 +55,16 @@
           <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Controls</h3>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <%= form.label :status, class: "block text-sm font-medium text-gray-700 mb-2" %>
-              <%= form.select :status,
-                  options_for_select(FeedbackBoard::Ticket::STATUSES.map { |status| [status.humanize, status] }, @ticket.status),
-                  {},
-                  class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
-              <p class="mt-1 text-sm text-gray-500">Update the ticket status to reflect progress</p>
-            </div>
+            <% if @board.has_status_tracking? %>
+              <div>
+                <%= form.label :status_slug, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :status_slug,
+                    options_for_select(@board.status_options_for_select, @ticket.status_slug),
+                    {},
+                    class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+                <p class="mt-1 text-sm text-gray-500">Update the ticket status to reflect progress</p>
+              </div>
+            <% end %>
 
             <div>
               <%= form.label :locked, class: "block text-sm font-medium text-gray-700 mb-2" %>
@@ -93,25 +95,28 @@
   </div>
 
   <!-- Status Guide -->
-  <div class="mt-6 bg-gray-50 rounded-lg p-4">
-    <h3 class="text-sm font-medium text-gray-800 mb-3">📋 Status Guide</h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-      <div class="flex items-center space-x-2">
-        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Open</span>
-        <span class="text-gray-600">New feedback, not yet reviewed</span>
-      </div>
-      <div class="flex items-center space-x-2">
-        <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Planned</span>
-        <span class="text-gray-600">Accepted and scheduled for development</span>
-      </div>
-      <div class="flex items-center space-x-2">
-        <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">In Progress</span>
-        <span class="text-gray-600">Currently being worked on</span>
-      </div>
-      <div class="flex items-center space-x-2">
-        <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Complete</span>
-        <span class="text-gray-600">Finished and deployed</span>
+  <% if @board.has_status_tracking? %>
+    <div class="mt-6 bg-gray-50 rounded-lg p-4">
+      <h3 class="text-sm font-medium text-gray-800 mb-3">📋 Status Guide</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <% @board.available_statuses.each do |status| %>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 text-xs font-medium rounded-full <%= status.color_classes %>">
+              <%= status.name %>
+            </span>
+            <span class="text-gray-600">
+              <%= case status.slug
+                  when 'open' then 'New feedback, not yet reviewed'
+                  when 'planned' then 'Accepted and scheduled for development'
+                  when 'in_progress' then 'Currently being worked on'
+                  when 'complete' then 'Finished and deployed'
+                  when 'closed' then 'Resolved or no longer relevant'
+                  else "#{status.name} status"
+                  end %>
+            </span>
+          </div>
+        <% end %>
       </div>
     </div>
-  </div>
+  <% end %>
 </div>

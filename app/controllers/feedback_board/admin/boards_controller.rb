@@ -58,7 +58,7 @@ module FeedbackBoard
       end
 
       def board_params
-        params.require(:board).permit(:name, :description)
+        params.require(:board).permit(:name, :description, :status_set_id)
       end
 
       def ensure_admin_access

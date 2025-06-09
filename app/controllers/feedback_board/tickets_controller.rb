@@ -29,7 +29,7 @@ module FeedbackBoard
                  end
 
       @tickets = @tickets.page(params[:page]) if respond_to?(:page)
-      @statuses = Ticket::STATUSES
+      @statuses = @board.available_statuses
       @search_query = params[:search]
     end
 
@@ -104,7 +104,7 @@ module FeedbackBoard
     def ticket_params
       permitted_params = [:title, :description]
       # Only admins can edit status and locked fields
-      permitted_params += [:status, :locked] if can_edit_tickets?
+      permitted_params += [:status_slug, :locked] if can_edit_tickets?
       params.require(:ticket).permit(*permitted_params)
     end
 

@@ -1,26 +1,27 @@
 module FeedbackBoard
   class Ticket < ApplicationRecord
-    STATUSES = %w[open planned in_progress complete].freeze
-
     belongs_to :board
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
 
     validates :title, presence: true, length: { maximum: 255 }
     validates :description, presence: true
-    validates :status, inclusion: { in: STATUSES }
     validates :user_id, presence: true
     validates :board_id, presence: true
+    validate :status_slug_valid_for_board
 
     # Email notification callbacks
     after_create :send_new_ticket_notifications
-    after_update :send_status_change_notifications, if: :saved_change_to_status?
+    after_update :send_status_change_notifications, if: :saved_change_to_status_slug?
 
     # Host app callback hooks
     after_create :trigger_ticket_created_callback
-    after_update :trigger_ticket_status_changed_callback, if: :saved_change_to_status?
+    after_update :trigger_ticket_status_changed_callback, if: :saved_change_to_status_slug?
 
-    scope :by_status, ->(status) { where(status: status) }
+    # Set default status when ticket is created
+    before_create :set_default_status
+
+    scope :by_status, ->(status_slug) { where(status_slug: status_slug) }
     scope :unlocked, -> { where(locked: false) }
     scope :locked, -> { where(locked: true) }
     scope :recent, -> { order(created_at: :desc) }
@@ -87,6 +88,32 @@ module FeedbackBoard
       !locked?
     end
 
+    def locked?
+      locked
+    end
+
+    # Status-related methods
+    def status
+      return nil unless board.has_status_tracking?
+      board.status_by_slug(status_slug)
+    end
+
+    def status_name
+      status&.name || status_slug&.humanize || 'Unknown'
+    end
+
+    def status_color_classes
+      status&.color_classes || 'bg-gray-100 text-gray-800'
+    end
+
+    def available_statuses
+      board.available_statuses
+    end
+
+    def can_change_status?
+      board.has_status_tracking?
+    end
+
     private
 
     def send_new_ticket_notifications
@@ -110,8 +137,8 @@ module FeedbackBoard
       user_email = get_user_email(user_id)
       return unless user_email
 
-      old_status = saved_changes['status'][0] if saved_changes['status']
-      NotificationMailer.status_changed(self, user_email, old_status).deliver_later
+      old_status_slug = saved_changes['status_slug'][0] if saved_changes['status_slug']
+      NotificationMailer.status_changed(self, user_email, old_status_slug).deliver_later
     end
 
     def get_user_email(user_id)
@@ -129,9 +156,9 @@ module FeedbackBoard
     end
 
     def trigger_ticket_status_changed_callback
-      old_status = saved_changes['status'][0]
-      new_status = saved_changes['status'][1]
-      FeedbackBoard::CallbackManager.call(:ticket_status_changed, self, old_status, new_status, board, get_user_object(user_id))
+      old_status_slug = saved_changes['status_slug'][0]
+      new_status_slug = saved_changes['status_slug'][1]
+      FeedbackBoard::CallbackManager.call(:ticket_status_changed, self, old_status_slug, new_status_slug, board, get_user_object(user_id))
     end
 
     def get_user_object(user_id)
@@ -141,6 +168,32 @@ module FeedbackBoard
       return nil unless user_class
 
       user_class.find_by(id: user_id)
+    end
+
+    def status_slug_valid_for_board
+      return unless status_slug.present? && board.present?
+
+      if board.has_status_tracking?
+        valid_slugs = board.status_set.status_slugs
+        unless valid_slugs.include?(status_slug)
+          errors.add(:status_slug, "is not valid for this board")
+        end
+      else
+        # Board has no status tracking, so status_slug should be nil
+        unless status_slug.nil?
+          errors.add(:status_slug, "should not be set for boards without status tracking")
+        end
+      end
+    end
+
+    def set_default_status
+      return unless board.present?
+
+      if board.has_status_tracking? && status_slug.blank?
+        self.status_slug = board.default_status_slug
+      elsif !board.has_status_tracking?
+        self.status_slug = nil
+      end
     end
   end
 end
