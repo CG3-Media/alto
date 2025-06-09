@@ -96,7 +96,7 @@
                 <%= truncate(ticket.description, length: 150) %>
               </p>
               <div class="flex items-center space-x-4 text-sm text-gray-500">
-                <span><span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span> posted</span>
+                <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
                 <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
                 <span><%= pluralize(ticket.comments.count, 'comment') %></span>
               </div>
