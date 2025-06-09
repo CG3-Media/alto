@@ -1,6 +1,6 @@
 module FeedbackBoard
   module Admin
-    class SettingsController < FeedbackBoard::ApplicationController
+    class SettingsController < ::FeedbackBoard::ApplicationController
       before_action :ensure_admin_access
 
       def show

@@ -1,5 +1,5 @@
 module FeedbackBoard
-  class BoardsController < ApplicationController
+  class BoardsController < ::FeedbackBoard::ApplicationController
     before_action :set_board, only: [:show, :edit, :update, :destroy]
     before_action :ensure_can_manage_boards, only: [:new, :create, :edit, :update, :destroy]
 

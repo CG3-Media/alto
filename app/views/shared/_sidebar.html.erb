@@ -13,18 +13,23 @@
             <span class="ml-2 text-xs text-gray-500"><%= current_board.tickets.count %></span>
           <% end %>
 
-          <% FeedbackBoard::Ticket::STATUSES.each do |status| %>
-            <% count = current_board.tickets.by_status(status).count %>
-            <%= link_to feedback_board.board_tickets_path(current_board, status: status),
-                class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status] == status ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
+          <% current_board.available_statuses.each do |status| %>
+            <% count = current_board.tickets.by_status(status.slug).count %>
+            <%= link_to feedback_board.board_tickets_path(current_board, status: status.slug),
+                class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status] == status.slug ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
               <div class="flex items-center">
-                <span class="w-2 h-2 rounded-full mr-2 <%= case status
-                  when 'open' then 'bg-green-500'
-                  when 'planned' then 'bg-blue-500'
-                  when 'in_progress' then 'bg-yellow-500'
-                  when 'complete' then 'bg-gray-500'
+                <span class="w-2 h-2 rounded-full mr-2 <%= case status.color
+                  when 'green' then 'bg-green-500'
+                  when 'blue' then 'bg-blue-500'
+                  when 'yellow' then 'bg-yellow-500'
+                  when 'red' then 'bg-red-500'
+                  when 'gray' then 'bg-gray-500'
+                  when 'purple' then 'bg-purple-500'
+                  when 'orange' then 'bg-orange-500'
+                  when 'pink' then 'bg-pink-500'
+                  else 'bg-gray-500'
                   end %>"></span>
-                <%= status.humanize %>
+                <%= status.name %>
               </div>
               <span class="ml-2 text-xs text-gray-500"><%= count %></span>
             <% end %>
@@ -43,12 +48,21 @@
             <%= link_to feedback_board.board_ticket_path(ticket.board, ticket),
                 class: "block hover:bg-gray-50 p-2 rounded-md" do %>
               <div class="flex items-start">
-                <span class="w-2 h-2 rounded-full mt-2 mr-2 <%= case ticket.status
-                  when 'open' then 'bg-green-500'
-                  when 'planned' then 'bg-blue-500'
-                  when 'in_progress' then 'bg-yellow-500'
-                  when 'complete' then 'bg-gray-500'
-                  end %>"></span>
+                <span class="w-2 h-2 rounded-full mt-2 mr-2 <%= if ticket.status
+                  case ticket.status.color
+                  when 'green' then 'bg-green-500'
+                  when 'blue' then 'bg-blue-500'
+                  when 'yellow' then 'bg-yellow-500'
+                  when 'red' then 'bg-red-500'
+                  when 'gray' then 'bg-gray-500'
+                  when 'purple' then 'bg-purple-500'
+                  when 'orange' then 'bg-orange-500'
+                  when 'pink' then 'bg-pink-500'
+                  else 'bg-gray-500'
+                  end
+                else
+                  'bg-gray-500'
+                end %>"></span>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-gray-900 truncate">
                     <%= truncate(ticket.title, length: 30) %>

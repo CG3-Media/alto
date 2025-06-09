@@ -1,0 +1,185 @@
+<%= form_with(model: [:admin, @status_set], local: true, class: "space-y-6") do |form| %>
+  <% if @status_set.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+      <h4 class="font-medium">Please fix the following errors:</h4>
+      <ul class="mt-2 list-disc list-inside">
+        <% @status_set.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Status Set Details -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Status Set Details</h3>
+
+    <%= render 'shared/forms/input',
+        form: form,
+        field_name: :name,
+        placeholder: "Status set name (e.g., 'Development Workflow')",
+        model: @status_set,
+        required: true %>
+
+    <%= render 'shared/forms/text_area',
+        form: form,
+        field_name: :description,
+        placeholder: "Describe when to use this status set",
+        rows: 3,
+        model: @status_set,
+        helper_text: "Help users understand when to use this workflow" %>
+
+    <div>
+      <label class="flex items-center">
+        <%= form.check_box :is_default, class: "rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" %>
+        <span class="ml-2 text-sm text-gray-900">Set as default status set</span>
+      </label>
+      <p class="mt-1 text-sm text-gray-500">The default status set is used for new boards unless specified otherwise</p>
+    </div>
+  </div>
+
+  <!-- Statuses -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-medium text-gray-900">🏷️ Statuses</h3>
+      <button type="button" id="add-status" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm font-medium">
+        + Add Status
+      </button>
+    </div>
+
+    <div id="statuses-container" class="space-y-4">
+      <%= form.fields_for :statuses do |status_form| %>
+        <%= render 'status_field', form: status_form %>
+      <% end %>
+    </div>
+
+    <p class="mt-2 text-sm text-gray-500">
+      💡 Tip: Create statuses in the order you want them to appear. Common workflows: Open → In Progress → Complete
+    </p>
+  </div>
+
+  <div class="flex justify-end space-x-3">
+    <%= render 'shared/buttons/secondary',
+        text: "Cancel",
+        url: feedback_board.admin_status_sets_path %>
+    <%= render 'shared/buttons/primary',
+        text: (@status_set.new_record? ? "Create Status Set" : "Update Status Set"),
+        type: "submit" %>
+  </div>
+<% end %>
+
+<!-- Template for new status fields -->
+<template id="status-field-template">
+  <div class="status-field border border-gray-200 rounded-lg p-4 bg-gray-50">
+    <div class="flex justify-between items-start mb-3">
+      <h4 class="text-sm font-medium text-gray-700">New Status</h4>
+      <button type="button" class="remove-status text-red-600 hover:text-red-800 text-sm">
+        ✕ Remove
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Status Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Status Name <span class="text-red-500">*</span>
+        </label>
+        <input type="text" name="TEMPLATE_NAME" placeholder="e.g., Open, In Progress, Complete"
+               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+      </div>
+
+      <!-- Status Slug -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Slug <span class="text-red-500">*</span>
+        </label>
+        <input type="text" name="TEMPLATE_SLUG" placeholder="e.g., open, in_progress, complete"
+               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm" required>
+        <p class="mt-1 text-xs text-gray-500">URL-friendly identifier (lowercase, underscores/hyphens)</p>
+      </div>
+
+      <!-- Color -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Color <span class="text-red-500">*</span>
+        </label>
+        <select name="TEMPLATE_COLOR" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="">Select a color</option>
+          <option value="green">🟢 Green</option>
+          <option value="blue">🔵 Blue</option>
+          <option value="yellow">🟡 Yellow</option>
+          <option value="red">🔴 Red</option>
+          <option value="gray">⚪ Gray</option>
+          <option value="purple">🟣 Purple</option>
+          <option value="orange">🟠 Orange</option>
+          <option value="pink">🩷 Pink</option>
+        </select>
+      </div>
+
+      <!-- Position -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Position
+        </label>
+        <input type="number" name="TEMPLATE_POSITION" min="0" readonly
+               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <p class="mt-1 text-xs text-gray-500">Order in workflow (automatically set)</p>
+      </div>
+    </div>
+
+    <!-- Color Preview -->
+    <div class="mt-3">
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-600">Preview:</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          Status Name
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const addButton = document.getElementById('add-status');
+  const container = document.getElementById('statuses-container');
+  const template = document.getElementById('status-field-template');
+  let statusIndex = <%= @status_set.statuses.size %>;
+
+    addButton.addEventListener('click', function() {
+    const templateContent = template.content.cloneNode(true);
+    const newFields = templateContent.querySelector('.status-field');
+
+    // Update field names with proper nested attributes
+    newFields.innerHTML = newFields.innerHTML.replace(/TEMPLATE_NAME/g, `status_set[statuses_attributes][${statusIndex}][name]`);
+    newFields.innerHTML = newFields.innerHTML.replace(/TEMPLATE_SLUG/g, `status_set[statuses_attributes][${statusIndex}][slug]`);
+    newFields.innerHTML = newFields.innerHTML.replace(/TEMPLATE_COLOR/g, `status_set[statuses_attributes][${statusIndex}][color]`);
+    newFields.innerHTML = newFields.innerHTML.replace(/TEMPLATE_POSITION/g, `status_set[statuses_attributes][${statusIndex}][position]`);
+
+    // Set position value
+    const positionField = newFields.querySelector('input[name*="[position]"]');
+    if (positionField) positionField.value = statusIndex;
+
+    // Update the status title
+    const titleElement = newFields.querySelector('h4');
+    if (titleElement) titleElement.textContent = `Status ${statusIndex + 1}`;
+
+    container.appendChild(newFields);
+    statusIndex++;
+  });
+
+  // Remove status functionality
+  container.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-status')) {
+      const statusField = e.target.closest('.status-field');
+      const destroyField = statusField.querySelector('input[name*="_destroy"]');
+      if (destroyField) {
+        destroyField.value = '1';
+        statusField.style.display = 'none';
+      } else {
+        statusField.remove();
+      }
+    }
+  });
+});
+</script>

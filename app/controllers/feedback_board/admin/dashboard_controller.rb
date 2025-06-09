@@ -1,6 +1,6 @@
 module FeedbackBoard
   module Admin
-    class DashboardController < FeedbackBoard::ApplicationController
+    class DashboardController < ::FeedbackBoard::ApplicationController
       before_action :ensure_admin_access
 
       def index

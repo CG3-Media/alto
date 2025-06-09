@@ -1,5 +1,5 @@
 module FeedbackBoard
-  class TicketsController < ApplicationController
+  class TicketsController < ::FeedbackBoard::ApplicationController
     before_action :set_board
     before_action :set_ticket, only: [:show, :edit, :update, :destroy]
     before_action :check_submit_permission, only: [:new, :create]

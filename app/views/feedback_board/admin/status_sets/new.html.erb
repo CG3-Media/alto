@@ -1,2 +1,16 @@
-<h1>FeedbackBoard::Admin::StatusSets#new</h1>
-<p>Find me in app/views/feedback_board/feedback_board/admin/status_sets/new.html.erb</p>
+<div class="space-y-6">
+  <%= render 'shared/page_header',
+      title: "✨ Create New Status Set",
+      actions: [
+        {
+          type: :link,
+          text: "← Back to Status Sets",
+          path: feedback_board.admin_status_sets_path,
+          class: "text-gray-600 hover:text-gray-900"
+        }
+      ] %>
+
+  <div class="max-w-4xl">
+    <%= render 'form' %>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 module FeedbackBoard
-  class CommentsController < ApplicationController
+  class CommentsController < ::FeedbackBoard::ApplicationController
     before_action :set_board
     before_action :set_ticket
     before_action :check_comment_permission, only: [:create]

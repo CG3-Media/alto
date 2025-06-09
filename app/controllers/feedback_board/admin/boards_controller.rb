@@ -1,11 +1,11 @@
 module FeedbackBoard
   module Admin
-    class BoardsController < FeedbackBoard::ApplicationController
+    class BoardsController < ::FeedbackBoard::ApplicationController
       before_action :ensure_admin_access
       before_action :set_board, only: [:show, :edit, :update, :destroy]
 
       def index
-        @boards = Board.includes(:tickets).ordered
+        @boards = ::FeedbackBoard::Board.includes(:tickets).ordered
         @board_stats = @boards.map do |board|
           {
             board: board,
@@ -17,11 +17,11 @@ module FeedbackBoard
       end
 
       def new
-        @board = Board.new
+        @board = ::FeedbackBoard::Board.new
       end
 
       def create
-        @board = Board.new(board_params)
+        @board = ::FeedbackBoard::Board.new(board_params)
 
         if @board.save
           redirect_to admin_boards_path, notice: 'Board was successfully created.'
@@ -54,7 +54,7 @@ module FeedbackBoard
       private
 
       def set_board
-        @board = Board.find(params[:id])
+        @board = ::FeedbackBoard::Board.find(params[:id])
       end
 
       def board_params

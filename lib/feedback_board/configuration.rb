@@ -57,12 +57,12 @@ module FeedbackBoard
     # Database-backed app_name with fallback to default
     def app_name
       return @default_app_name unless database_available?
-      FeedbackBoard::Setting.get('app_name', @default_app_name)
+      ::FeedbackBoard::Setting.get('app_name', @default_app_name)
     end
 
     def app_name=(value)
       if database_available?
-        FeedbackBoard::Setting.set('app_name', value)
+        ::FeedbackBoard::Setting.set('app_name', value)
       else
         # During setup/migrations, just store in memory
         @default_app_name = value
@@ -72,8 +72,8 @@ module FeedbackBoard
     private
 
     def database_available?
-      return false unless defined?(FeedbackBoard::Setting)
-      FeedbackBoard::Setting.table_exists?
+      return false unless defined?(::FeedbackBoard::Setting)
+      ::FeedbackBoard::Setting.table_exists?
     rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
       false
     end

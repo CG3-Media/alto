@@ -1,6 +1,6 @@
 module FeedbackBoard
   module Admin
-    class StatusSetsController < ApplicationController
+    class StatusSetsController < ::FeedbackBoard::ApplicationController
       before_action :require_admin_access
       before_action :set_status_set, only: [:show, :edit, :update, :destroy]
 
@@ -14,7 +14,10 @@ module FeedbackBoard
 
       def new
         @status_set = ::FeedbackBoard::StatusSet.new
-        @status_set.statuses.build # Start with one empty status
+        # Build initial statuses with positions
+        @status_set.statuses.build(position: 0)
+        @status_set.statuses.build(position: 1)
+        @status_set.statuses.build(position: 2)
       end
 
       def create
@@ -24,7 +27,11 @@ module FeedbackBoard
           redirect_to feedback_board.admin_status_set_path(@status_set),
                       notice: 'Status set was successfully created.'
         else
-          render :new
+          # Ensure positions are set for validation errors
+          @status_set.statuses.each_with_index do |status, index|
+            status.position = index if status.position.blank?
+          end
+          render :new, status: :unprocessable_entity
         end
       end
 
@@ -36,7 +43,11 @@ module FeedbackBoard
           redirect_to feedback_board.admin_status_set_path(@status_set),
                       notice: 'Status set was successfully updated.'
         else
-          render :edit
+          # Ensure positions are set for validation errors
+          @status_set.statuses.each_with_index do |status, index|
+            status.position = index if status.position.blank?
+          end
+          render :edit, status: :unprocessable_entity
         end
       end
 

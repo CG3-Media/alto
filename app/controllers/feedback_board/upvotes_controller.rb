@@ -1,5 +1,5 @@
 module FeedbackBoard
-  class UpvotesController < ApplicationController
+  class UpvotesController < ::FeedbackBoard::ApplicationController
     before_action :check_vote_permission
     before_action :set_board_and_upvotable
 

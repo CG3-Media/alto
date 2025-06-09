@@ -133,23 +133,23 @@ module FeedbackBoard
     end
 
     def self.create_default_data
-      return if FeedbackBoard::StatusSet.exists? # Don't recreate if data exists
+      return if ::FeedbackBoard::StatusSet.exists? # Don't recreate if data exists
 
       now = Time.current
 
       # Create default status sets
-      dev_set = FeedbackBoard::StatusSet.create!(
+      dev_set = ::FeedbackBoard::StatusSet.create!(
         name: 'Development Lifecycle',
         description: 'Full product development lifecycle with all stages',
         is_default: true
       )
 
-      simple_set = FeedbackBoard::StatusSet.create!(
+      simple_set = ::FeedbackBoard::StatusSet.create!(
         name: 'Simple Open/Closed',
         description: 'Basic open and closed statuses only'
       )
 
-      no_status_set = FeedbackBoard::StatusSet.create!(
+      no_status_set = ::FeedbackBoard::StatusSet.create!(
         name: 'No Status Tracking',
         description: 'Board without status tracking - just collect feedback'
       )
@@ -185,8 +185,8 @@ module FeedbackBoard
       # No Status Tracking has no statuses (empty set)
 
       # Create default board
-      unless FeedbackBoard::Board.exists?
-        FeedbackBoard::Board.create!(
+      unless ::FeedbackBoard::Board.exists?
+        ::FeedbackBoard::Board.create!(
           name: 'Feedback',
           slug: 'feedback',
           description: 'General feedback and feature requests',

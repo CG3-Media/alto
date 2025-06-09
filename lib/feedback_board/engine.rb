@@ -51,7 +51,7 @@ module FeedbackBoard
         # Use ActiveSupport::Reloader to handle development reloading
         ActiveSupport::Reloader.to_prepare do
           begin
-            FeedbackBoard::Setting.load_into_configuration! if FeedbackBoard::Setting.table_exists?
+            ::FeedbackBoard::Setting.load_into_configuration! if ::FeedbackBoard::Setting.table_exists?
           rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
             # Database might not be ready yet (migrations pending, etc.)
             Rails.logger.debug "FeedbackBoard: Database not ready, using default configuration"
