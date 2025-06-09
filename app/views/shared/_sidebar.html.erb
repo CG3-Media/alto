@@ -19,7 +19,7 @@
           <% end %>
         <% end %>
 
-        <% if can_manage_boards? %>
+        <% if can_access_admin? %>
           <%= link_to "➕ New Board", feedback_board.new_admin_board_path,
               class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-500 rounded-md hover:text-gray-700 hover:bg-gray-50" %>
         <% end %>
