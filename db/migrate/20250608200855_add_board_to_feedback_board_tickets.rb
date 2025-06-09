@@ -10,9 +10,9 @@ class AddBoardToFeedbackBoardTickets < ActiveRecord::Migration[7.0]
     reversible do |dir|
       dir.up do
         # Use ActiveRecord for database-agnostic operations
-        default_board = FeedbackBoard::Board.find_by(slug: 'feedback')
+        default_board = ::FeedbackBoard::Board.find_by(slug: 'feedback')
         if default_board
-          FeedbackBoard::Ticket.where(board_id: nil).update_all(board_id: default_board.id)
+          ::FeedbackBoard::Ticket.where(board_id: nil).update_all(board_id: default_board.id)
         end
       end
     end

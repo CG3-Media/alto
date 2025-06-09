@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_09_055254) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_09_075539) do
   create_table "feedback_board_boards", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -73,7 +73,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_09_055254) do
   create_table "feedback_board_tickets", force: :cascade do |t|
     t.string "title", null: false
     t.text "description"
-    t.string "status_slug", default: "open", null: false
+    t.string "status_slug"
     t.boolean "locked", default: false, null: false
     t.integer "user_id", null: false
     t.datetime "created_at", null: false

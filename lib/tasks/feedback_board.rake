@@ -4,7 +4,7 @@ namespace :feedback_board do
     puts "🚀 Setting up FeedbackBoard database tables..."
 
     begin
-      FeedbackBoard::DatabaseSetup.force_setup!
+      ::FeedbackBoard::DatabaseSetup.force_setup!
       puts "✅ FeedbackBoard database setup completed successfully!"
       puts ""
       puts "📋 Created tables:"
@@ -102,7 +102,7 @@ namespace :feedback_board do
 
     puts ""
     puts "🚀 Recreating tables..."
-    FeedbackBoard::DatabaseSetup.force_setup!
+    ::FeedbackBoard::DatabaseSetup.force_setup!
     puts "✅ FeedbackBoard database reset completed!"
   end
 end
