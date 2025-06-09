@@ -21,7 +21,7 @@ A mountable Rails engine for collecting user feedback with multiple boards, thre
 Add to your Gemfile:
 
 ```ruby
-gem 'feedback_board'
+gem 'feedback_board', github: 'CG3-Media/feedback_board'
 ```
 
 ```bash
@@ -365,4 +365,3 @@ rails generate feedback_board:uninstall
 This will guide you through removing the engine and optionally cleaning up database tables.
 
 ## License
-
