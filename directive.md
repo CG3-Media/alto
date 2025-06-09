@@ -366,6 +366,15 @@ This major architectural change transforms the feedback system from single-board
 
 ### ✅ RECENT BUG FIXES & IMPROVEMENTS
 
+- [x] **Enhanced Sluggable Concern** *(June 2025)*
+  - ✅ **Smart `.find()` Override**: Transparently handles both slug and ID parameters
+  - ✅ **Bug Fix**: Fixed admin board RecordNotFound error when accessing `/admin/boards/:slug/edit`
+  - ✅ **Backwards Compatible**: All existing Rails code continues to work seamlessly
+  - ✅ **Intelligent Fallback**: `Board.find('bug-reports')` ✅ (slug), `Board.find(123)` ✅ (ID)
+  - ✅ **Clean Architecture**: `find_by_slug_or_id()` with smart logic, `.find()` delegates cleanly
+  - ✅ **Developer Experience**: No more slug vs ID confusion in controllers
+  - ✅ **Route Consistency**: Admin routes now use `:slug` parameter like public routes
+
 - [x] **Comment Deletion Fix** *(December 2024)*
   - ✅ Fixed comment delete functionality that was incorrectly sending GET requests
   - ✅ Added Rails UJS via CDN (nobuild approach) to handle `method: :delete` properly
@@ -571,3 +580,101 @@ This provides:
 - ✅ **Developer Experience** - Simple `:primary`, `:secondary`, `:tertiary` API
 - ✅ **Flexibility** - Still supports custom classes when needed
 - ✅ **Backwards Compatible** - Old components still work, just updated styles
+
+## 🎯 Enhanced Sluggable Concern System
+
+### ✅ COMPLETED: Smart Parameter Handling with `.find()` Override
+
+The FeedbackBoard engine now features an enhanced Sluggable concern that transparently handles both slug and ID parameters, eliminating the confusion between different parameter types.
+
+#### Core Architecture
+
+**Smart `.find()` Method**: Overrides Rails' standard `.find()` to work with both slugs and IDs:
+
+```ruby
+# All of these work transparently:
+Board.find('bug-reports')        # ✅ Finds by slug
+Board.find(123)                  # ✅ Finds by ID
+Board.find('feedback')           # ✅ Finds by slug
+Board.find('999')                # ✅ Tries slug first, then ID
+```
+
+**Intelligent Fallback Logic**:
+- **Step 1**: Try finding by slug (most common case for URLs)
+- **Step 2**: If not found and parameter looks like ID, try finding by ID
+- **Step 3**: Raise helpful `ActiveRecord::RecordNotFound` with context
+
+#### Available Methods
+
+**Core Finder Methods**:
+```ruby
+Board.find_by_slug_or_id(param)          # Returns nil if not found
+Board.find_by_slug_or_id!(param)         # Raises exception if not found
+Board.find(param)                        # Enhanced to use smart logic
+```
+
+**Scoped Lookups** (for models like Status with scope):
+```ruby
+Status.find_by_slug_or_id_in_scope!(param, { status_set_id: 1 })
+```
+
+**Instance Methods**:
+```ruby
+board.to_param                           # Returns slug for URLs
+board.matches_param?(param)              # Check if param matches this record
+```
+
+#### Controller Simplification
+
+**Before** (manual slug handling):
+```ruby
+def set_board
+  @board = Board.find_by!(slug: params[:slug])
+rescue ActiveRecord::RecordNotFound
+  # Handle ID fallback manually...
+end
+```
+
+**After** (enhanced Sluggable):
+```ruby
+def set_board
+  @board = Board.find(params[:slug])  # Handles both automatically!
+end
+```
+
+#### Route Configuration
+
+**Admin Routes**: Now use `:slug` parameter for consistency:
+```ruby
+# config/routes.rb
+namespace :admin do
+  resources :boards, param: :slug, except: [:show]  # Uses slug, not ID
+end
+```
+
+**URL Examples**:
+- `/feedback/admin/boards/bug-reports/edit` ✅ (slug-based)
+- `/feedback/admin/boards/123/edit` ✅ (ID fallback still works)
+
+#### Performance Optimizations
+
+- **Slug-First Strategy**: Optimized for most common URL case (slugs)
+- **Regex Detection**: Fast integer detection for ID fallback
+- **Single Query**: No unnecessary database hits
+
+#### Benefits
+
+- ✅ **Zero Breaking Changes**: All existing code continues to work
+- ✅ **Developer Friendly**: No need to remember different finder methods
+- ✅ **URL Consistency**: Friendly URLs everywhere, ID fallback when needed
+- ✅ **Rails Conventions**: Standard `.find()` method just works better
+- ✅ **Error Handling**: Clear, contextual error messages
+
+### Bug Resolution
+
+**Fixed Issue**: `ActiveRecord::RecordNotFound` when accessing admin board routes
+- **Root Cause**: Admin routes used `:id` parameter but received slug values
+- **Solution**: Enhanced Sluggable concern + route parameter consistency
+- **Result**: Seamless slug/ID handling throughout the application
+
+This enhancement makes the FeedbackBoard engine more robust and developer-friendly while maintaining complete backwards compatibility! 🎯✨
