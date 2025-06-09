@@ -14,6 +14,7 @@ A mountable Rails engine for collecting user feedback with multiple boards, thre
 ## Features
 
 - Multiple feedback boards (Bug Reports, Feature Requests, etc.)
+- Customizable item labels per board ("tickets", "posts", "bugs", "requests", etc.)
 - Ticket creation with 3-level threaded comments and upvoting
 - Configurable status sets with custom statuses and colors
 - Admin dashboard with status management and analytics
@@ -96,6 +97,15 @@ Visit `/feedback/admin` to:
 - Manage boards
 - View analytics
 - Change ticket statuses
+
+## Board Item Labels
+
+Each board can use custom labels instead of "ticket". For example:
+- **Bug Reports** → "bugs" ("New Bug", "Search bugs")
+- **Feature Requests** → "requests" ("New Request", "Search requests")
+- **General Discussion** → "posts" ("New Post", "Search posts")
+
+Set the label when editing a board in the admin area. The interface automatically updates everywhere.
 
 ## 🎣 Callback Hooks
 

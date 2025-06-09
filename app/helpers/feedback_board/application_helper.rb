@@ -160,6 +160,15 @@ module FeedbackBoard
       @default_board ||= ::FeedbackBoard::Board.find_by(slug: 'feedback')
     end
 
+    # Board item label helpers
+    def current_board_item_name
+      current_board&.item_name || 'ticket'
+    end
+
+    def board_item_name(board)
+      board&.item_name || 'ticket'
+    end
+
     private
 
     def upvote_path_for(upvotable)

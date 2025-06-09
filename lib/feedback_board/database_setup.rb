@@ -85,6 +85,7 @@ module FeedbackBoard
           t.string :name, null: false
           t.string :slug, null: false
           t.text :description
+          t.string :item_label_singular, default: 'ticket'
           t.references :status_set, null: true, foreign_key: { to_table: :feedback_board_status_sets }
           t.timestamps
         end

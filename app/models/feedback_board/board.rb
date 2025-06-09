@@ -7,6 +7,8 @@ module FeedbackBoard
 
     validates :name, presence: true, length: { maximum: 100 }
     validates :slug, uniqueness: true
+    validates :item_label_singular, presence: true, length: { maximum: 50 },
+              format: { with: /\A[a-z ]+\z/i, message: 'only letters and spaces allowed' }
 
     scope :ordered, -> { order(:name) }
 
@@ -59,6 +61,11 @@ module FeedbackBoard
     def status_by_slug(slug)
       return nil unless has_status_tracking?
       status_set.status_by_slug(slug)
+    end
+
+    # Item labeling method
+    def item_name
+      item_label_singular.presence || 'ticket'
     end
 
   end

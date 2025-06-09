@@ -139,6 +139,49 @@ module FeedbackBoard
       assert_equal ["A Board", "B Board", "C Board"], ordered_boards
     end
 
+    # Item labeling tests
+    test "Board has default item label of ticket" do
+      board = Board.create!(name: "Test Board")
+      assert_equal "ticket", board.item_name
+      assert_equal "tickets", board.item_name.pluralize
+      assert_equal "Ticket", board.item_name.capitalize
+      assert_equal "Tickets", board.item_name.pluralize.capitalize
+    end
+
+    test "Board uses custom item label when set" do
+      board = Board.create!(name: "Discussion Board", item_label_singular: "post")
+      assert_equal "post", board.item_name
+      assert_equal "posts", board.item_name.pluralize
+      assert_equal "Post", board.item_name.capitalize
+      assert_equal "Posts", board.item_name.pluralize.capitalize
+    end
+
+    test "Board handles irregular pluralization correctly" do
+      board = Board.create!(name: "Feature Board", item_label_singular: "request")
+      assert_equal "request", board.item_name
+      assert_equal "requests", board.item_name.pluralize
+
+      # Test a tricky one
+      board2 = Board.create!(name: "Bug Board", item_label_singular: "person")
+      assert_equal "person", board2.item_name
+      assert_equal "people", board2.item_name.pluralize  # Rails pluralize should handle this
+    end
+
+    test "Board validates item_label_singular format" do
+      board = Board.new(name: "Test Board", item_label_singular: "invalid123!")
+      assert_not board.valid?
+      assert board.errors[:item_label_singular].present?
+
+      board.item_label_singular = "valid label"
+      assert board.valid?
+    end
+
+    test "Board requires item_label_singular when set" do
+      board = Board.new(name: "Test Board", item_label_singular: "")
+      assert_not board.valid?
+      assert board.errors[:item_label_singular].present?
+    end
+
         test "Board slug generation handles edge cases" do
       # Empty spaces and special chars only - should fallback to "item"
       board1 = Board.create!(name: "   !@#$%   ")

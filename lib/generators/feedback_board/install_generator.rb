@@ -102,137 +102,187 @@ module FeedbackBoard
         end
 
         say "🚀 Default Board Setup", :cyan
-        say "No boards found. Would you like to create default feedback boards?", :yellow
+        say "No boards found. Let's create some example boards with custom item labels!", :yellow
         say ""
-        say "This will create:", :blue
-        say "  🛠  Feature Requests (/feedback/boards/features)", :blue
-        say "  🐞 Bug Reports (/feedback/boards/bugs)", :blue
-        say "  💬 General Discussion (/feedback/boards/discussion)", :blue
+        say "💡 Each board can have custom labels (e.g., 'post', 'bug', 'issue', 'request')", :blue
         say ""
 
-        if yes?("Create these default boards? (y/n)", :green)
-          create_default_boards
-        else
-          say "⏭️  Skipping default boards. Create custom boards in the admin area later!", :yellow
-        end
+        create_default_boards
         say ""
       end
 
       def create_default_boards
-        say "📋 Creating default boards...", :blue
-
         begin
           # Check if status sets already exist
-          if ::FeedbackBoard::StatusSet.exists?
-            say "✅ Status sets already exist - skipping creation", :green
+          status_sets_exist = ::FeedbackBoard::StatusSet.exists?
+
+          boards_to_create = []
+
+          # Ask about Feature Requests board
+          if yes?("🛠  Create 'Feature Requests' board? (items called 'requests') (y/n)", :green)
+            boards_to_create << :features
+          end
+
+          # Ask about Bug Reports board
+          if yes?("🐞 Create 'Bug Reports' board? (items called 'bugs') (y/n)", :green)
+            boards_to_create << :bugs
+          end
+
+          # Ask about General Discussion board
+          if yes?("💬 Create 'General Discussion' board? (items called 'posts') (y/n)", :green)
+            boards_to_create << :discussion
+          end
+
+          if boards_to_create.empty?
+            say "⏭️  No boards selected. Create custom boards in the admin area later!", :yellow
             return
           end
 
+          say "📋 Creating #{boards_to_create.length} board(s)...", :blue
+
           # Create everything in a transaction for safety
           ActiveRecord::Base.transaction do
-            create_status_sets_and_boards
+            create_status_sets_and_boards(boards_to_create, status_sets_exist)
           end
 
-          say "✅ Default boards created successfully!", :green
+          say "✅ #{boards_to_create.length} board(s) created successfully!", :green
           say ""
           say "🎯 Available boards:", :cyan
-          say "  • /feedback/boards/features (Feature Requests)", :blue
-          say "  • /feedback/boards/bugs (Bug Reports)", :blue
-          say "  • /feedback/boards/discussion (General Discussion)", :blue
+
+          if boards_to_create.include?(:features)
+            say "  • /feedback/boards/features (Feature Requests → 'New Request')", :blue
+          end
+          if boards_to_create.include?(:bugs)
+            say "  • /feedback/boards/bugs (Bug Reports → 'New Bug')", :blue
+          end
+          if boards_to_create.include?(:discussion)
+            say "  • /feedback/boards/discussion (General Discussion → 'New Post')", :blue
+          end
 
         rescue => e
-          say "❌ Failed to create default boards: #{e.message}", :red
+          say "❌ Failed to create boards: #{e.message}", :red
           say "💡 You can create boards manually in the admin area later", :yellow
         end
       end
 
-      def create_status_sets_and_boards
-        # Create Feature Requests status set
-        feature_requests_set = ::FeedbackBoard::StatusSet.create!(
-          name: 'Feature Requests',
-          description: 'Product ideas and improvements workflow',
-          is_default: true
-        )
+      def create_status_sets_and_boards(boards_to_create, status_sets_exist)
+        status_sets = {}
 
-        # Create Bug Reports status set
-        bug_reports_set = ::FeedbackBoard::StatusSet.create!(
-          name: 'Bug Reports',
-          description: 'Bug triage and resolution workflow'
-        )
+        # Only create status sets if they don't exist and if we need them
+        unless status_sets_exist
+          # Create Feature Requests status set if needed
+          if boards_to_create.include?(:features)
+            status_sets[:features] = ::FeedbackBoard::StatusSet.create!(
+              name: 'Feature Requests',
+              description: 'Product ideas and improvements workflow',
+              is_default: true
+            )
 
-        # Create General Discussion status set
-        general_discussion_set = ::FeedbackBoard::StatusSet.create!(
-          name: 'General Discussion',
-          description: 'Simple conversation flow'
-        )
+            # Create statuses for Feature Requests
+            [
+              ['Open', 'green', 0, 'open'],
+              ['Planned', 'blue', 1, 'planned'],
+              ['In Progress', 'yellow', 2, 'in_progress'],
+              ['Complete', 'purple', 3, 'complete'],
+              ['Closed', 'gray', 4, 'closed']
+            ].each do |name, color, position, slug|
+              status_sets[:features].statuses.create!(
+                name: name,
+                color: color,
+                position: position,
+                slug: slug
+              )
+            end
+          end
 
-        # Create statuses for Feature Requests
-        [
-          ['Open', 'green', 0, 'open'],
-          ['Planned', 'blue', 1, 'planned'],
-          ['In Progress', 'yellow', 2, 'in_progress'],
-          ['Complete', 'purple', 3, 'complete'],
-          ['Closed', 'gray', 4, 'closed']
-        ].each do |name, color, position, slug|
-          feature_requests_set.statuses.create!(
-            name: name,
-            color: color,
-            position: position,
-            slug: slug
+          # Create Bug Reports status set if needed
+          if boards_to_create.include?(:bugs)
+            status_sets[:bugs] = ::FeedbackBoard::StatusSet.create!(
+              name: 'Bug Reports',
+              description: 'Bug triage and resolution workflow'
+            )
+
+            # Create statuses for Bug Reports
+            [
+              ['Open', 'green', 0, 'open'],
+              ['Acknowledged', 'blue', 1, 'acknowledged'],
+              ['In Progress', 'yellow', 2, 'in_progress'],
+              ['Fixed', 'purple', 3, 'fixed'],
+              ['Won\'t Fix', 'red', 4, 'wont_fix']
+            ].each do |name, color, position, slug|
+              status_sets[:bugs].statuses.create!(
+                name: name,
+                color: color,
+                position: position,
+                slug: slug
+              )
+            end
+          end
+
+          # Create General Discussion status set if needed
+          if boards_to_create.include?(:discussion)
+            status_sets[:discussion] = ::FeedbackBoard::StatusSet.create!(
+              name: 'General Discussion',
+              description: 'Simple conversation flow'
+            )
+
+            # Create statuses for General Discussion
+            [
+              ['Open', 'green', 0, 'open'],
+              ['Resolved', 'blue', 1, 'resolved'],
+              ['Closed', 'gray', 2, 'closed']
+            ].each do |name, color, position, slug|
+              status_sets[:discussion].statuses.create!(
+                name: name,
+                color: color,
+                position: position,
+                slug: slug
+              )
+            end
+          end
+        else
+          # Use existing status sets
+          if boards_to_create.include?(:features)
+            status_sets[:features] = ::FeedbackBoard::StatusSet.find_by(name: 'Feature Requests') || ::FeedbackBoard::StatusSet.first
+          end
+          if boards_to_create.include?(:bugs)
+            status_sets[:bugs] = ::FeedbackBoard::StatusSet.find_by(name: 'Bug Reports') || ::FeedbackBoard::StatusSet.first
+          end
+          if boards_to_create.include?(:discussion)
+            status_sets[:discussion] = ::FeedbackBoard::StatusSet.find_by(name: 'General Discussion') || ::FeedbackBoard::StatusSet.first
+          end
+        end
+
+        # Create only the selected boards with custom item labels
+        if boards_to_create.include?(:features)
+          ::FeedbackBoard::Board.create!(
+            name: '🛠 Feature Requests',
+            slug: 'features',
+            description: 'Product ideas and improvements. Statuses: open → planned → in_progress → complete → closed',
+            item_label_singular: 'request',
+            status_set: status_sets[:features]
           )
         end
 
-        # Create statuses for Bug Reports
-        [
-          ['Open', 'green', 0, 'open'],
-          ['Acknowledged', 'blue', 1, 'acknowledged'],
-          ['In Progress', 'yellow', 2, 'in_progress'],
-          ['Fixed', 'purple', 3, 'fixed'],
-          ['Won\'t Fix', 'red', 4, 'wont_fix']
-        ].each do |name, color, position, slug|
-          bug_reports_set.statuses.create!(
-            name: name,
-            color: color,
-            position: position,
-            slug: slug
+        if boards_to_create.include?(:bugs)
+          ::FeedbackBoard::Board.create!(
+            name: '🐞 Bug Reports',
+            slug: 'bugs',
+            description: 'Bug triage and resolution. Statuses: open → acknowledged → in_progress → fixed → won\'t_fix',
+            item_label_singular: 'bug',
+            status_set: status_sets[:bugs]
           )
         end
 
-        # Create statuses for General Discussion
-        [
-          ['Open', 'green', 0, 'open'],
-          ['Resolved', 'blue', 1, 'resolved'],
-          ['Closed', 'gray', 2, 'closed']
-        ].each do |name, color, position, slug|
-          general_discussion_set.statuses.create!(
-            name: name,
-            color: color,
-            position: position,
-            slug: slug
+        if boards_to_create.include?(:discussion)
+          ::FeedbackBoard::Board.create!(
+            name: '💬 General Discussion',
+            slug: 'discussion',
+            description: 'Simple conversations. Statuses: open → resolved → closed',
+            item_label_singular: 'post',
+            status_set: status_sets[:discussion]
           )
         end
-
-        # Create the three default boards
-        ::FeedbackBoard::Board.create!(
-          name: '🛠 Feature Requests',
-          slug: 'features',
-          description: 'Product ideas and improvements. Statuses: open → planned → in_progress → complete → closed',
-          status_set: feature_requests_set
-        )
-
-        ::FeedbackBoard::Board.create!(
-          name: '🐞 Bug Reports',
-          slug: 'bugs',
-          description: 'Bug triage and resolution. Statuses: open → acknowledged → in_progress → fixed → won\'t_fix',
-          status_set: bug_reports_set
-        )
-
-        ::FeedbackBoard::Board.create!(
-          name: '💬 General Discussion',
-          slug: 'discussion',
-          description: 'Simple conversations. Statuses: open → resolved → closed',
-          status_set: general_discussion_set
-        )
       end
 
       def show_final_status

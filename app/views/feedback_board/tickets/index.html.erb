@@ -3,7 +3,7 @@
   <% if can_submit_tickets? %>
     <% actions << {
       type: :link,
-      text: "New Ticket",
+      text: "New #{board_item_name(@board).capitalize}",
       path: feedback_board.new_board_ticket_path(@board),
       button_type: :primary
     } %>
@@ -19,7 +19,7 @@
   <% end %>
 
   <%= render 'shared/page_header',
-      title: "#{@board.name} Tickets",
+      title: "#{@board.name} #{board_item_name(@board).pluralize.capitalize}",
       actions: actions %>
 
 
@@ -52,9 +52,9 @@
           <p class="text-sm text-blue-700">
             <span class="font-medium">Search results for:</span> "<%= @search_query %>"
             <% if @tickets.respond_to?(:total_count) %>
-              • <%= pluralize(@tickets.total_count, 'ticket') %> found
+              • <%= pluralize(@tickets.total_count, board_item_name(@board)) %> found
             <% else %>
-              • <%= pluralize(@tickets.count, 'ticket') %> found
+              • <%= pluralize(@tickets.count, board_item_name(@board)) %> found
             <% end %>
           </p>
         </div>
@@ -124,17 +124,17 @@
       <div class="text-center py-12">
         <% if @search_query.present? %>
           <div class="text-gray-400 text-6xl mb-4">🔍</div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets found</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No <%= board_item_name(@board).pluralize %> found</h3>
           <p class="text-gray-500 mb-4">
-            No tickets match your search for "<%= @search_query %>".
-            <br>Try different keywords or <%= link_to "browse all tickets", feedback_board.board_tickets_path(@board, status: params[:status], sort: params[:sort]), class: "text-blue-600 hover:text-blue-500" %>.
+            No <%= board_item_name(@board).pluralize %> match your search for "<%= @search_query %>".
+            <br>Try different keywords or <%= link_to "browse all #{board_item_name(@board).pluralize}", feedback_board.board_tickets_path(@board, status: params[:status], sort: params[:sort]), class: "text-blue-600 hover:text-blue-500" %>.
           </p>
         <% else %>
           <div class="text-gray-400 text-6xl mb-4">📝</div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets yet</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No <%= board_item_name(@board).pluralize %> yet</h3>
           <p class="text-gray-500 mb-4">Be the first to submit feedback!</p>
           <% if can_submit_tickets? %>
-            <%= link_to "Create First Ticket", feedback_board.new_board_ticket_path(@board),
+            <%= link_to "Create First #{board_item_name(@board).capitalize}", feedback_board.new_board_ticket_path(@board),
                 class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
           <% end %>
         <% end %>

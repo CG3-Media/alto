@@ -25,6 +25,14 @@
       model: @board,
       helper_text: "Help users understand what this board is for" %>
 
+  <%= render 'shared/forms/input',
+      form: form,
+      field_name: :item_label_singular,
+      label_text: "Item Label (Singular)",
+      placeholder: "ticket, post, request, issue...",
+      model: @board,
+      helper_text: "What should items in this board be called? (e.g., 'ticket' for bugs, 'post' for discussions)" %>
+
   <div>
     <label for="board_status_set_id" class="block text-sm font-medium text-gray-700 mb-2">Status Set</label>
     <%= form.select :status_set_id,

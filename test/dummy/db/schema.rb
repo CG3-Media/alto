@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_09_162443) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_09_164410) do
   create_table "feedback_board_boards", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -18,6 +18,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_09_162443) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "status_set_id"
+    t.string "item_label_singular", default: "ticket"
     t.index ["name"], name: "index_feedback_board_boards_on_name"
     t.index ["slug"], name: "index_feedback_board_boards_on_slug", unique: true
     t.index ["status_set_id"], name: "index_feedback_board_boards_on_status_set_id"
