@@ -1,5 +1,6 @@
 module FeedbackBoard
   class CommentsController < ApplicationController
+    before_action :set_board
     before_action :set_ticket
     before_action :check_comment_permission, only: [:create]
     before_action :set_comment, only: [:destroy]
@@ -9,7 +10,7 @@ module FeedbackBoard
       @comment.user_id = current_user.id
 
       if @comment.save
-        redirect_to @ticket, notice: 'Comment was successfully added.'
+        redirect_to [@board, @ticket], notice: 'Comment was successfully added.'
       else
         @comments = @ticket.comments.includes(:upvotes).recent
         render 'feedback_board/tickets/show'
@@ -19,16 +20,20 @@ module FeedbackBoard
     def destroy
       if can_delete_comment?(@comment)
         @comment.destroy
-        redirect_to @ticket, notice: 'Comment was successfully deleted.'
+        redirect_to [@board, @ticket], notice: 'Comment was successfully deleted.'
       else
-        redirect_to @ticket, alert: 'You do not have permission to delete this comment.'
+        redirect_to [@board, @ticket], alert: 'You do not have permission to delete this comment.'
       end
     end
 
     private
 
+    def set_board
+      @board = Board.find_by!(slug: params[:board_slug])
+    end
+
     def set_ticket
-      @ticket = Ticket.find(params[:ticket_id])
+      @ticket = @board.tickets.find(params[:ticket_id])
     end
 
     def set_comment
@@ -41,7 +46,7 @@ module FeedbackBoard
 
     def check_comment_permission
       unless can_comment? && @ticket.can_be_commented_on?
-        redirect_to @ticket, alert: 'You cannot comment on this ticket.'
+        redirect_to [@board, @ticket], alert: 'You cannot comment on this ticket.'
       end
     end
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Feedback Board</title>
+    <title><%= app_name %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -18,17 +18,50 @@
     <header class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
-          <div class="flex items-center">
+          <div class="flex items-center space-x-6">
             <%= link_to feedback_board.root_path, class: "text-xl font-semibold text-gray-900" do %>
-              🗣️ Feedback Board
+              🗣️ <%= app_name %>
+            <% end %>
+
+            <!-- Board Navigation -->
+            <% boards = FeedbackBoard::Board.ordered.limit(4) %>
+            <% if boards.any? %>
+              <!-- Desktop Board Navigation -->
+              <div class="hidden md:flex items-center space-x-1 text-sm">
+                <% boards.first(3).each do |board| %>
+                  <%= link_to board.name, feedback_board.board_tickets_path(board),
+                      class: "px-3 py-1 rounded-md #{ board == current_board ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }" %>
+                <% end %>
+                <% if boards.count > 3 %>
+                  <%= link_to "All Boards", feedback_board.boards_path,
+                      class: "px-3 py-1 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300" %>
+                <% end %>
+              </div>
+
+              <!-- Mobile Board Selector -->
+              <div class="md:hidden">
+                <%= form_with url: "#", method: :get, local: true, class: "flex items-center" do |form| %>
+                  <%= form.select :board,
+                      options_from_collection_for_select(FeedbackBoard::Board.ordered, :slug, :name, current_board.slug),
+                      {},
+                      {
+                        class: "text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500",
+                        onchange: "window.location.href = '/feedback/boards/' + this.value + '/tickets'"
+                      } %>
+                <% end %>
+              </div>
             <% end %>
           </div>
           <nav class="flex space-x-4">
-            <%= link_to "All Tickets", feedback_board.tickets_path,
+            <%= link_to "All Tickets", feedback_board.board_tickets_path(current_board),
                 class: "text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
             <% if can_submit_tickets? %>
-              <%= link_to "New Ticket", feedback_board.new_ticket_path,
+              <%= link_to "New Ticket", feedback_board.new_board_ticket_path(current_board),
                   class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+            <% end %>
+            <% if can_access_admin? %>
+              <%= link_to "Manage Boards", feedback_board.admin_boards_path,
+                  class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
             <% end %>
           </nav>
         </div>

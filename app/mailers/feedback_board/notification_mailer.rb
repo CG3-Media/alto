@@ -40,5 +40,9 @@ module FeedbackBoard
     def user_display_name(user_id)
       FeedbackBoard.configuration.user_display_name_method.call(user_id)
     end
+
+    def app_name
+      FeedbackBoard.configuration.app_name
+    end
   end
 end

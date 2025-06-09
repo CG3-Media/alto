@@ -5,6 +5,79 @@ module FeedbackBoard
     before_action :authenticate_user!
     before_action :check_feedback_board_access!
 
+    # Make these methods available to views
+    helper_method :can_access_feedback_board?, :can_submit_tickets?, :can_comment?,
+                  :can_vote?, :can_edit_tickets?, :can_access_admin?, :can_manage_boards?,
+                  :can_access_board?, :current_board, :default_board
+
+    # Permission methods with sensible defaults
+    # Host apps can override these methods to customize behavior
+
+    def can_access_feedback_board?
+      return false unless current_user
+      true # Default: allow access if user is logged in
+    end
+
+    def can_submit_tickets?
+      return false unless current_user
+      true # Default: allow ticket submission if user is logged in
+    end
+
+    def can_comment?
+      return false unless current_user
+      true # Default: allow commenting if user is logged in
+    end
+
+    def can_vote?
+      return false unless current_user
+      true # Default: allow voting if user is logged in
+    end
+
+    def can_edit_tickets?
+      return false unless current_user
+      false # Default: secure by default - only admins should edit
+    end
+
+    def can_access_admin?
+      return false unless current_user
+      can_edit_tickets? # Default: fallback to edit permission
+    end
+
+    def can_manage_boards?
+      return false unless current_user
+      can_edit_tickets? # Default: fallback to edit permission
+    end
+
+    def can_access_board?(board)
+      return false unless current_user
+      true # Default: allow access to all boards if user is logged in
+    end
+
+    # Current board session management
+    def current_board
+      @current_board ||= begin
+        if session[:current_board_slug].present?
+          FeedbackBoard::Board.find_by(slug: session[:current_board_slug]) || default_board
+        else
+          default_board
+        end
+      end
+    end
+
+    def set_current_board(board)
+      session[:current_board_slug] = board.slug
+      @current_board = board
+    end
+
+    def default_board
+      @default_board ||= FeedbackBoard::Board.find_by(slug: 'feedback') ||
+                          FeedbackBoard::Board.create!(
+                            name: 'Feedback',
+                            slug: 'feedback',
+                            description: 'General feedback and feature requests'
+                          )
+    end
+
     private
 
     def authenticate_user!
@@ -21,83 +94,6 @@ module FeedbackBoard
       # This should be overridden by the host application
       # Default implementation looks for main_app's current_user
       main_app.current_user if main_app.respond_to?(:current_user)
-    end
-
-    def can_access_feedback_board?
-      return false unless current_user
-
-      # Check if main app has overridden this method
-      if main_app_controller.respond_to?(:can_access_feedback_board?, true)
-        main_app_controller.send(:can_access_feedback_board?)
-      else
-        # Default implementation
-        true
-      end
-    end
-
-    def can_submit_tickets?
-      return false unless current_user
-
-      # Check if main app has overridden this method
-      if main_app_controller.respond_to?(:can_submit_tickets?, true)
-        main_app_controller.send(:can_submit_tickets?)
-      else
-        # Default implementation
-        true
-      end
-    end
-
-    def can_comment?
-      return false unless current_user
-
-      # Check if main app has overridden this method
-      if main_app_controller.respond_to?(:can_comment?, true)
-        main_app_controller.send(:can_comment?)
-      else
-        # Default implementation
-        true
-      end
-    end
-
-    def can_vote?
-      return false unless current_user
-
-      # Check if main app has overridden this method
-      if main_app_controller.respond_to?(:can_vote?, true)
-        main_app_controller.send(:can_vote?)
-      else
-        # Default implementation
-        true
-      end
-    end
-
-    def can_edit_tickets?
-      return false unless current_user
-
-      # Check if main app has overridden this method
-      if main_app_controller.respond_to?(:can_edit_tickets?, true)
-        main_app_controller.send(:can_edit_tickets?)
-      else
-        # Default implementation - secure by default
-        false
-      end
-    end
-
-    def can_access_admin?
-      return false unless current_user
-
-      # Check if main app has overridden this method
-      if main_app_controller.respond_to?(:can_access_admin?, true)
-        main_app_controller.send(:can_access_admin?)
-      else
-        # Default implementation - secure by default, fallback to can_edit_tickets
-        can_edit_tickets?
-      end
-    end
-
-    # Helper method to get main app controller for delegation
-    def main_app_controller
-      @main_app_controller ||= main_app.try(:application_controller) || ::ApplicationController.new
     end
   end
 end

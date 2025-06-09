@@ -1,11 +1,11 @@
 <div class="max-w-2xl mx-auto">
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Submit New Feedback</h1>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Submit New Feedback to <%= @board.name %></h1>
       <p class="text-gray-600">Help us improve by sharing your suggestions, bug reports, or feature requests.</p>
     </div>
 
-    <%= form_with model: @ticket, local: true, class: "space-y-6" do |form| %>
+    <%= form_with model: [@board, @ticket], local: true, class: "space-y-6" do |form| %>
       <% if @ticket.errors.any? %>
         <div class="bg-red-50 border border-red-200 rounded-md p-4">
           <div class="flex">
@@ -55,7 +55,7 @@
       </div>
 
       <div class="flex items-center justify-between pt-4">
-        <%= link_to "Cancel", feedback_board.tickets_path,
+        <%= link_to "Cancel", feedback_board.board_tickets_path(@board),
             class: "text-gray-600 hover:text-gray-800 text-sm font-medium" %>
 
         <div class="flex space-x-3">

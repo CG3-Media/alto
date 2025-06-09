@@ -2,9 +2,11 @@
   <div class="flex justify-between items-center">
     <h1 class="text-2xl font-bold text-gray-900">📊 Admin Dashboard</h1>
     <div class="flex space-x-4">
+      <%= link_to "Manage Boards", feedback_board.admin_boards_path,
+          class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
       <%= link_to "Settings", feedback_board.admin_settings_path,
           class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      <%= link_to "Back to Tickets", feedback_board.root_path,
+      <%= link_to "Back to Feedback", feedback_board.root_path,
           class: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium" %>
     </div>
   </div>
@@ -42,13 +44,13 @@
     <div class="bg-white rounded-lg shadow p-6">
       <div class="flex items-center">
         <div class="flex-shrink-0">
-          <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-            <span class="text-white text-lg">📈</span>
+          <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+            <span class="text-white text-lg">🗂️</span>
           </div>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500">This Month</p>
-          <p class="text-2xl font-semibold text-gray-900"><%= @tickets_this_month %></p>
+          <p class="text-sm font-medium text-gray-500">Total Boards</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @total_boards %></p>
         </div>
       </div>
     </div>
@@ -56,7 +58,7 @@
     <div class="bg-white rounded-lg shadow p-6">
       <div class="flex items-center">
         <div class="flex-shrink-0">
-          <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+          <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
             <span class="text-white text-lg">💬</span>
           </div>
         </div>
@@ -82,7 +84,7 @@
               <div class="flex items-center justify-between">
                 <div class="flex-1">
                   <p class="text-sm font-medium text-gray-900">
-                    <%= link_to ticket.title, feedback_board.ticket_path(ticket),
+                    <%= link_to ticket.title, feedback_board.board_ticket_path(ticket.board, ticket),
                         class: "hover:text-blue-600" %>
                   </p>
                   <p class="text-sm text-gray-500">
@@ -120,7 +122,7 @@
             <div class="p-4">
               <div class="flex-1">
                 <p class="text-sm font-medium text-gray-900">
-                  <%= link_to comment.ticket.title, feedback_board.ticket_path(comment.ticket),
+                  <%= link_to comment.ticket.title, feedback_board.board_ticket_path(comment.ticket.board, comment.ticket),
                       class: "hover:text-blue-600" %>
                 </p>
                 <p class="text-sm text-gray-600 mt-1">

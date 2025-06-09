@@ -1,0 +1,11 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">➕ Create New Board</h1>
+    <%= link_to "← Back to Boards", feedback_board.admin_boards_path,
+        class: "text-gray-600 hover:text-gray-900" %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <%= render 'form' %>
+  </div>
+</div>

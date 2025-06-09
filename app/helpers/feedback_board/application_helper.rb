@@ -115,13 +115,41 @@ module FeedbackBoard
       FeedbackBoard.config.user_display_name_method.call(user_id)
     end
 
+    def app_name
+      FeedbackBoard.config.app_name
+    end
+
+    # Current board helper method
+    def current_board
+      @current_board ||= begin
+        if session[:current_board_slug].present?
+          FeedbackBoard::Board.find_by(slug: session[:current_board_slug]) || default_board
+        else
+          default_board
+        end
+      end
+    end
+
+    # Default board helper method
+    def default_board
+      @default_board ||= FeedbackBoard::Board.find_by(slug: 'feedback') ||
+                          FeedbackBoard::Board.create!(
+                            name: 'Feedback',
+                            slug: 'feedback',
+                            description: 'General feedback and feature requests'
+                          )
+    end
+
     private
 
     def upvote_path_for(upvotable)
       case upvotable
       when FeedbackBoard::Ticket
-        feedback_board.ticket_upvotes_path(upvotable)
+        # For tickets, we need the board context
+        board = upvotable.board
+        feedback_board.board_ticket_upvotes_path(board, upvotable)
       when FeedbackBoard::Comment
+        # For comments, we can still use the comment-specific route
         feedback_board.comment_upvotes_path(upvotable)
       end
     end

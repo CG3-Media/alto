@@ -49,7 +49,7 @@
     <!-- Comment Form -->
     <% if can_comment? && @ticket.can_be_commented_on? %>
       <div class="p-6 border-b border-gray-200 bg-gray-50">
-        <%= form_with model: [@ticket, @comment], local: true, class: "space-y-4" do |form| %>
+        <%= form_with model: [@board, @ticket, @comment], local: true, class: "space-y-4" do |form| %>
           <div class="text-sm text-gray-600 mb-2">
             Commenting as <span class="font-medium text-gray-700"><%= user_display_name(current_user.id) %></span>
           </div>
@@ -102,12 +102,12 @@
 
   <!-- Back Link -->
   <div class="flex justify-between items-center">
-    <%= link_to "← Back to Feedback", feedback_board.tickets_path,
+    <%= link_to "← Back to #{@board.name}", feedback_board.board_tickets_path(@board),
         class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
 
     <% if can_edit_tickets? %>
       <div class="space-x-2">
-        <%= link_to "Edit Ticket", feedback_board.edit_ticket_path(@ticket),
+        <%= link_to "Edit Ticket", feedback_board.edit_board_ticket_path(@board, @ticket),
             class: "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
       </div>
     <% end %>

@@ -17,6 +17,7 @@ module FeedbackBoard
 
         # Save settings to database
         settings = {
+          'app_name' => params[:app_name],
           'notifications_enabled' => params[:notifications_enabled] == '1',
           'notification_from_email' => params[:notification_from_email],
           'notify_ticket_author' => params[:notify_ticket_author] == '1',

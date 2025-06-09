@@ -2,6 +2,7 @@ module FeedbackBoard
   class Ticket < ApplicationRecord
     STATUSES = %w[open planned in_progress complete].freeze
 
+    belongs_to :board
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
 
@@ -9,6 +10,7 @@ module FeedbackBoard
     validates :description, presence: true
     validates :status, inclusion: { in: STATUSES }
     validates :user_id, presence: true
+    validates :board_id, presence: true
 
     # Email notification callbacks
     after_create :send_new_ticket_notifications
@@ -19,6 +21,7 @@ module FeedbackBoard
     scope :locked, -> { where(locked: true) }
     scope :recent, -> { order(created_at: :desc) }
     scope :popular, -> { left_joins(:upvotes).group(:id).order('count(feedback_board_upvotes.id) desc') }
+    scope :for_board, ->(board) { where(board: board) }
 
         # Search scopes
     scope :search_by_content, ->(query) {

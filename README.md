@@ -8,16 +8,17 @@ A mountable Rails engine that replicates core Canny.io-style feedback functional
 
 ## ✨ Features
 
-- 🎫 **Ticket Management** - Create, view, and manage feedback tickets
+- 📋 **Multiple Boards** - Create and manage multiple feedback boards (Feature, Bug Reports, etc.)
+- 🎫 **Ticket Management** - Create, view, and manage feedback tickets within boards
 - 💬 **Comments** - Threaded discussions on tickets with user name display
 - 👍 **Upvoting** - Users can vote on tickets and comments (with AJAX)
-- 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments
+- 🔍 **Search** - Full-text search across ticket titles, descriptions, and comments (board-scoped)
 - 📧 **Email Notifications** - Configurable email alerts for tickets, comments, and status changes
 - 📊 **Status Tracking** - `open`, `planned`, `in_progress`, `complete`
 - 🔒 **Moderation** - Lock tickets to prevent further discussion
-- 👑 **Admin Dashboard** - Statistics, recent activity, and email configuration
+- 👑 **Admin Dashboard** - Statistics, recent activity, board management, and email configuration
 - 🎨 **Beautiful UI** - Clean Tailwind CSS design with user-friendly forms
-- 🔐 **Permissions** - Flexible permission system
+- 🔐 **Permissions** - Flexible permission system with board-level access control
 - ⚡ **Performance** - Optimized queries and database indexes
 
 ## 🚀 Installation
@@ -118,6 +119,17 @@ class ApplicationController < ActionController::Base
   def can_edit_tickets?
     current_user&.admin?  # Default: false (secure by default)
   end
+
+  # Optional: Control who can manage boards (create, edit, delete)
+  def can_manage_boards?
+    current_user&.admin?  # Default: false (secure by default)
+  end
+
+  # Optional: Control access to specific boards
+  def can_access_board?(board)
+    true  # Default: true (all boards accessible)
+    # Example: current_user&.can_access_board?(board.slug)
+  end
 end
 ```
 
@@ -154,8 +166,27 @@ end
 <!-- In your app's navigation -->
 <%= link_to "Feedback", feedback_board.root_path, class: "nav-link" %>
 
+<!-- Link to specific board -->
+<%= link_to "Feature Requests", feedback_board.board_path("features"), class: "nav-link" %>
+<%= link_to "Bug Reports", feedback_board.board_path("bugs"), class: "nav-link" %>
+
 <!-- Or embed directly -->
 <iframe src="/feedback" width="100%" height="600"></iframe>
+```
+
+### Multiple Boards
+
+```erb
+<!-- List all boards -->
+<% FeedbackBoard::Board.all.each do |board| %>
+  <%= link_to board.name, feedback_board.board_path(board.slug),
+      class: "block p-4 border rounded hover:bg-gray-50" %>
+<% end %>
+
+<!-- Board-specific ticket creation -->
+<%= link_to "Submit Feature Request",
+    feedback_board.new_board_ticket_path("features"),
+    class: "btn btn-primary" %>
 ```
 
 ### User Association
@@ -296,6 +327,13 @@ FeedbackBoard.configure do |config|
   #   return "Anonymous" unless user
   #   user.profile&.display_name || user.email
   # end
+
+  # Board configuration
+  config.default_board_name = "Feedback"  # Name for the default board
+  config.default_board_slug = "feedback"  # URL slug for the default board
+
+  # Allow admins to delete boards with tickets (use with caution!)
+  config.allow_board_deletion_with_tickets = false
 end
 ```
 
@@ -397,6 +435,27 @@ end
 
 ### Models
 
+#### FeedbackBoard::Board
+```ruby
+# Attributes
+board.name             # String (required)
+board.slug             # String (auto-generated, URL-friendly)
+board.description      # Text (optional)
+board.created_at       # DateTime
+board.updated_at       # DateTime
+
+# Associations
+board.tickets          # HasMany tickets
+
+# Methods
+board.to_param         # Returns slug for URLs
+board.tickets_count    # Integer (cached counter)
+
+# Scopes
+Board.by_slug(slug)    # Find by slug
+Board.ordered          # Order by name
+```
+
 #### FeedbackBoard::Ticket
 ```ruby
 # Attributes
@@ -405,10 +464,12 @@ ticket.description     # Text
 ticket.status          # String (open, planned, in_progress, complete)
 ticket.locked          # Boolean
 ticket.user_id         # Integer
+ticket.board_id        # Integer (belongs to board)
 ticket.created_at      # DateTime
 ticket.updated_at      # DateTime
 
 # Associations
+ticket.board           # BelongsTo board
 ticket.comments        # HasMany comments
 ticket.upvotes         # HasMany upvotes (polymorphic)
 
@@ -423,6 +484,7 @@ Ticket.by_status('open')     # Filter by status
 Ticket.recent                # Order by created_at desc
 Ticket.popular               # Order by upvotes count
 Ticket.unlocked              # Not locked
+Ticket.for_board(board)      # Scope to specific board
 ```
 
 #### FeedbackBoard::Comment
@@ -454,16 +516,28 @@ upvote.upvotable_id    # Integer
 
 ```ruby
 # All routes are namespaced under the mount point
-feedback_board.root_path                    # GET /feedback
-feedback_board.tickets_path                 # GET /feedback/tickets
-feedback_board.new_ticket_path              # GET /feedback/tickets/new
-feedback_board.ticket_path(ticket)          # GET /feedback/tickets/:id
-feedback_board.edit_ticket_path(ticket)     # GET /feedback/tickets/:id/edit
+feedback_board.root_path                             # GET /feedback (redirects to default board)
 
-# Nested routes
-feedback_board.ticket_comments_path(ticket)           # POST /feedback/tickets/:id/comments
-feedback_board.ticket_upvotes_path(ticket)            # POST /feedback/tickets/:id/upvotes
-feedback_board.comment_upvotes_path(comment)          # POST /feedback/comments/:id/upvotes
+# Board routes
+feedback_board.boards_path                           # GET /feedback/boards (admin only)
+feedback_board.board_path(board)                     # GET /feedback/boards/:slug
+feedback_board.new_board_path                        # GET /feedback/boards/new (admin only)
+feedback_board.edit_board_path(board)                # GET /feedback/boards/:slug/edit (admin only)
+
+# Nested ticket routes under boards
+feedback_board.board_tickets_path(board)             # GET /feedback/boards/:slug/tickets
+feedback_board.new_board_ticket_path(board)          # GET /feedback/boards/:slug/tickets/new
+feedback_board.board_ticket_path(board, ticket)      # GET /feedback/boards/:slug/tickets/:id
+feedback_board.edit_board_ticket_path(board, ticket) # GET /feedback/boards/:slug/tickets/:id/edit
+
+# Nested routes for comments and upvotes
+feedback_board.board_ticket_comments_path(board, ticket)    # POST /feedback/boards/:slug/tickets/:id/comments
+feedback_board.board_ticket_upvotes_path(board, ticket)     # POST /feedback/boards/:slug/tickets/:id/upvotes
+feedback_board.comment_upvotes_path(comment)                # POST /feedback/comments/:id/upvotes
+
+# Admin routes
+feedback_board.admin_root_path                       # GET /feedback/admin
+feedback_board.admin_boards_path                     # GET /feedback/admin/boards
 ```
 
 ## 🔧 Troubleshooting
