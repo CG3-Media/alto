@@ -1,0 +1,57 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# FeedbackBoard Rails Engine Architecture
+
+## **Core Engine Structure**
+
+- **Mount Pattern**: Always mount as `mount FeedbackBoard::Engine => "/feedback"` in host app routes
+- **Namespace Isolation**: Use `FeedbackBoard::` namespace for all models, controllers, and concerns
+- **ApplicationController**: Inherit from `FeedbackBoard::ApplicationController` for all engine controllers
+- **Configuration**: Use `FeedbackBoard.configuration` object for engine-wide settings
+
+## **Permission Integration**
+
+- **Host App Methods**: Delegate to host app permission methods like `current_user.can?(:access_feedback_board)`
+- **Graceful Fallbacks**: Provide sensible defaults when host app doesn't implement permission methods
+- **Controller Integration**:
+  ```ruby
+  # ✅ DO: Use delegation pattern
+  def can_access_feedback_board?
+    respond_to?(:current_user) && current_user&.can?(:access_feedback_board)
+  end
+
+  # ❌ DON'T: Hard-code permission logic
+  def can_access_feedback_board?
+    current_user.admin? # Too specific
+  end
+  ```
+
+## **User Model Integration**
+
+- **Configurable User Model**: Support different user model names via `FeedbackBoard.configuration.user_class`
+- **Polymorphic Associations**: Use `belongs_to :user, polymorphic: true` when appropriate
+- **Display Name Flexibility**: Support configurable user display methods (`email`, `name`, `username`)
+
+## **Engine Generators**
+
+- **Install Generator**: Copy necessary files (Stimulus controllers, initializers) to host app
+- **Migration Generator**: Create timestamped migrations that work with host app
+- **Configuration Generator**: Create initializer with sensible defaults
+
+## **Dependency Management**
+
+- **Minimal Dependencies**: Keep gemspec dependencies to essential gems only
+- **Rails Version Compatibility**: Support Rails 7.0+ with clear version constraints
+- **Asset Strategy**: Use nobuild approach with CDN assets for simplicity
+
+## **Module Organization**
+
+- **Concerns**: Place shared functionality in `app/models/concerns/feedback_board/`
+- **Helpers**: Namespace helpers under `FeedbackBoard::` module
+- **Services**: Use service objects for complex business logic
+- **Callback System**: Implement callback hooks for host app integration
+
+Reference: @directive.md for complete architecture specifications

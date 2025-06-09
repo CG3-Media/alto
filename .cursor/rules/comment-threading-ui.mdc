@@ -1,0 +1,139 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Comment Threading & UI System
+
+## **Threading Architecture**
+
+- **3-Level Threading**: Comments (depth 0) → Replies (depth 1) → Nested Replies (depth 2)
+- **Dedicated Thread Pages**: Navigate to `/tickets/:id/comments/:comment_id` for focused discussions
+- **Depth Management**: Set comment depth with `before_validation` callback, not `before_create`
+- **Parent-Child Relationships**: Use `parent_id` foreign key with proper associations
+- **Thread Context**: Always maintain parent ticket context throughout navigation
+
+## **Database Structure**
+
+```ruby
+# ✅ DO: Proper threading model structure
+class Comment < ApplicationRecord
+  belongs_to :ticket
+  belongs_to :parent, class_name: 'Comment', optional: true
+  has_many :replies, class_name: 'Comment', foreign_key: :parent_id, dependent: :destroy
+
+  before_validation :set_depth_from_parent
+  validates :depth, inclusion: { in: 0..2, message: "Maximum nesting depth is 2" }
+
+  private
+
+  def set_depth_from_parent
+    self.depth = parent ? parent.depth + 1 : 0
+  end
+end
+```
+
+## **Navigation Patterns**
+
+- **Thread Previews**: Show comment previews with reply counts on main ticket page
+- **Activity Indicators**: "View Thread & Reply (X replies)" with context
+- **Smart Redirects**: Context-aware navigation after replies/deletions
+- **Breadcrumb Navigation**: Clear path from board → ticket → thread
+- **Back Navigation**: Always provide clear path back to parent context
+
+## **Controller Patterns**
+
+- **Thread Context**: Extract comment and ticket in `before_action` filters
+- **Nested Parameters**: Handle deeply nested comment creation properly
+- **Redirect Logic**: Smart redirects based on action context (create vs delete)
+- **Error Handling**: Graceful handling of missing comments/tickets
+- **Permission Checks**: Verify user can access both ticket and thread
+
+```ruby
+# ✅ DO: Proper nested comment creation
+def create
+  @comment = @ticket.comments.build(comment_params)
+  @comment.parent = @parent_comment if @parent_comment
+  @comment.user = current_user
+
+  if @comment.save
+    redirect_to_appropriate_context
+  else
+    render_thread_with_errors
+  end
+end
+
+private
+
+def redirect_to_appropriate_context
+  if @parent_comment
+    # Redirect to thread view for replies
+    redirect_to board_ticket_comment_path(@board, @ticket, @parent_comment)
+  else
+    # Redirect to ticket for top-level comments
+    redirect_to board_ticket_path(@board, @ticket)
+  end
+end
+```
+
+## **UI/UX Patterns**
+
+- **Simplified Forms**: Clean, focused reply forms without complex JavaScript
+- **Visual Hierarchy**: Clear indentation and styling for comment depths
+- **Reply Affordances**: Clear "Reply" buttons and form positioning
+- **Thread Indicators**: Visual connection between parent and child comments
+- **Mobile Responsive**: Threading that works well on mobile devices
+
+## **JavaScript Integration**
+
+- **Minimal JavaScript**: Use Rails UJS for form handling, avoid complex SPA patterns
+- **Progressive Enhancement**: Core functionality works without JavaScript
+- **Delete Confirmations**: Proper confirmation dialogs for comment deletion
+- **Form Toggling**: Simple show/hide for reply forms
+- **Upvote Integration**: AJAX upvoting without full page reloads
+
+```javascript
+// ✅ DO: Simple, progressive JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+  // Simple reply form toggle
+  document.querySelectorAll('.reply-toggle').forEach(button => {
+    button.addEventListener('click', function() {
+      const formId = this.dataset.formId;
+      const form = document.getElementById(formId);
+      form.classList.toggle('hidden');
+    });
+  });
+});
+```
+
+## **Performance Considerations**
+
+- **N+1 Query Prevention**: Use `includes(:user, :replies)` for comment loading
+- **Thread Loading**: Load thread context efficiently with single queries
+- **Pagination**: Consider pagination for threads with many replies
+- **Caching**: Cache rendered comment threads where appropriate
+- **Database Indexes**: Index on `parent_id` and `ticket_id` for performance
+
+## **Threading Depth Management**
+
+- **Depth Validation**: Prevent comments deeper than 2 levels
+- **UI Constraints**: Disable reply buttons at maximum depth
+- **Graceful Degradation**: Handle edge cases where depth limits are reached
+- **Admin Override**: Consider admin ability to manage problematic threads
+
+## **Mobile & Accessibility**
+
+- **Touch Targets**: Adequate touch targets for mobile reply buttons
+- **Screen Reader Support**: Proper ARIA labels for threading relationships
+- **Keyboard Navigation**: Full keyboard accessibility for thread navigation
+- **Responsive Design**: Threading layout that adapts to screen size
+- **Focus Management**: Proper focus handling when navigating between contexts
+
+## **Error Handling**
+
+- **Missing Comments**: Graceful 404 handling for deleted/missing comments
+- **Permission Errors**: Clear messaging for unauthorized thread access
+- **Validation Errors**: Contextual error display in threading forms
+- **Nested Error Handling**: Proper error context for deeply nested operations
+
+Reference: @directive.md Comment Threading System section for complete implementation details and UX patterns

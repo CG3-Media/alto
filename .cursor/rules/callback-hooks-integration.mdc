@@ -1,0 +1,123 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Host App Callback Hooks Integration
+
+## **Callback Architecture**
+
+- **Zero Configuration**: Host app just defines methods and they get called automatically
+- **Error Isolation**: Callback failures don't break main feedback flow - log and continue
+- **Rich Context**: Every callback receives full context (object, board, user, additional data)
+- **Automatic Detection**: Use `respond_to?` to detect available callback methods
+- **Graceful Failure**: Log errors but never raise exceptions that break user experience
+
+## **Available Callback Methods**
+
+- **Ticket Events**:
+  - `ticket_created(ticket, board, user)` - New ticket submitted
+  - `ticket_status_changed(ticket, old_status, new_status, board, user)` - Status changes
+- **Comment Events**:
+  - `comment_created(comment, ticket, board, user)` - New comment/reply posted
+  - `comment_deleted(comment, ticket, board, user)` - Comment removed
+- **Upvote Events**:
+  - `upvote_created(upvote, votable, board, user)` - Ticket/comment upvoted
+  - `upvote_removed(upvote, votable, board, user)` - Upvote removed
+
+## **CallbackManager Implementation**
+
+```ruby
+# ✅ DO: Safe callback execution pattern
+def self.execute_callback(method_name, *args)
+  return unless Rails.application.respond_to?(method_name)
+
+  begin
+    Rails.application.send(method_name, *args)
+  rescue => e
+    Rails.logger.error "FeedbackBoard callback #{method_name} failed: #{e.message}"
+    # Never re-raise - callbacks must not break main flow
+  end
+end
+
+# ❌ DON'T: Unsafe callback execution
+def self.execute_callback(method_name, *args)
+  Rails.application.send(method_name, *args) # Could break main flow
+end
+```
+
+## **Model Integration Patterns**
+
+- **After Actions**: Use `after_create`, `after_update`, `after_destroy` callbacks
+- **Context Building**: Gather all relevant objects before callback execution
+- **Async Consideration**: Callbacks execute synchronously - keep them lightweight
+- **Data Integrity**: Execute callbacks after successful database transactions
+
+```ruby
+# ✅ DO: Proper callback timing
+after_create :trigger_created_callback
+after_update :trigger_status_change_callback, if: :saved_change_to_status?
+
+private
+
+def trigger_created_callback
+  FeedbackBoard::CallbackManager.execute_callback(
+    :ticket_created, self, board, user
+  )
+end
+```
+
+## **Host App Integration Options**
+
+- **ApplicationController Method**: Define callbacks in main app's ApplicationController
+- **Concern Pattern**: Use concern module for complex callback logic
+- **Service Class**: Delegate to dedicated service classes for heavy integrations
+- **Background Jobs**: Enqueue jobs from callbacks for async processing
+
+```ruby
+# ✅ DO: Clean host app integration
+class ApplicationController < ActionController::Base
+  private
+
+  def ticket_created(ticket, board, user)
+    case board.slug
+    when 'bugs'
+      SlackNotifier.bug_reported(ticket, user)
+      BugTracker.create_issue(ticket)
+    when 'features'
+      ProductBoard.add_request(ticket)
+      Analytics.track_feature_request(user, ticket)
+    end
+  end
+end
+```
+
+## **Error Handling & Logging**
+
+- **Never Raise**: Callbacks must never raise exceptions that break user flow
+- **Comprehensive Logging**: Log all callback attempts and failures
+- **Context Information**: Include relevant IDs and data in log messages
+- **Monitoring Integration**: Support for error tracking services
+
+## **Testing Considerations**
+
+- **Callback Mocking**: Provide test helpers for mocking callback methods
+- **Integration Tests**: Test that callbacks are triggered with correct parameters
+- **Error Scenarios**: Test that callback failures don't break main functionality
+- **Performance Testing**: Ensure callbacks don't significantly impact response times
+
+## **Performance Guidelines**
+
+- **Lightweight Operations**: Keep callback logic fast and simple
+- **Async Processing**: Use background jobs for heavy operations
+- **Database Queries**: Minimize additional queries in callback methods
+- **External API Calls**: Always use background jobs for external API integrations
+
+## **Security Considerations**
+
+- **Input Validation**: Validate all callback parameters
+- **Permission Checks**: Respect user permissions in callback logic
+- **Data Exposure**: Be careful about exposing sensitive data through callbacks
+- **Rate Limiting**: Consider rate limiting for external service integrations
+
+Reference: @directive.md Host App Callback Hooks section for complete examples and integration patterns

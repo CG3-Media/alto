@@ -1,0 +1,84 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Multiple Boards System Architecture
+
+## **URL Structure & Routing**
+
+- **Board-Scoped URLs**: All resources nested under boards: `/feedback/boards/:board_slug/tickets`
+- **Slug-Based Routing**: Use board slugs in URLs for SEO and readability
+- **Admin Routes**: Admin board management at `/feedback/admin/boards` with slug parameters
+- **Nested Resources**:
+  ```ruby
+  # ✅ DO: Proper resource nesting
+  resources :boards, param: :slug do
+    resources :tickets do
+      resources :comments
+    end
+  end
+
+  # ❌ DON'T: Flat routing without board context
+  resources :tickets # Missing board scope
+  ```
+
+## **Board Model Requirements**
+
+- **Required Fields**: `name` (required), `slug` (unique), `description` (optional)
+- **Slug Generation**: Auto-generate URL-friendly slugs from board names
+- **Associations**: `has_many :tickets, dependent: :restrict_with_error` for safety
+- **Validations**: Name presence, slug uniqueness, slug format (URL-safe)
+- **Default Board**: Always maintain a default board for fallback behavior
+
+## **Sluggable Concern Pattern**
+
+- **Smart Parameter Handling**: Override `.find()` to handle both slugs and IDs transparently
+- **Finder Methods**: Implement `find_by_slug_or_id` and `find_by_slug_or_id!`
+- **URL Generation**: `to_param` returns slug for clean URLs
+- **Fallback Logic**: Try slug first, then ID for backwards compatibility
+  ```ruby
+  # ✅ DO: Enhanced find method
+  def self.find(param)
+    find_by_slug_or_id!(param)
+  end
+
+  # ❌ DON'T: Manual slug/ID handling in controllers
+  def set_board
+    @board = params[:slug].present? ? Board.find_by_slug!(params[:slug]) : Board.find(params[:id])
+  end
+  ```
+
+## **Controller Scoping Patterns**
+
+- **Board Context**: All ticket/comment controllers must scope by board
+- **Parameter Extraction**: Extract board from `params[:board_slug]` in before_action
+- **Permission Checking**: Check board-level permissions before resource access
+- **Breadcrumb Context**: Maintain board context throughout navigation
+- **Error Handling**: Proper 404 handling for missing boards
+
+## **Database Migration Strategy**
+
+- **Safe Migrations**: Use `restrict_with_error` to prevent accidental data loss
+- **Default Board Creation**: Auto-create default board in migration
+- **Data Migration**: Migrate existing tickets to default board
+- **Foreign Key Constraints**: Proper referential integrity with board_id
+- **Indexing**: Index board_id on tickets table for performance
+
+## **Admin Interface**
+
+- **Board Management**: CRUD operations for boards with safety checks
+- **Ticket Count Validation**: Prevent deletion of boards with tickets
+- **Board Statistics**: Show ticket counts and activity per board
+- **Default Board Protection**: Prevent deletion of default/last board
+- **Bulk Operations**: Support for bulk ticket moving between boards
+
+## **Board-Specific Features**
+
+- **Scoped Search**: Search limited to current board context
+- **Board Statistics**: Ticket counts, status distribution per board
+- **Permission Integration**: Board-level access control hooks
+- **Notification Settings**: Per-board email notification configuration
+- **Custom Styling**: Future support for board-specific themes
+
+Reference: @directive.md Multiple Boards System section for complete implementation details
