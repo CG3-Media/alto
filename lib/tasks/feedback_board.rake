@@ -15,6 +15,7 @@ namespace :feedback_board do
       puts "  • feedback_board_comments"
       puts "  • feedback_board_upvotes"
       puts "  • feedback_board_settings"
+      puts "  • feedback_board_subscriptions"
       puts ""
       puts "🎉 You can now visit /feedback in your application!"
     rescue => e
@@ -41,7 +42,8 @@ namespace :feedback_board do
       'feedback_board_tickets',
       'feedback_board_comments',
       'feedback_board_upvotes',
-      'feedback_board_settings'
+      'feedback_board_settings',
+      'feedback_board_subscriptions'
     ]
 
     connection = ActiveRecord::Base.connection
@@ -84,6 +86,7 @@ namespace :feedback_board do
 
     connection = ActiveRecord::Base.connection
     tables_to_drop = [
+      'feedback_board_subscriptions',
       'feedback_board_upvotes',
       'feedback_board_comments',
       'feedback_board_tickets',

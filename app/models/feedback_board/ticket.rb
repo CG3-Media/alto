@@ -3,6 +3,7 @@ module FeedbackBoard
     belongs_to :board
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
+    has_many :subscriptions, class_name: 'FeedbackBoard::Subscription', dependent: :destroy
 
     validates :title, presence: true, length: { maximum: 255 }
     validates :description, presence: true

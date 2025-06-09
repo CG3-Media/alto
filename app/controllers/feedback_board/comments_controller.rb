@@ -6,12 +6,13 @@ module FeedbackBoard
     before_action :set_comment, only: [:show, :destroy]
     before_action :set_parent_comment, only: [:create], if: -> { params[:comment] && params[:comment][:parent_id].present? }
 
-                def create
+    def create
       @comment = @ticket.comments.build(comment_params)
       @comment.user_id = current_user.id
 
       if @comment.save
-                if @comment.is_reply?
+        @ticket.subscriptions.find_or_create_by(email: current_user.email)
+        if @comment.is_reply?
           # Redirect to the thread view of the root comment
           root_comment = @comment.thread_root
           redirect_to feedback_board.board_ticket_comment_path(@board, @ticket, root_comment),

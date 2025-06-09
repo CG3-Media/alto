@@ -37,7 +37,8 @@ module FeedbackBoard
         'feedback_board_tickets',
         'feedback_board_comments',
         'feedback_board_upvotes',
-        'feedback_board_settings'
+        'feedback_board_settings',
+        'feedback_board_subscriptions'
       ]
 
       connection = ActiveRecord::Base.connection
@@ -181,6 +182,23 @@ module FeedbackBoard
       # Add indexes for settings table (check existence first)
       if connection.table_exists?('feedback_board_settings')
         add_index_if_not_exists(connection, :feedback_board_settings, :key, { unique: true })
+      end
+
+      # Create subscriptions table
+      unless connection.table_exists?('feedback_board_subscriptions')
+        connection.create_table :feedback_board_subscriptions do |t|
+          t.string :email
+          t.integer :ticket_id
+          t.datetime :last_viewed_at
+          t.timestamps
+        end
+      end
+
+      # Add indexes for subscriptions table (check existence first)
+      if connection.table_exists?('feedback_board_subscriptions')
+        add_index_if_not_exists(connection, :feedback_board_subscriptions, :ticket_id)
+        add_index_if_not_exists(connection, :feedback_board_subscriptions, :email)
+        add_index_if_not_exists(connection, :feedback_board_subscriptions, [:ticket_id, :email])
       end
     end
 

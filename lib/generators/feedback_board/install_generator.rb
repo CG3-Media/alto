@@ -74,7 +74,8 @@ module FeedbackBoard
           'feedback_board_tickets',
           'feedback_board_comments',
           'feedback_board_upvotes',
-          'feedback_board_settings'
+          'feedback_board_settings',
+          'feedback_board_subscriptions'
         ]
 
         connection = ActiveRecord::Base.connection
