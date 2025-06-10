@@ -15,6 +15,10 @@ module Alto
       [:status_set_id]
     end
 
+    def slug_source_attribute
+      :name
+    end
+
     def color_classes
       case color
       when 'green'

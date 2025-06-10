@@ -3,7 +3,17 @@ module Alto
     has_many :statuses, -> { order(:position) }, dependent: :destroy
     has_many :boards, dependent: :nullify
 
-    accepts_nested_attributes_for :statuses, allow_destroy: true, reject_if: :all_blank
+    accepts_nested_attributes_for :statuses,
+                                  allow_destroy: true,
+                                  reject_if: ->(attributes) {
+                                    # Reject if marked for destruction
+                                    return true if attributes['_destroy'] == '1' || attributes['_destroy'] == true
+
+                                    # Reject if all key fields are blank
+                                    attributes['name'].blank? &&
+                                    attributes['slug'].blank? &&
+                                    attributes['color'].blank?
+                                  }
 
     validates :name, presence: true, length: { maximum: 100 }
     validates :name, uniqueness: true
