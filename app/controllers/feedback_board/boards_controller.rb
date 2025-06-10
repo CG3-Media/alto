@@ -4,16 +4,19 @@ module FeedbackBoard
     before_action :ensure_can_manage_boards, only: [:new, :create, :edit, :update, :destroy]
 
     def redirect_to_default
-      # Find the default board or any board if default doesn't exist
-      default_board = ::FeedbackBoard::Board.find_by(slug: 'feedback') ||
-                      ::FeedbackBoard::Board.first
+      # Find accessible boards for this user
+      accessible_boards = ::FeedbackBoard::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?)
 
-      # If no boards exist at all, redirect to boards index or admin
+      # Find the default board or any accessible board if default doesn't exist
+      default_board = accessible_boards.find_by(slug: 'feedback') ||
+                      accessible_boards.first
+
+      # If no accessible boards exist, redirect appropriately
       if default_board.nil?
         if can_manage_boards?
           redirect_to boards_path, notice: 'No boards exist yet. Create your first board!'
         else
-          redirect_to main_app.root_path, alert: 'No feedback boards are available yet.'
+          redirect_to main_app.root_path, alert: 'No feedback boards are available to you.'
         end
         return
       end
@@ -25,7 +28,9 @@ module FeedbackBoard
     end
 
     def index
-      @boards = ::FeedbackBoard::Board.ordered.includes(:tickets)
+      @boards = ::FeedbackBoard::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?)
+                                     .ordered
+                                     .includes(:tickets)
     end
 
     def show

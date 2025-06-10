@@ -15,10 +15,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.string "name", null: false
     t.string "slug", null: false
     t.text "description"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.integer "status_set_id"
     t.string "item_label_singular", default: "ticket"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["name"], name: "index_feedback_board_boards_on_name"
     t.index ["slug"], name: "index_feedback_board_boards_on_slug", unique: true
     t.index ["status_set_id"], name: "index_feedback_board_boards_on_status_set_id"
@@ -26,16 +26,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
 
   create_table "feedback_board_comments", force: :cascade do |t|
     t.integer "ticket_id", null: false
+    t.string "user_type"
     t.integer "user_id"
+    t.integer "parent_id"
     t.text "content"
+    t.integer "depth", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "parent_id"
-    t.integer "depth", default: 0, null: false
     t.index ["content"], name: "index_feedback_board_comments_on_content"
     t.index ["parent_id"], name: "index_feedback_board_comments_on_parent_id"
     t.index ["ticket_id"], name: "index_feedback_board_comments_on_ticket_id"
-    t.index ["user_id"], name: "index_feedback_board_comments_on_user_id"
+    t.index ["user_type", "user_id"], name: "index_feedback_board_comments_on_user"
   end
 
   create_table "feedback_board_settings", force: :cascade do |t|
@@ -87,10 +88,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.text "description"
     t.string "status_slug"
     t.boolean "locked", default: false, null: false
+    t.string "user_type", null: false
     t.integer "user_id", null: false
+    t.integer "board_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "board_id", null: false
     t.index ["board_id"], name: "index_feedback_board_tickets_on_board_id"
     t.index ["created_at"], name: "index_feedback_board_tickets_on_created_at"
     t.index ["description"], name: "index_feedback_board_tickets_on_description"
@@ -98,18 +100,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.index ["status_slug", "created_at"], name: "index_feedback_board_tickets_on_status_slug_and_created_at"
     t.index ["status_slug"], name: "index_feedback_board_tickets_on_status_slug"
     t.index ["title"], name: "index_feedback_board_tickets_on_title"
-    t.index ["user_id"], name: "index_feedback_board_tickets_on_user_id"
+    t.index ["user_type", "user_id"], name: "index_feedback_board_tickets_on_user"
   end
 
   create_table "feedback_board_upvotes", force: :cascade do |t|
     t.string "upvotable_type", null: false
     t.integer "upvotable_id", null: false
+    t.string "user_type", null: false
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["upvotable_type", "upvotable_id", "user_id"], name: "index_upvotes_on_upvotable_and_user", unique: true
     t.index ["upvotable_type", "upvotable_id"], name: "index_feedback_board_upvotes_on_upvotable"
-    t.index ["user_id"], name: "index_feedback_board_upvotes_on_user_id"
+    t.index ["user_type", "user_id"], name: "index_feedback_board_upvotes_on_user"
   end
 
   create_table "users", force: :cascade do |t|

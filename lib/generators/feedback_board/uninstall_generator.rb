@@ -1,7 +1,18 @@
 module FeedbackBoard
   module Generators
     class UninstallGenerator < Rails::Generators::Base
-      desc "Uninstall FeedbackBoard"
+      desc <<~DESC
+        Uninstall FeedbackBoard - complete removal in one command!
+
+        This safely removes:
+        • Configuration files
+        • Database tables (optional)
+        • Provides cleanup instructions
+        • Maintains data safety with confirmations
+
+        Examples:
+          rails generate feedback_board:uninstall    # Interactive uninstall with prompts
+      DESC
 
       def uninstall_feedback_board
         say "🗑️  Uninstalling FeedbackBoard...", :red
@@ -86,7 +97,7 @@ module FeedbackBoard
         migration_file = "db/migrate/#{timestamp}_remove_feedback_board_tables.rb"
 
         migration_content = <<~RUBY
-          class RemoveFeedbackBoardTables < ActiveRecord::Migration[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]
+          class RemoveFeedbackBoardTables < ActiveRecord::Migration[7.0]
             def up
               # Disable foreign key checks for safe removal
               connection = ActiveRecord::Base.connection
@@ -121,7 +132,7 @@ module FeedbackBoard
 
             def remove_table_safely(table_name)
               if table_exists?(table_name)
-                say "  • Removing #{table_name}..."
+                say "  • Removing \#{table_name}..."
 
                 # Remove foreign key constraints first
                 foreign_keys(table_name).each do |fk|
@@ -131,10 +142,10 @@ module FeedbackBoard
                 # Remove the table (indexes are automatically removed)
                 drop_table table_name
               else
-                say "  • #{table_name} not found (skipping)"
+                say "  • \#{table_name} not found (skipping)"
               end
             rescue => e
-              say "  ⚠️  Could not remove #{table_name}: #{e.message}", :yellow
+              say "  ⚠️  Could not remove \#{table_name}: \#{e.message}", :yellow
             end
           end
         RUBY

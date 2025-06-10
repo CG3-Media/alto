@@ -85,7 +85,13 @@ module FeedbackBoard
     def can_access_board?(board = nil)
       check_configured_permission(:can_access_board?, board) do
         return false unless current_user
-        true # Default: allow access to all boards if user is logged in
+
+        # Check if board is admin-only and user has admin access
+        if board&.admin_only?
+          return can_access_admin?
+        end
+
+        true # Default: allow access to public boards if user is logged in
       end
     end
 

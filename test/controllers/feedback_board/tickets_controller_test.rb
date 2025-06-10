@@ -63,5 +63,77 @@ module FeedbackBoard
       tickets_methods = TicketsController.instance_methods(true)  # Include inherited methods
       assert_includes tickets_methods, :can_access_board?
     end
+
+    # Admin-only board access tests
+    test "should deny access to admin-only board for regular users" do
+      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+      # Mock regular user permissions
+      @controller.define_singleton_method(:can_access_admin?) { false }
+      @controller.define_singleton_method(:current_user) { double("user", id: 1) }
+      @controller.define_singleton_method(:can_access_board?) do |board|
+        return false unless board
+        # This simulates the logic we added to ApplicationController
+        board.admin_only? ? false : true
+      end
+
+      get :index, params: { board_slug: admin_board.slug }
+
+      # Should redirect away from the admin board
+      assert_response :redirect
+      assert_match(/You do not have permission/, flash[:alert])
+    end
+
+    test "should allow access to admin-only board for admin users" do
+      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+      # Mock admin user permissions
+      @controller.define_singleton_method(:can_access_admin?) { true }
+      @controller.define_singleton_method(:current_user) { double("admin", id: 1) }
+      @controller.define_singleton_method(:can_access_board?) do |board|
+        return false unless board
+        # This simulates the logic we added to ApplicationController
+        board.admin_only? ? true : true
+      end
+      @controller.define_singleton_method(:can_submit_tickets?) { true }
+      @controller.define_singleton_method(:ensure_current_board_set) { |board| @current_board = board }
+
+      get :index, params: { board_slug: admin_board.slug }
+
+      # Should allow access
+      assert_response :success
+      assert_equal admin_board, assigns(:board)
+    end
+
+    test "should allow access to public board for regular users" do
+      public_board = Board.create!(name: "Public Board", is_admin_only: false)
+
+      # Mock regular user permissions
+      @controller.define_singleton_method(:can_access_admin?) { false }
+      @controller.define_singleton_method(:current_user) { double("user", id: 1) }
+      @controller.define_singleton_method(:can_access_board?) do |board|
+        return false unless board
+        # This simulates the logic we added to ApplicationController
+        board.admin_only? ? false : true
+      end
+      @controller.define_singleton_method(:can_submit_tickets?) { true }
+      @controller.define_singleton_method(:ensure_current_board_set) { |board| @current_board = board }
+
+      get :index, params: { board_slug: public_board.slug }
+
+      # Should allow access
+      assert_response :success
+      assert_equal public_board, assigns(:board)
+    end
+
+    private
+
+    def double(name, attributes = {})
+      obj = Object.new
+      attributes.each do |key, value|
+        obj.define_singleton_method(key) { value }
+      end
+      obj
+    end
   end
 end

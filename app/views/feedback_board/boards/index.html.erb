@@ -15,7 +15,14 @@
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
         <%= link_to feedback_board.board_tickets_path(board), class: "block p-6" do %>
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold text-gray-900"><%= board.name %></h3>
+            <div class="flex items-center">
+              <h3 class="text-lg font-semibold text-gray-900"><%= board.name %></h3>
+              <% if board.admin_only? %>
+                <span class="ml-2 text-sm bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                  🔒 Admin Only
+                </span>
+              <% end %>
+            </div>
             <span class="text-sm text-gray-500">
               <%= pluralize(board.tickets_count, 'ticket') %>
             </span>

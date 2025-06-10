@@ -11,6 +11,8 @@ module FeedbackBoard
               format: { with: /\A[a-z ]+\z/i, message: 'only letters and spaces allowed' }
 
     scope :ordered, -> { order(:name) }
+    scope :public_boards, -> { where(is_admin_only: false) }
+    scope :admin_only_boards, -> { where(is_admin_only: true) }
 
     def slug_source_attribute
       :name
@@ -66,6 +68,24 @@ module FeedbackBoard
     # Item labeling method
     def item_name
       item_label_singular.presence || 'ticket'
+    end
+
+    # Admin-only access methods
+    def admin_only?
+      is_admin_only?
+    end
+
+    def publicly_accessible?
+      !is_admin_only?
+    end
+
+    # Scope boards based on user's admin status
+    def self.accessible_to_user(user, current_user_is_admin: false)
+      if current_user_is_admin
+        all
+      else
+        public_boards
+      end
     end
 
   end

@@ -71,6 +71,28 @@
     <% end %>
   </div>
 
+  <hr class="border-gray-200">
+
+  <div class="space-y-2">
+    <div class="flex items-start">
+      <div class="flex items-center h-5">
+        <%= form.check_box :is_admin_only,
+            class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" %>
+      </div>
+      <div class="ml-3">
+        <%= form.label :is_admin_only, "Admin-Only Board", class: "text-sm font-medium text-gray-700" %>
+        <p class="text-sm text-gray-500">
+          🔒 Only administrators can view and access this board. Regular users won't see it in listings or be able to access it directly.
+        </p>
+      </div>
+    </div>
+    <% if @board.errors[:is_admin_only].any? %>
+      <% @board.errors[:is_admin_only].each do |error| %>
+        <p class="text-sm text-red-600"><%= error %></p>
+      <% end %>
+    <% end %>
+  </div>
+
   <div class="flex justify-end space-x-3">
     <%= render 'shared/buttons/secondary',
         text: "Cancel",

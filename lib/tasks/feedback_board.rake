@@ -4,7 +4,13 @@ namespace :feedback_board do
     puts "🚀 Setting up FeedbackBoard database tables..."
 
     begin
-      ::FeedbackBoard::DatabaseSetup.force_setup!
+      # Copy only FeedbackBoard migrations (avoid ActionMailbox/ActionText)
+      puts "📦 Installing FeedbackBoard migrations only..."
+      copy_feedback_board_migrations_only
+
+      puts "⚡ Running migrations..."
+      system("rake db:migrate")
+
       puts "✅ FeedbackBoard database setup completed successfully!"
       puts ""
       puts "📋 Created tables:"
@@ -105,7 +111,80 @@ namespace :feedback_board do
 
     puts ""
     puts "🚀 Recreating tables..."
-    ::FeedbackBoard::DatabaseSetup.force_setup!
+
+    # Copy only FeedbackBoard migrations (avoid ActionMailbox/ActionText)
+    puts "📦 Installing FeedbackBoard migrations only..."
+    copy_feedback_board_migrations_only
+
+    puts "⚡ Running migrations..."
+    system("rake db:migrate")
+
     puts "✅ FeedbackBoard database reset completed!"
   end
 end
+
+# Helper method to copy only FeedbackBoard migrations
+def copy_feedback_board_migrations_only
+    require 'fileutils'
+
+    # Get the source migrations directory from the engine
+    source_migrations = File.join(::FeedbackBoard::Engine.root, "db", "migrate")
+    destination_migrations = Rails.root.join("db", "migrate")
+
+    # Ensure destination directory exists
+    FileUtils.mkdir_p(destination_migrations)
+
+    # Get all FeedbackBoard migration files
+    migration_files = Dir.glob(File.join(source_migrations, "*.rb"))
+
+    if migration_files.empty?
+      puts "⚠️  No FeedbackBoard migrations found"
+      return
+    end
+
+    copied_count = 0
+    migration_files.each do |source_file|
+      filename = File.basename(source_file)
+
+      # Generate a new timestamp for this migration
+      timestamp = Time.current.utc.strftime("%Y%m%d%H%M%S").to_i
+      timestamp += copied_count # Ensure unique timestamps
+
+      # Create new filename with current timestamp + feedback_board suffix
+      new_filename = "#{timestamp}_#{filename.gsub(/^\d+_/, '')}"
+      new_filename = new_filename.gsub('.rb', '.feedback_board.rb') unless new_filename.include?('feedback_board')
+
+      destination_file = File.join(destination_migrations, new_filename)
+
+      # Skip if migration already exists (check by class name)
+      if migration_already_exists_in_rake?(source_file, destination_migrations)
+        puts "   exists    #{new_filename}"
+      else
+        FileUtils.cp(source_file, destination_file)
+        puts "   copied    #{new_filename}"
+        copied_count += 1
+      end
+    end
+
+    if copied_count > 0
+      puts "📦 Copied #{copied_count} FeedbackBoard migration(s)"
+    else
+      puts "📦 All FeedbackBoard migrations already present"
+    end
+  end
+
+  def migration_already_exists_in_rake?(source_file, destination_dir)
+    source_content = File.read(source_file)
+
+    # Look for existing migrations with similar class names
+    class_name_match = source_content.match(/class\s+(\w+)\s+</)
+    return false unless class_name_match
+
+    class_name = class_name_match[1]
+
+    # Check if any existing migration has the same class name
+    Dir.glob(File.join(destination_dir, "*feedback_board*.rb")).any? do |existing_file|
+      existing_content = File.read(existing_file)
+      existing_content.include?("class #{class_name}")
+    end
+  end

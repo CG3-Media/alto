@@ -57,7 +57,7 @@ module FeedbackBoard
       assert_empty boards
     end
 
-                test "Board slug must be unique" do
+    test "Board slug must be unique" do
       board1 = Board.create!(name: "Test Board")
       board2 = Board.create(name: "Different Name")
 
@@ -68,7 +68,7 @@ module FeedbackBoard
       assert board2.errors[:slug].present?
     end
 
-                test "Board slug validation format accepts valid slugs" do
+    test "Board slug validation format accepts valid slugs" do
       board = Board.create!(name: "Test Board")
       original_slug = board.slug
 
@@ -182,7 +182,7 @@ module FeedbackBoard
       assert board.errors[:item_label_singular].present?
     end
 
-        test "Board slug generation handles edge cases" do
+    test "Board slug generation handles edge cases" do
       # Empty spaces and special chars only - should fallback to "item"
       board1 = Board.create!(name: "   !@#$%   ")
       assert_equal "item", board1.slug
@@ -198,6 +198,66 @@ module FeedbackBoard
       # Multiple spaces and hyphens
       board4 = Board.create!(name: "Test   ---   Board")
       assert_equal "test-board", board4.slug
+    end
+
+    test "Board has correct item label pluralization" do
+      board = Board.create!(name: "Post Board", item_label_singular: "post")
+      assert_equal "posts", board.item_name.pluralize
+      assert_equal "Posts", board.item_name.pluralize.capitalize
+    end
+
+    # Admin-only board tests
+    test "Board admin_only? method works correctly" do
+      public_board = Board.create!(name: "Public Board", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+      assert_not public_board.admin_only?
+      assert admin_board.admin_only?
+    end
+
+    test "Board publicly_accessible? method works correctly" do
+      public_board = Board.create!(name: "Public Board", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+      assert public_board.publicly_accessible?
+      assert_not admin_board.publicly_accessible?
+    end
+
+    test "Board scopes work correctly" do
+      public_board = Board.create!(name: "Public Board", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+      assert_includes Board.public_boards, public_board
+      assert_not_includes Board.public_boards, admin_board
+
+      assert_includes Board.admin_only_boards, admin_board
+      assert_not_includes Board.admin_only_boards, public_board
+    end
+
+      test "Board accessible_to_user scope works for regular users" do
+    public_board = Board.create!(name: "Public Board", is_admin_only: false)
+    admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+    accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: false)
+
+    assert_includes accessible_boards, public_board
+    assert_not_includes accessible_boards, admin_board
+  end
+
+  test "Board accessible_to_user scope works for admin users" do
+    public_board = Board.create!(name: "Public Board", is_admin_only: false)
+    admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+    accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: true)
+
+    assert_includes accessible_boards, public_board
+    assert_includes accessible_boards, admin_board
+  end
+
+    test "Board defaults to public when created" do
+      board = Board.create!(name: "Default Board")
+      assert_not board.admin_only?
+      assert board.publicly_accessible?
     end
   end
 end
