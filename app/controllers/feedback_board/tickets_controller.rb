@@ -6,7 +6,7 @@ module FeedbackBoard
     before_action :check_board_access
 
     # Make helper methods available to views
-    helper_method :can_user_edit_ticket?
+    helper_method :can_user_edit_ticket?, :current_user_subscribed?
 
     def index
       # Set this as the current board in session
@@ -127,6 +127,20 @@ module FeedbackBoard
       return false unless current_user
       # Users can edit their own tickets, or admins can edit any ticket
       ticket.user_id == current_user.id || can_edit_tickets?
+    end
+
+    def current_user_subscribed?(ticket = @ticket)
+      return false unless current_user
+
+      begin
+        user_email = ::FeedbackBoard.configuration.user_email.call(current_user.id)
+        return false unless user_email.present?
+
+        ticket.subscriptions.exists?(email: user_email)
+      rescue => e
+        Rails.logger.warn "[FeedbackBoard] Failed to check subscription status: #{e.message}"
+        false
+      end
     end
 
     def track_ticket_view

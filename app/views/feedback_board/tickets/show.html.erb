@@ -105,13 +105,31 @@
     <%= link_to "← Back to #{@board.name}", feedback_board.board_tickets_path(@board),
         class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
 
-    <% if can_user_edit_ticket?(@ticket) %>
-      <div class="space-x-2">
-        <%= link_to "Manage Subscribers", feedback_board.board_ticket_subscribers_path(@board, @ticket),
-            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-        <%= link_to "Edit Ticket", feedback_board.edit_board_ticket_path(@board, @ticket),
-            class: "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-      </div>
-    <% end %>
+    <div class="flex items-center space-x-2">
+      <% if current_user_subscribed? %>
+        <%= render 'shared/button',
+            text: "Unsubscribe",
+            url: feedback_board.unsubscribe_me_board_ticket_subscribers_path(@board, @ticket),
+            method: :delete,
+            button_type: :secondary,
+            html_options: {
+              data: {
+                confirm: "Are you sure you want to unsubscribe from this ticket?",
+                turbo_method: :delete
+              }
+            } %>
+      <% end %>
+
+      <% if can_user_edit_ticket?(@ticket) %>
+        <%= render 'shared/button',
+            text: "Manage Subscribers",
+            url: feedback_board.board_ticket_subscribers_path(@board, @ticket),
+            button_type: :primary %>
+        <%= render 'shared/button',
+            text: "Edit Ticket",
+            url: feedback_board.edit_board_ticket_path(@board, @ticket),
+            button_type: :secondary %>
+      <% end %>
+    </div>
   </div>
 </div>

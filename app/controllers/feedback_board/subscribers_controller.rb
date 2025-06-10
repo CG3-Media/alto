@@ -40,6 +40,33 @@ module FeedbackBoard
                   notice: "Successfully unsubscribed #{email} from this ticket."
     end
 
+    def unsubscribe_me
+      return redirect_to feedback_board.board_ticket_path(@board, @ticket), alert: "You must be logged in to unsubscribe." unless current_user
+
+      begin
+        user_email = ::FeedbackBoard.configuration.user_email.call(current_user.id)
+
+        if user_email.blank?
+          return redirect_to feedback_board.board_ticket_path(@board, @ticket), alert: "Unable to determine your email address."
+        end
+
+        subscription = @ticket.subscriptions.find_by(email: user_email)
+
+        if subscription
+          subscription.destroy
+          redirect_to feedback_board.board_ticket_path(@board, @ticket),
+                      notice: "You have been unsubscribed from this ticket."
+        else
+          redirect_to feedback_board.board_ticket_path(@board, @ticket),
+                      notice: "You are not currently subscribed to this ticket."
+        end
+      rescue => e
+        Rails.logger.error "[FeedbackBoard] Failed to unsubscribe user: #{e.message}"
+        redirect_to feedback_board.board_ticket_path(@board, @ticket),
+                    alert: "Failed to unsubscribe. Please try again."
+      end
+    end
+
     private
 
     def set_board
