@@ -47,7 +47,7 @@ mount Alto::Engine => "/community" # e.g. or /feedback or whatever
 
 ```bash
 rails generate alto:install
-````
+```
 
 This creates:
 - Database tables
@@ -245,10 +245,17 @@ end
 
 For simplicity, we're using tailwind via a CDN. 🤷🏾‍♂️
 
-
 ### Integrations
 
-See the [Callback Hooks](#-callback-hooks) section for integrating with external services like Slack, analytics, and ticketing systems.
+Alto integrates seamlessly with your existing Rails application through its callback hook system. Common integration patterns include:
+
+- **Slack/Discord Notifications** - Notify teams of new tickets and comments
+- **Email Notifications** - Send updates to stakeholders and users
+- **Analytics Tracking** - Track user engagement and feedback patterns
+- **External Ticketing** - Sync with Zendesk, Jira, or other systems
+- **Custom Business Logic** - Trigger workflows based on feedback events
+
+See the [Callback Hooks](#-callback-hooks) section above for implementation examples.
 
 ## 🔗 Polymorphic User Architecture
 
