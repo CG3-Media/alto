@@ -16,8 +16,10 @@
         </div>
       </div>
       <div>
-        <%= link_to "Back to Ticket", feedback_board.board_ticket_path(@board, @ticket),
-            class: "inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50" %>
+        <%= render 'shared/button',
+            text: "Back to Ticket",
+            url: feedback_board.board_ticket_path(@board, @ticket),
+            button_type: :secondary %>
       </div>
     </div>
   </div>
@@ -32,17 +34,21 @@
       <div class="mt-5">
         <%= form_with model: @new_subscription, url: feedback_board.board_ticket_subscribers_path(@board, @ticket), local: true, class: "flex gap-x-4" do |form| %>
           <div class="flex-1">
-            <%= form.email_field :email,
+            <%= render 'shared/forms/input',
+                form: form,
+                field_name: :email,
+                label_text: nil,
                 placeholder: "Enter email address",
-                class: "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6",
-                required: true %>
-            <% if @new_subscription.errors[:email].any? %>
-              <p class="mt-1 text-sm text-red-600"><%= @new_subscription.errors[:email].first %></p>
-            <% end %>
+                input_type: "email",
+                required: true,
+                model: @new_subscription,
+                show_label: false %>
           </div>
-          <div>
-            <%= form.submit "Subscribe",
-                class: "inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" %>
+          <div class="flex items-end">
+            <%= render 'shared/button',
+                text: "Subscribe",
+                type: "submit",
+                button_type: :primary %>
           </div>
         <% end %>
       </div>
@@ -56,7 +62,7 @@
         <div class="sm:flex-auto">
           <h3 class="text-base font-semibold leading-6 text-gray-900">Current Subscribers</h3>
           <p class="mt-2 text-sm text-gray-700">
-            <%= pluralize(@subscriptions.count, 'subscriber') %> will receive notifications about this ticket.
+            <%= pluralize(@subscriptions.count, 'subscriber') %> can receive notifications about this ticket.
           </p>
         </div>
       </div>
