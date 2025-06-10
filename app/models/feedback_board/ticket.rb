@@ -113,6 +113,15 @@ module FeedbackBoard
       board.has_status_tracking?
     end
 
+    # Subscribable concern implementation
+    def subscribable_ticket
+      self
+    end
+
+    def user_email
+      ::FeedbackBoard.configuration.user_email.call(user_id)
+    end
+
     private
 
     def trigger_ticket_created_callback
@@ -128,29 +137,11 @@ module FeedbackBoard
     def get_user_object(user_id)
       return nil unless user_id
 
-      user_class = ::FeedbackBoard.configuration.user_model.constantize rescue nil
-      return nil unless user_class
-
-      user_class.find_by(id: user_id)
-    end
-
-    # Subscribable concern implementation
-    def subscribable_ticket
-      self
-    end
-
-    def user_email
-      user = get_user_object(user_id)
-      return nil unless user
-
-      if user.respond_to?(:email)
-        user.email
-      elsif user.respond_to?(:email_address)
-        user.email_address
-      else
-        # Fallback: try the configured display method
-        display_method = ::FeedbackBoard.configuration.user_display_method || :email
-        user.respond_to?(display_method) ? user.send(display_method) : nil
+      begin
+        user_class = ::FeedbackBoard.configuration.user_model.constantize
+        user_class.find_by(id: user_id)
+      rescue NameError
+        nil
       end
     end
 

@@ -1,5 +1,7 @@
 module FeedbackBoard
   class Upvote < ApplicationRecord
+    include ::FeedbackBoard::Subscribable
+
     belongs_to :upvotable, polymorphic: true
 
     validates :user_id, presence: true
@@ -11,6 +13,23 @@ module FeedbackBoard
 
     scope :for_tickets, -> { where(upvotable_type: 'FeedbackBoard::Ticket') }
     scope :for_comments, -> { where(upvotable_type: 'FeedbackBoard::Comment') }
+
+    # Subscribable concern implementation
+    def subscribable_ticket
+      if upvotable.respond_to?(:board)
+        # Upvoting a ticket directly
+        upvotable
+      elsif upvotable.respond_to?(:ticket)
+        # Upvoting a comment - subscribe to the comment's ticket
+        upvotable.ticket
+      else
+        nil
+      end
+    end
+
+    def user_email
+      ::FeedbackBoard.configuration.user_email.call(user_id)
+    end
 
     private
 

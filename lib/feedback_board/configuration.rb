@@ -9,6 +9,7 @@ module FeedbackBoard
     def initialize
       # Default configuration: try common name fields, fallback to email
       @user_display_name_block = default_user_display_name_block
+      @user_email_block = default_user_email_block
       @user_model = "User"
 
       # App branding default (fallback if database not available)
@@ -37,6 +38,12 @@ module FeedbackBoard
     def user_display_name(&block)
       @user_display_name_block = block if block_given?
       @user_display_name_block
+    end
+
+    # Set user email method with a block
+    def user_email(&block)
+      @user_email_block = block if block_given?
+      @user_email_block
     end
 
             # Call a permission method block or proc
@@ -97,6 +104,28 @@ module FeedbackBoard
           user.email
         else
           "User ##{user_id}"
+        end
+      end
+    end
+
+    def default_user_email_block
+      proc do |user_id|
+        return nil unless user_id
+
+        # Get the user model class (configurable, defaults to User)
+        user_class = user_model.constantize rescue nil
+        return nil unless user_class
+
+        user = user_class.find_by(id: user_id)
+        return nil unless user
+
+        # Try common email field names
+        if user.respond_to?(:email) && user.email.present?
+          user.email
+        elsif user.respond_to?(:email_address) && user.email_address.present?
+          user.email_address
+        else
+          nil
         end
       end
     end

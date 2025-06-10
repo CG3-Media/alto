@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_09_230759) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
   create_table "feedback_board_boards", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -110,6 +110,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_09_230759) do
     t.index ["upvotable_type", "upvotable_id", "user_id"], name: "index_upvotes_on_upvotable_and_user", unique: true
     t.index ["upvotable_type", "upvotable_id"], name: "index_feedback_board_upvotes_on_upvotable"
     t.index ["user_id"], name: "index_feedback_board_upvotes_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "feedback_board_boards", "feedback_board_status_sets", column: "status_set_id"
