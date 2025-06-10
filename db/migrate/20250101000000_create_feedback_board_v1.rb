@@ -32,6 +32,7 @@ class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
       t.text :description
       t.references :status_set, foreign_key: { to_table: :feedback_board_status_sets }
       t.string :item_label_singular, default: 'ticket'
+      t.boolean :is_admin_only, default: false, null: false
       t.timestamps null: false
     end
 
@@ -68,7 +69,7 @@ class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
 
     add_index :feedback_board_comments, :content, if_not_exists: true
 
-        # Upvotes - voting system for tickets and comments
+    # Upvotes - voting system for tickets and comments
     create_table :feedback_board_upvotes, if_not_exists: true do |t|
       t.references :upvotable, null: false, polymorphic: true
       t.references :user, null: false, polymorphic: true
