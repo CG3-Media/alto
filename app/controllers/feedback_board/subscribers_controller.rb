@@ -10,15 +10,26 @@ module FeedbackBoard
     end
 
     def create
-      @subscription = @ticket.subscriptions.build(subscription_params)
+      email = subscription_params[:email]
 
-      if @subscription.save
+      # Find existing subscription or create new one
+      @subscription = @ticket.subscriptions.find_or_initialize_by(email: email)
+
+      if @subscription.persisted?
+        # Already exists - just touch it to update timestamps
+        @subscription.touch
         redirect_to feedback_board.board_ticket_subscribers_path(@board, @ticket),
-                    notice: "Successfully subscribed #{@subscription.email} to this ticket."
+                    notice: "#{email} subscription updated. They can continue receiving notifications for this ticket."
       else
-        @subscriptions = @ticket.subscriptions.includes(:ticket).order(:email)
-        @new_subscription = @subscription
-        render :index, status: :unprocessable_entity
+        # New subscription - try to save
+        if @subscription.save
+          redirect_to feedback_board.board_ticket_subscribers_path(@board, @ticket),
+                      notice: "Successfully subscribed #{email} to this ticket."
+        else
+          @subscriptions = @ticket.subscriptions.includes(:ticket).order(:email)
+          @new_subscription = @subscription
+          render :index, status: :unprocessable_entity
+        end
       end
     end
 
