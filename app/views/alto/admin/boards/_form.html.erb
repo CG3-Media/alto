@@ -62,10 +62,15 @@
     </p>
     <%= form.select :status_set_id,
                       options_from_collection_for_select(::Alto::StatusSet.ordered, :id, :name, @board.status_set_id),
-        { prompt: 'No status tracking', include_blank: false },
+        { prompt: 'Select a status set...', include_blank: false },
         { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
     <% if @board.errors[:status_set_id].any? %>
       <% @board.errors[:status_set_id].each do |error| %>
+        <p class="text-sm text-red-600"><%= error %></p>
+      <% end %>
+    <% end %>
+    <% if @board.errors[:status_set].any? %>
+      <% @board.errors[:status_set].each do |error| %>
         <p class="text-sm text-red-600"><%= error %></p>
       <% end %>
     <% end %>

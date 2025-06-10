@@ -110,19 +110,21 @@ module Alto
     end
 
     test "Board has_status_tracking? works correctly" do
-      board_without_status = Board.create!(name: "No Status Board")
-      assert_not board_without_status.has_status_tracking?
-
       # Use a unique name to avoid conflicts
       status_set = StatusSet.create!(name: "Test Status Set #{Time.current.to_i}")
-      board_with_status = Board.create!(name: "Status Board #{Time.current.to_i}", status_set: status_set)
+      board_with_status = Board.create!(name: "Status Board #{Time.current.to_i}", status_set: status_set, item_label_singular: "ticket")
 
       # Will return false until status_set has statuses
       assert_not board_with_status.has_status_tracking?
+
+      # Add a status and test again
+      status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      assert board_with_status.has_status_tracking?
     end
 
-    test "Board status-related methods handle nil status_set gracefully" do
-      board = Board.create!(name: "Test Board")
+    test "Board status-related methods work with empty status sets" do
+      status_set = StatusSet.create!(name: "Empty Status Set #{Time.current.to_i}")
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
 
       assert_empty board.available_statuses
       assert_empty board.status_options_for_select

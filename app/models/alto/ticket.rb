@@ -96,7 +96,6 @@ module Alto
 
     # Status-related methods
     def status
-      return nil unless board.has_status_tracking?
       board.status_by_slug(status_slug)
     end
 
@@ -113,7 +112,7 @@ module Alto
     end
 
     def can_change_status?
-      board.has_status_tracking?
+      true
     end
 
     # Subscribable concern implementation
@@ -151,26 +150,17 @@ module Alto
     def status_slug_valid_for_board
       return unless status_slug.present? && board.present?
 
-      if board.has_status_tracking?
-        valid_slugs = board.status_set.status_slugs
-        unless valid_slugs.include?(status_slug)
-          errors.add(:status_slug, "is not valid for this board")
-        end
-      else
-        # Board has no status tracking, so status_slug should be nil
-        unless status_slug.nil?
-          errors.add(:status_slug, "should not be set for boards without status tracking")
-        end
+      valid_slugs = board.status_set.status_slugs
+      unless valid_slugs.include?(status_slug)
+        errors.add(:status_slug, "is not valid for this board")
       end
     end
 
     def set_default_status
       return unless board.present?
 
-      if board.has_status_tracking? && status_slug.blank?
+      if status_slug.blank?
         self.status_slug = board.default_status_slug
-      elsif !board.has_status_tracking?
-        self.status_slug = nil
       end
     end
 

@@ -3,12 +3,13 @@ module Alto
     include Sluggable
 
     has_many :tickets, dependent: :restrict_with_error
-    belongs_to :status_set, optional: true
+    belongs_to :status_set
 
     validates :name, presence: true, length: { maximum: 100 }
     validates :slug, uniqueness: true
     validates :item_label_singular, presence: true, length: { maximum: 50 },
               format: { with: /\A[a-z ]+\z/i, message: 'only letters and spaces allowed' }
+    validates :status_set, presence: true
 
     scope :ordered, -> { order(:name) }
     scope :public_boards, -> { where(is_admin_only: false) }
@@ -42,26 +43,26 @@ module Alto
 
     # Status-related methods
     def has_status_tracking?
-      status_set.present? && status_set.has_statuses?
+      status_set&.has_statuses? || false
     end
 
     def available_statuses
-      return [] unless has_status_tracking?
+      return [] unless status_set
       status_set.statuses.ordered
     end
 
     def status_options_for_select
-      return [] unless has_status_tracking?
+      return [] unless status_set
       status_set.status_options_for_select
     end
 
     def default_status_slug
-      return nil unless has_status_tracking?
+      return nil unless status_set
       status_set.first_status&.slug
     end
 
     def status_by_slug(slug)
-      return nil unless has_status_tracking?
+      return nil unless status_set
       status_set.status_by_slug(slug)
     end
 
