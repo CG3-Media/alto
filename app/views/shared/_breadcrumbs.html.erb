@@ -1,3 +1,4 @@
+<% unless params[:action] == 'new' %>
 <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6" aria-label="Breadcrumb">
   <% if defined?(@board) %>
     <!-- Board Link -->
@@ -69,3 +70,4 @@
     <span class="text-gray-500">Admin Dashboard</span>
   <% end %>
 </nav>
+<% end %>

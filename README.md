@@ -52,29 +52,11 @@ rails generate alto:install
 This creates:
 - Database tables
 - Configuration file at `config/initializers/alto.rb`
-- Stimulus controller (if using Hotwire)
 
 **The installer is safe to run multiple times.**
 
-### ⚡ Migration Safety
 
-Alto uses **idempotent migrations** that are safe to run multiple times. All database operations use `if_not_exists: true` to prevent conflicts during:
-
-- Development cycles with multiple install/uninstall
-- Production deployments and rollbacks
-- CI/CD pipeline runs
-- Host app migration conflicts
-
-This means you can safely:
-```bash
-# Safe to run multiple times
-rails generate alto:install
-rails db:migrate
-```
-
-The migrations will gracefully handle existing tables and indexes without errors.
-
-### 3. Configure permissions (optional)
+### 3. Configure permissions
 
 Edit `config/initializers/alto.rb`:
 
@@ -109,54 +91,10 @@ end
 <%= link_to "Bug Reports", alto.board_path("bugs") %>
 ```
 
-### Admin Access
-
-Visit `/feedback/admin` to:
-- Manage boards
-- View analytics
-- Change ticket statuses
-
-## Board Item Labels
-
-Each board can use custom labels instead of "ticket". For example:
-- **Bug Reports** → "bugs" ("New Bug", "Search bugs")
-- **Feature Requests** → "requests" ("New Request", "Search requests")
-- **General Discussion** → "posts" ("New Post", "Search posts")
-
-Set the label when editing a board in the admin area. The interface automatically updates everywhere.
 
 ## 🎣 Callback Hooks
 
 One of Alto's most powerful features is its callback hook system. The engine automatically calls methods in your host app when events occur, enabling seamless integration with external services.
-
-### ⚙️ How It Works
-
-Define callback methods in your **ApplicationController** (not config) - they need access to controller context like `current_user`:
-
-```ruby
-# app/controllers/application_controller.rb
-class ApplicationController < ActionController::Base
-  private
-
-  def ticket_created(ticket, board, user)
-    # Called whenever a new ticket is submitted
-    case board.slug
-    when 'bugs'
-      SlackNotifier.notify("#dev-team", "🐛 New bug: #{ticket.title}")
-      BugTracker.create_issue(ticket, user)
-    when 'features'
-      Analytics.track(user&.id, 'feature_requested')
-      ProductBoard.add_request(ticket)
-    end
-  end
-
-  def comment_created(comment, ticket, board, user)
-    # Called whenever someone comments
-    # Send email notifications using your preferred method
-    UserMailer.new_comment_notification(comment, ticket, user).deliver_later
-  end
-end
-```
 
 ### 🔗 Available Hooks
 
@@ -181,25 +119,7 @@ end
 
 ### 📍 Where to Define Callbacks
 
-**✅ ApplicationController (Recommended)** - Callbacks need controller context:
-```ruby
-# app/controllers/application_controller.rb - ✅ YES
-class ApplicationController < ActionController::Base
-  private
-
-  def ticket_created(ticket, board, user)
-    # Has access to current_user, request, session, etc.
-  end
-end
-```
-
-**❌ NOT in config/initializers** - No access to request context:
-```ruby
-# config/initializers/alto.rb - ❌ NO
-# This won't work - no access to current_user or controller helpers
-```
-
-**🗂️ Alternative: Use a Concern for organization:**
+**🗂️ Use a Concern for organization:**
 ```ruby
 # app/controllers/concerns/alto_callbacks.rb
 module AltoCallbacks
@@ -220,7 +140,7 @@ end
 
 ### 🚀 Common Use Cases
 
-**💬 Slack/Discord Notifications:**
+**💬 Slack/Discord/Email Notifications:**
 ```ruby
 def ticket_created(ticket, board, user)
   SlackWebhook.post(
@@ -228,6 +148,14 @@ def ticket_created(ticket, board, user)
     text: "New #{board.name}: #{ticket.title}",
     user: user&.email
   )
+
+  # Send email notification
+  UserMailer.alto_notification(
+    to: board.admin_email,
+    subject: "New ticket: #{ticket.title}",
+    ticket: ticket,
+    user: user
+  ).deliver_later
 end
 ```
 
@@ -310,52 +238,13 @@ config.permission :can_create_tickets? do
 end
 ```
 
-### Email Notifications
-
-Email notifications are handled through the callback system. Implement callback methods in your ApplicationController to send notifications using your preferred mailer:
-
-```ruby
-# app/controllers/application_controller.rb
-def ticket_created(ticket, board, user)
-  # Send email using your mailer
-  UserMailer.ticket_created(ticket, user).deliver_later
-end
-
-def comment_created(comment, ticket, board, user)
-  # Notify ticket author of new comments
-  if ticket.user_id != user&.id
-    UserMailer.new_comment(comment, ticket).deliver_later
-  end
-end
-```
 
 ## Customization
 
 ### Styling
 
-Override views by copying them to your app:
+For simplicity, we're using tailwind via a CDN. 🤷🏾‍♂️
 
-```bash
-mkdir -p app/views/alto/tickets
-cp $(bundle show alto)/app/views/alto/tickets/* app/views/alto/tickets/
-```
-
-The engine uses Tailwind CSS via CDN. To use your own CSS framework, override the layout:
-
-```erb
-<!-- app/views/layouts/alto/application.html.erb -->
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Feedback</title>
-    <%= csrf_meta_tags %>
-    <%= stylesheet_link_tag "your-styles" %>
-  </head>
-  <body>
-    <%= yield %>
-  </body>
-</html>
-```
 
 ### Integrations
 
@@ -382,154 +271,12 @@ Alto.configure do |config|
 end
 ```
 
-### 🎯 Benefits
 
-**✅ Flexible User Models** - Works with any user model name:
-```ruby
-# E-commerce app
-config.user_model = "Customer"
-
-# SaaS platform
-config.user_model = "Account"
-
-# Membership site
-config.user_model = "Member"
-
-# Corporate app
-config.user_model = "Employee"
-```
-
-**✅ Multi-Tenant Support** - Different user types in the same database:
-```ruby
-# One feedback board can handle tickets from:
-# - Customer users (user_type: "Customer", user_id: 123)
-# - Admin users (user_type: "AdminUser", user_id: 456)
-# - Vendor users (user_type: "Vendor", user_id: 789)
-```
-
-**✅ Host App Integration** - No forced naming conventions:
-```ruby
-# Your existing user model works as-is
-class Account < ApplicationRecord
-  has_many :feedback_tickets, class_name: 'Alto::Ticket'
-end
-
-# Configure the engine to use it
-Alto.configure do |config|
-  config.user_model = "Account"
-end
-```
-
-### 🔧 Technical Implementation
-
-The engine automatically handles polymorphic associations:
-
-```ruby
-# In Alto models:
-class Ticket < ApplicationRecord
-  belongs_to :user, polymorphic: true  # Uses user_type + user_id
-end
-
-class Comment < ApplicationRecord
-  belongs_to :user, polymorphic: true  # Uses user_type + user_id
-end
-
-class Upvote < ApplicationRecord
-  belongs_to :user, polymorphic: true  # Uses user_type + user_id
-end
-```
-
-When you create a ticket, the engine automatically sets:
-```ruby
-ticket = Ticket.create!(
-  title: "Bug report",
-  user: current_account  # If config.user_model = "Account"
-)
-# → user_type = "Account", user_id = current_account.id
-```
-
-### 💡 User Display Configuration
-
-Configure how users are displayed in the interface:
-
-```ruby
-Alto.configure do |config|
-  config.user_model = "Account"
-
-  # Customize display names
-  config.user_display_name do |user_id|
-    account = Account.find_by(id: user_id)
-    return "Anonymous" unless account
-
-    # Try different name formats
-    if account.full_name.present?
-      account.full_name
-    elsif account.first_name.present?
-      account.first_name
-    else
-      account.email
-    end
-  end
-end
-```
-
-This architecture ensures Alto integrates seamlessly with your existing user model, regardless of what you call it! 🎉
-
-## Troubleshooting
-
-### "undefined method 'humanize'" error
-
-This happens when ticket statuses are misconfigured. Run:
-
-```bash
-rails generate alto:install
-```
-
-The installer will create any missing status configurations.
-
-### Email notifications not working
-
-Email notifications are handled through callback methods in your ApplicationController. Ensure you've implemented the callback methods you need:
-
-```ruby
-# app/controllers/application_controller.rb
-def ticket_created(ticket, board, user)
-  # Your email notification logic here
-end
-```
 
 ### Permission denied errors
 
 Check your permission configuration in `config/initializers/alto.rb`. The default permissions allow all access.
 
-### Search not working
-
-Ensure you've run the installer to create proper database indexes:
-
-```bash
-rails generate alto:install
-```
-
-### "user_type violates not-null constraint" error
-
-This error occurs when the polymorphic user associations aren't properly configured. This was fixed in recent versions, but if you encounter it:
-
-1. **Ensure you're using the latest version** with proper polymorphic associations
-2. **Check your user model configuration**:
-   ```ruby
-   # config/initializers/alto.rb
-   Alto.configure do |config|
-     config.user_model = "User"  # Must match your actual user model
-   end
-   ```
-
-3. **Verify your models have the polymorphic associations** (automatically included in recent versions):
-   ```ruby
-   # These should be present in app/models/alto/*.rb
-   belongs_to :user, polymorphic: true
-   ```
-
-If you're still having issues, the engine automatically sets `user_type` based on your `config.user_model` setting.
 
 ## Uninstall
 
@@ -539,4 +286,27 @@ rails generate alto:uninstall
 
 This will guide you through removing the engine and optionally cleaning up database tables.
 
+
 ## License
+
+MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
