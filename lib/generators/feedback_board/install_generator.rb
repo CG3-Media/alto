@@ -46,27 +46,170 @@ module FeedbackBoard
           # Copy ONLY FeedbackBoard migrations (avoid ActionMailbox/ActionText)
           copy_feedback_board_migrations
 
-          say "⚡ Running database migrations...", :blue
+          # Detect multi-database setup
+          multi_db_info = detect_multi_database_setup
 
-          # Check if tables already exist before migrating
-          if feedback_board_tables_exist?
-            say "✅ FeedbackBoard tables already exist - skipping migration", :green
+          if multi_db_info[:is_multi_db]
+            handle_multi_database_migration(multi_db_info)
           else
-            # Run migrations (Rails handles what's already been run)
-            rake "db:migrate"
-            say "✅ Database setup complete!", :green
+            handle_single_database_migration
           end
+
         rescue => e
           say "❌ Migration failed: #{e.message}", :red
           say ""
-          say "💡 Try running these commands manually:", :yellow
-          say "   rake railties:install:migrations SOURCE=feedback_board", :blue
-          say "   rake db:migrate", :blue
+          show_migration_troubleshooting_help
           say ""
           raise "Installation halted due to migration failure"
         end
 
         say ""
+      end
+
+      def detect_multi_database_setup
+        multi_db_info = {
+          is_multi_db: false,
+          databases: [],
+          primary_database: nil,
+          available_tasks: []
+        }
+
+        begin
+          # Check database configuration
+          if defined?(ActiveRecord::Base.configurations)
+            config = ActiveRecord::Base.configurations.configurations
+
+            # Count unique database names (excluding test environments)
+            database_names = config.select { |c| !c.name.include?('test') }.map(&:database).uniq
+
+            if database_names.length > 1
+              multi_db_info[:is_multi_db] = true
+              multi_db_info[:databases] = database_names
+            end
+          end
+
+          # Check available rake tasks for database-specific migrations
+          available_tasks = `rake -T 2>/dev/null | grep "db:migrate:" | grep -v "db:migrate:status"`.strip.split("\n")
+          multi_db_info[:available_tasks] = available_tasks.map { |task| task.split[1] }.compact
+
+          # Look for primary database task
+          if multi_db_info[:available_tasks].any? { |task| task.include?('primary') }
+            multi_db_info[:primary_database] = 'primary'
+            multi_db_info[:is_multi_db] = true
+          end
+
+          # Alternative check: look for multiple db:migrate: tasks
+          if multi_db_info[:available_tasks].length > 1
+            multi_db_info[:is_multi_db] = true
+          end
+
+        rescue => e
+          Rails.logger.debug "FeedbackBoard: Could not detect multi-database setup: #{e.message}"
+        end
+
+        multi_db_info
+      end
+
+      def handle_multi_database_migration(multi_db_info)
+        say ""
+        say "🔍 Multi-Database Setup Detected!", :yellow
+        say "   Available databases: #{multi_db_info[:databases].join(', ')}" if multi_db_info[:databases].any?
+        say "   Available migration tasks: #{multi_db_info[:available_tasks].join(', ')}" if multi_db_info[:available_tasks].any?
+        say ""
+
+        # Check if tables already exist before migrating
+        if feedback_board_tables_exist?
+          say "✅ FeedbackBoard tables already exist - skipping migration", :green
+          return
+        end
+
+        say "⚡ Running database migrations for multi-database setup...", :blue
+
+        # Try to run migration on primary database first
+        if multi_db_info[:primary_database] == 'primary'
+          begin
+            say "   → Running migration on primary database...", :blue
+            rake "db:migrate:primary"
+            say "✅ Database setup complete on primary database!", :green
+            return
+          rescue => e
+            say "⚠️  Primary database migration failed: #{e.message}", :yellow
+          end
+        end
+
+        # Fallback to trying available database-specific tasks
+        migration_success = false
+        multi_db_info[:available_tasks].each do |task|
+          next if task == 'db:migrate' # Skip generic task
+
+          begin
+            say "   → Trying #{task}...", :blue
+            rake task
+            say "✅ Database setup complete using #{task}!", :green
+            migration_success = true
+            break
+          rescue => e
+            say "⚠️  #{task} failed: #{e.message}", :yellow
+          end
+        end
+
+        unless migration_success
+          say ""
+          say "❌ Automatic migration failed for multi-database setup", :red
+          say ""
+          say "💡 Manual Setup Required:", :yellow
+          say "Please run ONE of these commands manually:", :blue
+          say ""
+
+          if multi_db_info[:primary_database] == 'primary'
+            say "   # Most common for multi-database Rails apps:", :green
+            say "   rails db:migrate:primary", :cyan
+            say ""
+          end
+
+          multi_db_info[:available_tasks].each do |task|
+            next if task == 'db:migrate'
+            say "   # Alternative:", :blue
+            say "   rake #{task}", :cyan
+          end
+
+          say ""
+          say "Then re-run the generator:", :blue
+          say "   rails generate feedback_board:install --skip-migrations", :cyan
+          say ""
+
+          raise "Multi-database migration requires manual intervention"
+        end
+      end
+
+      def handle_single_database_migration
+        say "⚡ Running database migrations...", :blue
+
+        # Check if tables already exist before migrating
+        if feedback_board_tables_exist?
+          say "✅ FeedbackBoard tables already exist - skipping migration", :green
+        else
+          # Run migrations (Rails handles what's already been run)
+          rake "db:migrate"
+          say "✅ Database setup complete!", :green
+        end
+      end
+
+      def show_migration_troubleshooting_help
+        say "💡 Troubleshooting Tips:", :yellow
+        say ""
+        say "For multi-database setups, try:", :blue
+        say "   rails db:migrate:primary", :cyan
+        say "   # or", :blue
+        say "   rake railties:install:migrations SOURCE=feedback_board", :cyan
+        say "   rails db:migrate:primary", :cyan
+        say ""
+        say "For single database setups, try:", :blue
+        say "   rake railties:install:migrations SOURCE=feedback_board", :cyan
+        say "   rails db:migrate", :cyan
+        say ""
+        say "Then re-run with --skip-migrations:", :blue
+        say "   rails generate feedback_board:install --skip-migrations", :cyan
       end
 
       def check_and_create_initializer
@@ -318,6 +461,9 @@ module FeedbackBoard
         say "📋 Installation Summary:", :cyan
         say ""
 
+        # Detect multi-database setup for final status
+        multi_db_info = detect_multi_database_setup
+
         # Check routes
         routes_content = File.read("config/routes.rb") rescue ""
         if routes_content.include?("FeedbackBoard::Engine")
@@ -333,16 +479,51 @@ module FeedbackBoard
           say "❌ Config: No initializer found", :red
         end
 
-        # Check database
+        # Check database with multi-database awareness
         begin
           connection = ActiveRecord::Base.connection
           if connection.table_exists?('feedback_board_boards')
             say "✅ Database: All tables ready", :green
           else
             say "⚠️  Database: Tables may not be ready", :yellow
+
+            # Provide specific guidance for multi-database setups
+            if multi_db_info[:is_multi_db]
+              say ""
+              say "🔍 Multi-Database Setup Detected - Tables Missing!", :yellow
+              say "   This might be why tables aren't ready. Try:", :blue
+
+              if multi_db_info[:primary_database] == 'primary'
+                say "   rails db:migrate:primary", :cyan
+              end
+
+              multi_db_info[:available_tasks].each do |task|
+                next if task == 'db:migrate'
+                say "   rake #{task}", :cyan
+              end
+
+              say ""
+              say "   Then re-run: rails generate feedback_board:install --skip-migrations", :blue
+            end
           end
         rescue
           say "⚠️  Database: Could not verify (may still be setting up)", :yellow
+
+          # Show multi-database troubleshooting
+          if multi_db_info[:is_multi_db]
+            say ""
+            say "🔍 Multi-Database Setup Detected!", :yellow
+            say "   If tables are missing, try these migration commands:", :blue
+
+            if multi_db_info[:primary_database] == 'primary'
+              say "   rails db:migrate:primary", :cyan
+            end
+
+            multi_db_info[:available_tasks].each do |task|
+              next if task == 'db:migrate'
+              say "   rake #{task}", :cyan
+            end
+          end
         end
 
         # Check boards
@@ -353,16 +534,33 @@ module FeedbackBoard
           else
             say "⚠️  Boards: No boards found - create some in admin area", :yellow
           end
-        rescue
+        rescue => e
           say "⚠️  Boards: Could not check (database may still be initializing)", :yellow
+
+          # Additional context for multi-database setups
+          if multi_db_info[:is_multi_db] && e.message.include?('does not exist')
+            say "   → This looks like a multi-database migration issue", :blue
+            say "   → Try the migration commands above first", :blue
+          end
         end
 
         say ""
-                say "🚀 Next Steps:", :yellow
+        say "🚀 Next Steps:", :yellow
         say "1. Visit /feedback in your app to see the feedback board"
         say "2. Customize permissions in config/initializers/feedback_board.rb"
         say "3. Implement callback methods in your ApplicationController for notifications"
         say ""
+
+        # Show multi-database specific guidance
+        if multi_db_info[:is_multi_db]
+          say "📚 Multi-Database App Detected:", :cyan
+          say "   If you encounter database issues, remember to use database-specific commands:", :blue
+          say "   • For migrations: rails db:migrate:primary (or your database name)", :blue
+          say "   • For console: rails console (should work normally)", :blue
+          say "   • For seeds: rails db:seed:primary (if needed)", :blue
+          say ""
+        end
+
         say "💡 To uninstall: rails generate feedback_board:uninstall", :blue
         say ""
       end
