@@ -1,0 +1,16 @@
+<div class="space-y-6">
+  <%= render 'shared/page_header',
+      title: "➕ Create New Board",
+      actions: [
+        {
+          type: :link,
+          text: "← Back to Boards",
+          path: alto.admin_boards_path,
+          class: "text-gray-600 hover:text-gray-900"
+        }
+      ] %>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <%= render 'form' %>
+  </div>
+</div>

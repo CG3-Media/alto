@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in feedback_board.gemspec.
+# Specify your gem's dependencies in alto.gemspec.
 gemspec
 
 gem "puma"

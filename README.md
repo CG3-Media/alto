@@ -1,6 +1,6 @@
 <img width="1663" alt="image" src="https://github.com/user-attachments/assets/4e17ab33-cb16-42ef-b514-725344b7ee0b" />
 
-# FeedbackBoard Rails Engine
+# Alto Rails Engine
 
 A mountable Rails engine for collecting user feedback with multiple boards, threaded comments, and voting.
 
@@ -26,7 +26,7 @@ A mountable Rails engine for collecting user feedback with multiple boards, thre
 Add to your Gemfile:
 
 ```ruby
-gem 'feedback_board', github: 'CG3-Media/feedback_board'
+gem 'alto', github: 'CG3-Media/alto'
 ```
 
 ```bash
@@ -40,25 +40,25 @@ bundle install
 Add to `config/routes.rb`:
 
 ```ruby
-mount FeedbackBoard::Engine => "/feedback"
+mount Alto::Engine => "/feedback"
 ```
 
 ### 2. Run the installer
 
 ```bash
-rails generate feedback_board:install
+rails generate alto:install
 ```
 
 This creates:
 - Database tables
-- Configuration file at `config/initializers/feedback_board.rb`
+- Configuration file at `config/initializers/alto.rb`
 - Stimulus controller (if using Hotwire)
 
 **The installer is safe to run multiple times.**
 
 ### ⚡ Migration Safety
 
-FeedbackBoard uses **idempotent migrations** that are safe to run multiple times. All database operations use `if_not_exists: true` to prevent conflicts during:
+Alto uses **idempotent migrations** that are safe to run multiple times. All database operations use `if_not_exists: true` to prevent conflicts during:
 
 - Development cycles with multiple install/uninstall
 - Production deployments and rollbacks
@@ -68,7 +68,7 @@ FeedbackBoard uses **idempotent migrations** that are safe to run multiple times
 This means you can safely:
 ```bash
 # Safe to run multiple times
-rails generate feedback_board:install
+rails generate alto:install
 rails db:migrate
 ```
 
@@ -76,12 +76,12 @@ The migrations will gracefully handle existing tables and indexes without errors
 
 ### 3. Configure permissions (optional)
 
-Edit `config/initializers/feedback_board.rb`:
+Edit `config/initializers/alto.rb`:
 
 ```ruby
-FeedbackBoard.configure do |config|
+Alto.configure do |config|
   # Restrict access to signed-in users
-  config.permission :can_access_feedback_board? do
+  config.permission :can_access_alto? do
     user_signed_in?
   end
 
@@ -103,10 +103,10 @@ end
 
 ```erb
 <!-- Link to feedback board -->
-<%= link_to "Feedback", feedback_board.root_path %>
+<%= link_to "Feedback", alto.root_path %>
 
 <!-- Link to specific board -->
-<%= link_to "Bug Reports", feedback_board.board_path("bugs") %>
+<%= link_to "Bug Reports", alto.board_path("bugs") %>
 ```
 
 ### Admin Access
@@ -127,7 +127,7 @@ Set the label when editing a board in the admin area. The interface automaticall
 
 ## 🎣 Callback Hooks
 
-One of FeedbackBoard's most powerful features is its callback hook system. The engine automatically calls methods in your host app when events occur, enabling seamless integration with external services.
+One of Alto's most powerful features is its callback hook system. The engine automatically calls methods in your host app when events occur, enabling seamless integration with external services.
 
 ### ⚙️ How It Works
 
@@ -195,14 +195,14 @@ end
 
 **❌ NOT in config/initializers** - No access to request context:
 ```ruby
-# config/initializers/feedback_board.rb - ❌ NO
+# config/initializers/alto.rb - ❌ NO
 # This won't work - no access to current_user or controller helpers
 ```
 
 **🗂️ Alternative: Use a Concern for organization:**
 ```ruby
-# app/controllers/concerns/feedback_board_callbacks.rb
-module FeedbackBoardCallbacks
+# app/controllers/concerns/alto_callbacks.rb
+module AltoCallbacks
   extend ActiveSupport::Concern
 
   private
@@ -214,7 +214,7 @@ end
 
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  include FeedbackBoardCallbacks
+  include AltoCallbacks
 end
 ```
 
@@ -256,9 +256,9 @@ end
 
 ## Configuration
 
-All configuration happens in `config/initializers/feedback_board.rb`. The installer creates this file with documented options.
+All configuration happens in `config/initializers/alto.rb`. The installer creates this file with documented options.
 
-**🔓 Authentication-Agnostic** - FeedbackBoard works with ANY authentication system (or none at all):
+**🔓 Authentication-Agnostic** - Alto works with ANY authentication system (or none at all):
 - ✅ Devise
 - ✅ Custom authentication
 - ✅ JWT tokens
@@ -268,7 +268,7 @@ All configuration happens in `config/initializers/feedback_board.rb`. The instal
 ### Common Options
 
 ```ruby
-FeedbackBoard.configure do |config|
+Alto.configure do |config|
   # User model (default: "User")
   config.user_model = "Account"
 
@@ -336,14 +336,14 @@ end
 Override views by copying them to your app:
 
 ```bash
-mkdir -p app/views/feedback_board/tickets
-cp $(bundle show feedback_board)/app/views/feedback_board/tickets/* app/views/feedback_board/tickets/
+mkdir -p app/views/alto/tickets
+cp $(bundle show alto)/app/views/alto/tickets/* app/views/alto/tickets/
 ```
 
 The engine uses Tailwind CSS via CDN. To use your own CSS framework, override the layout:
 
 ```erb
-<!-- app/views/layouts/feedback_board/application.html.erb -->
+<!-- app/views/layouts/alto/application.html.erb -->
 <!DOCTYPE html>
 <html>
   <head>
@@ -363,7 +363,7 @@ See the [Callback Hooks](#-callback-hooks) section for integrating with external
 
 ## 🔗 Polymorphic User Architecture
 
-FeedbackBoard uses Rails polymorphic associations to support **any user model** in your host application. This flexible design allows the engine to work with different user model names across different applications.
+Alto uses Rails polymorphic associations to support **any user model** in your host application. This flexible design allows the engine to work with different user model names across different applications.
 
 ### 🏗️ How It Works
 
@@ -374,8 +374,8 @@ The engine stores user references using two columns:
 This is automatically configured based on your initializer:
 
 ```ruby
-# config/initializers/feedback_board.rb
-FeedbackBoard.configure do |config|
+# config/initializers/alto.rb
+Alto.configure do |config|
   config.user_model = "User"        # → user_type = "User"
   # config.user_model = "Account"   # → user_type = "Account"
   # config.user_model = "Member"    # → user_type = "Member"
@@ -411,11 +411,11 @@ config.user_model = "Employee"
 ```ruby
 # Your existing user model works as-is
 class Account < ApplicationRecord
-  has_many :feedback_tickets, class_name: 'FeedbackBoard::Ticket'
+  has_many :feedback_tickets, class_name: 'Alto::Ticket'
 end
 
 # Configure the engine to use it
-FeedbackBoard.configure do |config|
+Alto.configure do |config|
   config.user_model = "Account"
 end
 ```
@@ -425,7 +425,7 @@ end
 The engine automatically handles polymorphic associations:
 
 ```ruby
-# In FeedbackBoard models:
+# In Alto models:
 class Ticket < ApplicationRecord
   belongs_to :user, polymorphic: true  # Uses user_type + user_id
 end
@@ -453,7 +453,7 @@ ticket = Ticket.create!(
 Configure how users are displayed in the interface:
 
 ```ruby
-FeedbackBoard.configure do |config|
+Alto.configure do |config|
   config.user_model = "Account"
 
   # Customize display names
@@ -473,7 +473,7 @@ FeedbackBoard.configure do |config|
 end
 ```
 
-This architecture ensures FeedbackBoard integrates seamlessly with your existing user model, regardless of what you call it! 🎉
+This architecture ensures Alto integrates seamlessly with your existing user model, regardless of what you call it! 🎉
 
 ## Troubleshooting
 
@@ -482,7 +482,7 @@ This architecture ensures FeedbackBoard integrates seamlessly with your existing
 This happens when ticket statuses are misconfigured. Run:
 
 ```bash
-rails generate feedback_board:install
+rails generate alto:install
 ```
 
 The installer will create any missing status configurations.
@@ -500,14 +500,14 @@ end
 
 ### Permission denied errors
 
-Check your permission configuration in `config/initializers/feedback_board.rb`. The default permissions allow all access.
+Check your permission configuration in `config/initializers/alto.rb`. The default permissions allow all access.
 
 ### Search not working
 
 Ensure you've run the installer to create proper database indexes:
 
 ```bash
-rails generate feedback_board:install
+rails generate alto:install
 ```
 
 ### "user_type violates not-null constraint" error
@@ -517,15 +517,15 @@ This error occurs when the polymorphic user associations aren't properly configu
 1. **Ensure you're using the latest version** with proper polymorphic associations
 2. **Check your user model configuration**:
    ```ruby
-   # config/initializers/feedback_board.rb
-   FeedbackBoard.configure do |config|
+   # config/initializers/alto.rb
+   Alto.configure do |config|
      config.user_model = "User"  # Must match your actual user model
    end
    ```
 
 3. **Verify your models have the polymorphic associations** (automatically included in recent versions):
    ```ruby
-   # These should be present in app/models/feedback_board/*.rb
+   # These should be present in app/models/alto/*.rb
    belongs_to :user, polymorphic: true
    ```
 
@@ -534,7 +534,7 @@ If you're still having issues, the engine automatically sets `user_type` based o
 ## Uninstall
 
 ```bash
-rails generate feedback_board:uninstall
+rails generate alto:uninstall
 ```
 
 This will guide you through removing the engine and optionally cleaning up database tables.

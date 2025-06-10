@@ -1,31 +1,31 @@
-namespace :feedback_board do
-  desc "Setup FeedbackBoard database tables"
+namespace :alto do
+  desc "Setup Alto database tables"
   task setup: :environment do
-    puts "🚀 Setting up FeedbackBoard database tables..."
+    puts "🚀 Setting up Alto database tables..."
 
     begin
-      # Copy only FeedbackBoard migrations (avoid ActionMailbox/ActionText)
-      puts "📦 Installing FeedbackBoard migrations only..."
-      copy_feedback_board_migrations_only
+      # Copy only Alto migrations (avoid ActionMailbox/ActionText)
+      puts "📦 Installing Alto migrations only..."
+      copy_alto_migrations_only
 
       puts "⚡ Running migrations..."
       system("rake db:migrate")
 
-      puts "✅ FeedbackBoard database setup completed successfully!"
+      puts "✅ Alto database setup completed successfully!"
       puts ""
       puts "📋 Created tables:"
-      puts "  • feedback_board_status_sets"
-      puts "  • feedback_board_statuses"
-      puts "  • feedback_board_boards"
-      puts "  • feedback_board_tickets"
-      puts "  • feedback_board_comments"
-      puts "  • feedback_board_upvotes"
-      puts "  • feedback_board_settings"
-      puts "  • feedback_board_subscriptions"
+      puts "  • alto_status_sets"
+      puts "  • alto_statuses"
+      puts "  • alto_boards"
+      puts "  • alto_tickets"
+      puts "  • alto_comments"
+      puts "  • alto_upvotes"
+      puts "  • alto_settings"
+      puts "  • alto_subscriptions"
       puts ""
       puts "🎉 You can now visit /feedback in your application!"
     rescue => e
-      puts "❌ Failed to setup FeedbackBoard database:"
+      puts "❌ Failed to setup Alto database:"
       puts "   #{e.message}"
       puts ""
       puts "💡 Troubleshooting tips:"
@@ -36,20 +36,20 @@ namespace :feedback_board do
     end
   end
 
-  desc "Check FeedbackBoard database status"
+  desc "Check Alto database status"
   task status: :environment do
-    puts "🔍 Checking FeedbackBoard database status..."
+    puts "🔍 Checking Alto database status..."
     puts ""
 
     required_tables = [
-      'feedback_board_status_sets',
-      'feedback_board_statuses',
-      'feedback_board_boards',
-      'feedback_board_tickets',
-      'feedback_board_comments',
-      'feedback_board_upvotes',
-      'feedback_board_settings',
-      'feedback_board_subscriptions'
+      'alto_status_sets',
+      'alto_statuses',
+      'alto_boards',
+      'alto_tickets',
+      'alto_comments',
+      'alto_upvotes',
+      'alto_settings',
+      'alto_subscriptions'
     ]
 
     connection = ActiveRecord::Base.connection
@@ -67,19 +67,19 @@ namespace :feedback_board do
     puts ""
 
     if missing_tables.empty?
-      puts "🎉 All FeedbackBoard tables exist!"
+      puts "🎉 All Alto tables exist!"
     else
       puts "⚠️  Missing #{missing_tables.length} table(s):"
       missing_tables.each { |table| puts "   • #{table}" }
       puts ""
       puts "🔧 To fix this, run:"
-      puts "   rails feedback_board:setup"
+      puts "   rails alto:setup"
     end
   end
 
-  desc "Reset FeedbackBoard database (WARNING: destroys all data)"
+  desc "Reset Alto database (WARNING: destroys all data)"
   task reset: :environment do
-    puts "⚠️  WARNING: This will destroy ALL FeedbackBoard data!"
+    puts "⚠️  WARNING: This will destroy ALL Alto data!"
     print "Are you sure? Type 'yes' to continue: "
 
     input = STDIN.gets.chomp
@@ -88,18 +88,18 @@ namespace :feedback_board do
       exit
     end
 
-    puts "🗑️  Dropping FeedbackBoard tables..."
+    puts "🗑️  Dropping Alto tables..."
 
     connection = ActiveRecord::Base.connection
     tables_to_drop = [
-      'feedback_board_subscriptions',
-      'feedback_board_upvotes',
-      'feedback_board_comments',
-      'feedback_board_tickets',
-      'feedback_board_statuses',
-      'feedback_board_status_sets',
-      'feedback_board_boards',
-      'feedback_board_settings'
+      'alto_subscriptions',
+      'alto_upvotes',
+      'alto_comments',
+      'alto_tickets',
+      'alto_statuses',
+      'alto_status_sets',
+      'alto_boards',
+      'alto_settings'
     ]
 
     tables_to_drop.each do |table|
@@ -112,33 +112,33 @@ namespace :feedback_board do
     puts ""
     puts "🚀 Recreating tables..."
 
-    # Copy only FeedbackBoard migrations (avoid ActionMailbox/ActionText)
-    puts "📦 Installing FeedbackBoard migrations only..."
-    copy_feedback_board_migrations_only
+    # Copy only Alto migrations (avoid ActionMailbox/ActionText)
+    puts "📦 Installing Alto migrations only..."
+    copy_alto_migrations_only
 
     puts "⚡ Running migrations..."
     system("rake db:migrate")
 
-    puts "✅ FeedbackBoard database reset completed!"
+    puts "✅ Alto database reset completed!"
   end
 end
 
-# Helper method to copy only FeedbackBoard migrations
-def copy_feedback_board_migrations_only
+# Helper method to copy only Alto migrations
+def copy_alto_migrations_only
     require 'fileutils'
 
     # Get the source migrations directory from the engine
-    source_migrations = File.join(::FeedbackBoard::Engine.root, "db", "migrate")
+    source_migrations = File.join(::Alto::Engine.root, "db", "migrate")
     destination_migrations = Rails.root.join("db", "migrate")
 
     # Ensure destination directory exists
     FileUtils.mkdir_p(destination_migrations)
 
-    # Get all FeedbackBoard migration files
+    # Get all Alto migration files
     migration_files = Dir.glob(File.join(source_migrations, "*.rb"))
 
     if migration_files.empty?
-      puts "⚠️  No FeedbackBoard migrations found"
+      puts "⚠️  No Alto migrations found"
       return
     end
 
@@ -150,9 +150,9 @@ def copy_feedback_board_migrations_only
       timestamp = Time.current.utc.strftime("%Y%m%d%H%M%S").to_i
       timestamp += copied_count # Ensure unique timestamps
 
-      # Create new filename with current timestamp + feedback_board suffix
+      # Create new filename with current timestamp + alto suffix
       new_filename = "#{timestamp}_#{filename.gsub(/^\d+_/, '')}"
-      new_filename = new_filename.gsub('.rb', '.feedback_board.rb') unless new_filename.include?('feedback_board')
+      new_filename = new_filename.gsub('.rb', '.alto.rb') unless new_filename.include?('alto')
 
       destination_file = File.join(destination_migrations, new_filename)
 
@@ -167,9 +167,9 @@ def copy_feedback_board_migrations_only
     end
 
     if copied_count > 0
-      puts "📦 Copied #{copied_count} FeedbackBoard migration(s)"
+      puts "📦 Copied #{copied_count} Alto migration(s)"
     else
-      puts "📦 All FeedbackBoard migrations already present"
+      puts "📦 All Alto migrations already present"
     end
   end
 
@@ -183,7 +183,7 @@ def copy_feedback_board_migrations_only
     class_name = class_name_match[1]
 
     # Check if any existing migration has the same class name
-    Dir.glob(File.join(destination_dir, "*feedback_board*.rb")).any? do |existing_file|
+    Dir.glob(File.join(destination_dir, "*alto*.rb")).any? do |existing_file|
       existing_content = File.read(existing_file)
       existing_content.include?("class #{class_name}")
     end

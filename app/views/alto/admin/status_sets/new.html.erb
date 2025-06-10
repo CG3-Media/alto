@@ -1,0 +1,16 @@
+<div class="space-y-6">
+  <%= render 'shared/page_header',
+      title: "✨ Create New Status Set",
+      actions: [
+        {
+          type: :link,
+          text: "← Back to Status Sets",
+          path: alto.admin_status_sets_path,
+          class: "text-gray-600 hover:text-gray-900"
+        }
+      ] %>
+
+  <div class="max-w-4xl">
+    <%= render 'form' %>
+  </div>
+</div>

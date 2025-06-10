@@ -1,4 +1,4 @@
-FeedbackBoard::Engine.routes.draw do
+Alto::Engine.routes.draw do
   # Root redirects to default board
   root 'boards#redirect_to_default'
 

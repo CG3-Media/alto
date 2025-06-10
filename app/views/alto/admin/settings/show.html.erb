@@ -1,0 +1,81 @@
+<div class="space-y-6">
+  <%= render 'shared/page_header',
+      title: "⚙️ App Settings",
+      actions: [
+        {
+          type: :link,
+          text: "Dashboard",
+          path: alto.admin_root_path,
+          button_type: :secondary
+        },
+        {
+          type: :link,
+          text: "Back to Tickets",
+          path: alto.root_path,
+          button_type: :secondary
+        }
+      ] %>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Application Settings</h3>
+      <p class="text-sm text-gray-500 mt-1">Configure app branding and general settings</p>
+    </div>
+
+    <%= form_with url: alto.admin_settings_path, method: :patch, local: true, class: "p-6 space-y-6" do |form| %>
+
+      <!-- App Branding -->
+      <div class="space-y-4">
+        <h4 class="text-md font-medium text-gray-900">App Branding</h4>
+
+        <%= render 'shared/forms/input',
+            field_name: "app_name",
+            label_text: "Application Name",
+            placeholder: "Feedback Board",
+            html_options: {
+              id: "app_name",
+              value: @config.app_name
+            } %>
+        <p class="mt-1 text-sm text-gray-500">The name that appears in the header and page title</p>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end border-t pt-6">
+        <%= render 'shared/button',
+            text: "Save Settings",
+            type: "submit",
+            button_type: :primary %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Notifications Info -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">📧 Email Notifications</h3>
+      <p class="text-sm text-gray-500 mt-1">Configure notifications in your host application using callbacks</p>
+    </div>
+    <div class="p-6">
+      <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+        <div class="flex">
+          <div class="ml-3">
+            <p class="text-sm text-blue-700">
+              <strong>🔄 Callback Integration:</strong> Email notifications are now handled through your host application using the callback system.
+              Implement notification methods in your ApplicationController to receive events.
+            </p>
+            <pre class="mt-2 text-xs text-blue-800 bg-blue-100 p-2 rounded"><code># Example in your ApplicationController:
+def ticket_created(ticket, board, user)
+  # Send email notifications using your preferred method
+  NotificationMailer.new_ticket(ticket, user).deliver_later
+end
+
+def comment_created(comment, ticket, board, user)
+  # Handle comment notifications
+  NotificationMailer.new_comment(comment, ticket, user).deliver_later
+end</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

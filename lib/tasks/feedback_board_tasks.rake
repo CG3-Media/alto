@@ -1,4 +1,4 @@
 # desc "Explaining what the task does"
-# task :feedback_board do
+# task :alto do
 #   # Task goes here
 # end

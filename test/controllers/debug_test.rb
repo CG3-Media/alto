@@ -5,36 +5,36 @@ class DebugTest < ActiveSupport::TestCase
     puts "\n=== DEBUGGING METHOD INHERITANCE ==="
 
     # Check ApplicationController
-    app_controller = FeedbackBoard::ApplicationController.new
+    app_controller = Alto::ApplicationController.new
     puts "ApplicationController methods:"
     puts "  - responds to can_access_board?: #{app_controller.respond_to?(:can_access_board?)}"
     puts "  - responds to can_access_board? (include private): #{app_controller.respond_to?(:can_access_board?, true)}"
 
     # Check TicketsController
-    tickets_controller = FeedbackBoard::TicketsController.new
+    tickets_controller = Alto::TicketsController.new
     puts "\nTicketsController methods:"
     puts "  - responds to can_access_board?: #{tickets_controller.respond_to?(:can_access_board?)}"
     puts "  - responds to can_access_board? (include private): #{tickets_controller.respond_to?(:can_access_board?, true)}"
 
     # Check inheritance chain
     puts "\nInheritance chain:"
-    FeedbackBoard::TicketsController.ancestors.each_with_index do |klass, index|
+    Alto::TicketsController.ancestors.each_with_index do |klass, index|
       puts "  #{index}: #{klass}"
     end
 
     # Check method resolution
     puts "\nMethod locations:"
-    if FeedbackBoard::ApplicationController.private_method_defined?(:can_access_board?)
+    if Alto::ApplicationController.private_method_defined?(:can_access_board?)
       puts "  - can_access_board? defined in ApplicationController (private)"
-    elsif FeedbackBoard::ApplicationController.method_defined?(:can_access_board?)
+    elsif Alto::ApplicationController.method_defined?(:can_access_board?)
       puts "  - can_access_board? defined in ApplicationController (public)"
     else
       puts "  - can_access_board? NOT found in ApplicationController"
     end
 
-    if FeedbackBoard::TicketsController.private_method_defined?(:can_access_board?)
+    if Alto::TicketsController.private_method_defined?(:can_access_board?)
       puts "  - can_access_board? available in TicketsController (private)"
-    elsif FeedbackBoard::TicketsController.method_defined?(:can_access_board?)
+    elsif Alto::TicketsController.method_defined?(:can_access_board?)
       puts "  - can_access_board? available in TicketsController (public)"
     else
       puts "  - can_access_board? NOT available in TicketsController"
@@ -42,12 +42,12 @@ class DebugTest < ActiveSupport::TestCase
 
     # Check all private methods
     puts "\nApplicationController private methods containing 'access':"
-    FeedbackBoard::ApplicationController.private_instance_methods.grep(/access/).each do |method|
+    Alto::ApplicationController.private_instance_methods.grep(/access/).each do |method|
       puts "  - #{method}"
     end
 
     puts "\nTicketsController private methods containing 'access':"
-    FeedbackBoard::TicketsController.private_instance_methods.grep(/access/).each do |method|
+    Alto::TicketsController.private_instance_methods.grep(/access/).each do |method|
       puts "  - #{method}"
     end
 
@@ -59,7 +59,7 @@ class DebugTest < ActiveSupport::TestCase
         Struct.new(:id, :email).new(1, 'test@example.com')
       }
 
-      board = FeedbackBoard::Board.new(name: 'Test', slug: 'test')
+      board = Alto::Board.new(name: 'Test', slug: 'test')
       result = tickets_controller.send(:can_access_board?, board)
       puts "  - SUCCESS: #{result}"
     rescue => e

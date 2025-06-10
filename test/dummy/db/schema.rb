@@ -10,8 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
-  create_table "feedback_board_boards", force: :cascade do |t|
+ActiveRecord::Schema[7.2].define(version: 2025_06_10_170600) do
+  create_table "alto_boards", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
     t.text "description"
@@ -20,12 +20,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.boolean "is_admin_only", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_feedback_board_boards_on_name"
-    t.index ["slug"], name: "index_feedback_board_boards_on_slug", unique: true
-    t.index ["status_set_id"], name: "index_feedback_board_boards_on_status_set_id"
+    t.index ["name"], name: "index_alto_boards_on_name"
+    t.index ["slug"], name: "index_alto_boards_on_slug", unique: true
+    t.index ["status_set_id"], name: "index_alto_boards_on_status_set_id"
   end
 
-  create_table "feedback_board_comments", force: :cascade do |t|
+  create_table "alto_comments", force: :cascade do |t|
     t.integer "ticket_id", null: false
     t.string "user_type"
     t.integer "user_id"
@@ -34,32 +34,32 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.integer "depth", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["content"], name: "index_feedback_board_comments_on_content"
-    t.index ["parent_id"], name: "index_feedback_board_comments_on_parent_id"
-    t.index ["ticket_id"], name: "index_feedback_board_comments_on_ticket_id"
-    t.index ["user_type", "user_id"], name: "index_feedback_board_comments_on_user"
+    t.index ["content"], name: "index_alto_comments_on_content"
+    t.index ["parent_id"], name: "index_alto_comments_on_parent_id"
+    t.index ["ticket_id"], name: "index_alto_comments_on_ticket_id"
+    t.index ["user_type", "user_id"], name: "index_alto_comments_on_user"
   end
 
-  create_table "feedback_board_settings", force: :cascade do |t|
+  create_table "alto_settings", force: :cascade do |t|
     t.string "key", null: false
     t.text "value"
     t.string "value_type", default: "string"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_feedback_board_settings_on_key", unique: true
+    t.index ["key"], name: "index_alto_settings_on_key", unique: true
   end
 
-  create_table "feedback_board_status_sets", force: :cascade do |t|
+  create_table "alto_status_sets", force: :cascade do |t|
     t.string "name", null: false
     t.text "description"
     t.boolean "is_default", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["is_default"], name: "index_feedback_board_status_sets_on_is_default"
-    t.index ["name"], name: "index_feedback_board_status_sets_on_name"
+    t.index ["is_default"], name: "index_alto_status_sets_on_is_default"
+    t.index ["name"], name: "index_alto_status_sets_on_name"
   end
 
-  create_table "feedback_board_statuses", force: :cascade do |t|
+  create_table "alto_statuses", force: :cascade do |t|
     t.integer "status_set_id", null: false
     t.string "name", null: false
     t.string "color", null: false
@@ -67,24 +67,24 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["slug"], name: "index_feedback_board_statuses_on_slug"
-    t.index ["status_set_id", "position"], name: "index_feedback_board_statuses_on_status_set_id_and_position"
-    t.index ["status_set_id", "slug"], name: "index_feedback_board_statuses_on_status_set_id_and_slug", unique: true
-    t.index ["status_set_id"], name: "index_feedback_board_statuses_on_status_set_id"
+    t.index ["slug"], name: "index_alto_statuses_on_slug"
+    t.index ["status_set_id", "position"], name: "index_alto_statuses_on_status_set_id_and_position"
+    t.index ["status_set_id", "slug"], name: "index_alto_statuses_on_status_set_id_and_slug", unique: true
+    t.index ["status_set_id"], name: "index_alto_statuses_on_status_set_id"
   end
 
-  create_table "feedback_board_subscriptions", force: :cascade do |t|
+  create_table "alto_subscriptions", force: :cascade do |t|
     t.string "email"
     t.integer "ticket_id"
     t.datetime "last_viewed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_feedback_board_subscriptions_on_email"
-    t.index ["ticket_id", "email"], name: "index_feedback_board_subscriptions_on_ticket_id_and_email", unique: true
-    t.index ["ticket_id"], name: "index_feedback_board_subscriptions_on_ticket_id"
+    t.index ["email"], name: "index_alto_subscriptions_on_email"
+    t.index ["ticket_id", "email"], name: "index_alto_subscriptions_on_ticket_id_and_email", unique: true
+    t.index ["ticket_id"], name: "index_alto_subscriptions_on_ticket_id"
   end
 
-  create_table "feedback_board_tickets", force: :cascade do |t|
+  create_table "alto_tickets", force: :cascade do |t|
     t.string "title", null: false
     t.text "description"
     t.string "status_slug"
@@ -94,17 +94,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.integer "board_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["board_id"], name: "index_feedback_board_tickets_on_board_id"
-    t.index ["created_at"], name: "index_feedback_board_tickets_on_created_at"
-    t.index ["description"], name: "index_feedback_board_tickets_on_description"
-    t.index ["locked"], name: "index_feedback_board_tickets_on_locked"
-    t.index ["status_slug", "created_at"], name: "index_feedback_board_tickets_on_status_slug_and_created_at"
-    t.index ["status_slug"], name: "index_feedback_board_tickets_on_status_slug"
-    t.index ["title"], name: "index_feedback_board_tickets_on_title"
-    t.index ["user_type", "user_id"], name: "index_feedback_board_tickets_on_user"
+    t.index ["board_id"], name: "index_alto_tickets_on_board_id"
+    t.index ["created_at"], name: "index_alto_tickets_on_created_at"
+    t.index ["description"], name: "index_alto_tickets_on_description"
+    t.index ["locked"], name: "index_alto_tickets_on_locked"
+    t.index ["status_slug", "created_at"], name: "index_alto_tickets_on_status_slug_and_created_at"
+    t.index ["status_slug"], name: "index_alto_tickets_on_status_slug"
+    t.index ["title"], name: "index_alto_tickets_on_title"
+    t.index ["user_type", "user_id"], name: "index_alto_tickets_on_user"
   end
 
-  create_table "feedback_board_upvotes", force: :cascade do |t|
+  create_table "alto_upvotes", force: :cascade do |t|
     t.string "upvotable_type", null: false
     t.integer "upvotable_id", null: false
     t.string "user_type", null: false
@@ -112,8 +112,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["upvotable_type", "upvotable_id", "user_id"], name: "index_upvotes_on_upvotable_and_user", unique: true
-    t.index ["upvotable_type", "upvotable_id"], name: "index_feedback_board_upvotes_on_upvotable"
-    t.index ["user_type", "user_id"], name: "index_feedback_board_upvotes_on_user"
+    t.index ["upvotable_type", "upvotable_id"], name: "index_alto_upvotes_on_upvotable"
+    t.index ["user_type", "user_id"], name: "index_alto_upvotes_on_user"
   end
 
   create_table "users", force: :cascade do |t|
@@ -122,10 +122,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.datetime "updated_at", null: false
   end
 
-  add_foreign_key "feedback_board_boards", "feedback_board_status_sets", column: "status_set_id"
-  add_foreign_key "feedback_board_comments", "feedback_board_comments", column: "parent_id"
-  add_foreign_key "feedback_board_comments", "feedback_board_tickets", column: "ticket_id"
-  add_foreign_key "feedback_board_statuses", "feedback_board_status_sets", column: "status_set_id"
-  add_foreign_key "feedback_board_subscriptions", "feedback_board_tickets", column: "ticket_id"
-  add_foreign_key "feedback_board_tickets", "feedback_board_boards", column: "board_id"
+  add_foreign_key "alto_boards", "alto_status_sets", column: "status_set_id"
+  add_foreign_key "alto_comments", "alto_comments", column: "parent_id"
+  add_foreign_key "alto_comments", "alto_tickets", column: "ticket_id"
+  add_foreign_key "alto_statuses", "alto_status_sets", column: "status_set_id"
+  add_foreign_key "alto_subscriptions", "alto_tickets", column: "ticket_id"
+  add_foreign_key "alto_tickets", "alto_boards", column: "board_id"
 end

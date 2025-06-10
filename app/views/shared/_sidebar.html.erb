@@ -3,7 +3,7 @@
   <div class="p-4 space-y-6">
 
     <!-- Status Filters -->
-    <% if defined?(current_board) %>
+    <% if defined?(current_board) && current_board %>
       <% status_collapsed = cookies['sidebar-section-0'] == 'true' %>
       <div class="feedback-sidebar-section">
         <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
@@ -12,7 +12,7 @@
         </div>
         <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if status_collapsed %>>
           <nav class="space-y-1">
-            <%= link_to feedback_board.board_tickets_path(current_board),
+            <%= link_to alto.board_tickets_path(current_board),
                 class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status].blank? ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
               All Tickets
               <span class="ml-2 text-xs text-gray-500"><%= current_board.tickets.count %></span>
@@ -20,7 +20,7 @@
 
             <% current_board.available_statuses.each do |status| %>
               <% count = current_board.tickets.by_status(status.slug).count %>
-              <%= link_to feedback_board.board_tickets_path(current_board, status: status.slug),
+              <%= link_to alto.board_tickets_path(current_board, status: status.slug),
                   class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status] == status.slug ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
                 <div class="flex items-center">
                   <span class="w-2 h-2 rounded-full mr-2 <%= case status.color
@@ -49,7 +49,7 @@
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
         <% if defined?(current_board) && current_board %>
-          <%= link_to feedback_board.board_activity_path(current_board),
+          <%= link_to alto.board_activity_path(current_board),
               class: "text-sm font-semibold text-gray-900 uppercase tracking-wide hover:text-blue-600 transition-colors flex-1" do %>
             Recent Activity
           <% end %>
@@ -63,11 +63,11 @@
           <% if defined?(current_board) && current_board %>
             <% recent_tickets = current_board.tickets.includes(:comments).recent.limit(5) %>
           <% else %>
-            <% recent_tickets = ::FeedbackBoard::Ticket.includes(:board, :comments).recent.limit(5) %>
+            <% recent_tickets = ::Alto::Ticket.includes(:board, :comments).recent.limit(5) %>
           <% end %>
           <% recent_tickets.each do |ticket| %>
             <div class="group">
-              <%= link_to feedback_board.board_ticket_path(ticket.board, ticket),
+              <%= link_to alto.board_ticket_path(ticket.board, ticket),
                   class: "block hover:bg-gray-50 p-2 rounded-md" do %>
                 <div class="flex items-start">
                   <span class="w-2 h-2 rounded-full mt-2 mr-2 <%= if ticket.status
@@ -104,7 +104,7 @@
 
           <% if defined?(current_board) && current_board %>
             <div class="mt-4 pt-3 border-t border-gray-200">
-              <%= link_to feedback_board.board_activity_path(current_board),
+              <%= link_to alto.board_activity_path(current_board),
                   class: "text-xs text-blue-600 hover:text-blue-800 font-medium" do %>
                 View all activity →
               <% end %>
@@ -119,7 +119,7 @@
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
         <% if can_access_admin? %>
-          <%= link_to feedback_board.admin_boards_path,
+          <%= link_to alto.admin_boards_path,
               class: "text-sm font-semibold text-gray-900 uppercase tracking-wide hover:text-blue-600 transition-colors flex-1" do %>
             Boards
           <% end %>
@@ -130,9 +130,9 @@
       </div>
       <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if boards_collapsed %>>
         <nav class="space-y-1">
-          <% FeedbackBoard::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered.each do |board| %>
+          <% Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered.each do |board| %>
             <% ticket_count = board.tickets_count %>
-            <%= link_to feedback_board.board_tickets_path(board),
+            <%= link_to alto.board_tickets_path(board),
                 class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ board == current_board ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
               <div class="flex items-center">
                 <span class="truncate">
@@ -149,7 +149,7 @@
           <% end %>
 
           <% if can_access_admin? %>
-            <%= link_to "➕ New Board", feedback_board.new_admin_board_path,
+            <%= link_to "➕ New Board", alto.new_admin_board_path,
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-500 rounded-md hover:text-gray-700 hover:bg-gray-50" %>
           <% end %>
         </nav>
@@ -166,7 +166,7 @@
         </div>
         <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if admin_collapsed %>>
           <nav class="space-y-1">
-            <%= link_to feedback_board.admin_root_path,
+            <%= link_to alto.admin_root_path,
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -174,7 +174,7 @@
               Dashboard
             <% end %>
 
-            <%= link_to feedback_board.admin_boards_path,
+            <%= link_to alto.admin_boards_path,
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -182,7 +182,7 @@
               Manage Boards
             <% end %>
 
-            <%= link_to feedback_board.admin_settings_path,
+            <%= link_to alto.admin_settings_path,
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -219,7 +219,7 @@
         <!-- Mobile version uses simplified content for performance -->
         <div>
           <% if can_access_admin? %>
-            <%= link_to feedback_board.admin_boards_path,
+            <%= link_to alto.admin_boards_path,
                 class: "text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 block hover:text-blue-600 transition-colors",
                 onclick: "toggleMobileSidebar()" do %>
               Boards
@@ -228,8 +228,8 @@
             <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
           <% end %>
           <nav class="space-y-1">
-            <% FeedbackBoard::Board.ordered.each do |board| %>
-              <%= link_to board.name, feedback_board.board_tickets_path(board),
+            <% Alto::Board.ordered.each do |board| %>
+              <%= link_to board.name, alto.board_tickets_path(board),
                   class: "block px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900",
                   onclick: "toggleMobileSidebar()" %>
             <% end %>

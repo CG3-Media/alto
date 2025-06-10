@@ -1,7 +1,7 @@
 <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6" aria-label="Breadcrumb">
   <% if defined?(@board) %>
     <!-- Board Link -->
-    <%= link_to @board.name, feedback_board.board_tickets_path(@board),
+    <%= link_to @board.name, alto.board_tickets_path(@board),
         class: "hover:text-blue-600 font-medium" %>
 
     <% if defined?(@ticket) %>
@@ -12,7 +12,7 @@
 
       <!-- Ticket Link -->
       <% if @ticket.persisted? %>
-        <%= link_to truncate(@ticket.title, length: 50), feedback_board.board_ticket_path(@board, @ticket),
+        <%= link_to truncate(@ticket.title, length: 50), alto.board_ticket_path(@board, @ticket),
             class: "hover:text-blue-600 font-medium" %>
 
         <% if controller_name == 'comments' && action_name == 'show' %>
@@ -64,7 +64,7 @@
   <% elsif controller_name == 'boards' %>
     <!-- All Boards -->
     <span class="text-gray-500">All Boards</span>
-  <% elsif defined?(@boards) || (controller_name == 'dashboard' && defined?(FeedbackBoard::Admin)) %>
+  <% elsif defined?(@boards) || (controller_name == 'dashboard' && defined?(Alto::Admin)) %>
     <!-- Admin Dashboard -->
     <span class="text-gray-500">Admin Dashboard</span>
   <% end %>

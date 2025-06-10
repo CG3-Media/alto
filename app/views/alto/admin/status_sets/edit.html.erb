@@ -1,0 +1,22 @@
+<div class="space-y-6">
+  <%= render 'shared/page_header',
+      title: "✏️ Edit Status Set: #{@status_set.name}",
+      actions: [
+        {
+          type: :link,
+          text: "← Back to Status Sets",
+          path: alto.admin_status_sets_path,
+          class: "text-gray-600 hover:text-gray-900"
+        },
+        {
+          type: :link,
+          text: "View Details",
+          path: alto.admin_status_set_path(@status_set),
+          class: "text-blue-600 hover:text-blue-700"
+        }
+      ] %>
+
+  <div class="max-w-4xl">
+    <%= render 'form' %>
+  </div>
+</div>

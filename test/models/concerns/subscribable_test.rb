@@ -1,11 +1,11 @@
 require "test_helper"
 
-module FeedbackBoard
+module Alto
   class SubscribableTest < ActiveSupport::TestCase
     # Create a test class that includes the Subscribable concern
     class TestSubscribableModel < ActiveRecord::Base
-      self.table_name = 'feedback_board_tickets'
-      include ::FeedbackBoard::Subscribable
+      self.table_name = 'alto_tickets'
+      include ::Alto::Subscribable
 
       attr_accessor :test_user_email, :test_ticket, :should_create_sub
 
@@ -23,8 +23,12 @@ module FeedbackBoard
     end
 
     def setup
+      # Create test users to ensure they exist for validation
+      @user1 = User.find_or_create_by!(id: 1, email: 'test1@example.com')
+      @user2 = User.find_or_create_by!(id: 2, email: 'test2@example.com')
+
       # Create test board with status set
-      @status_set = ::FeedbackBoard::StatusSet.create!(
+      @status_set = ::Alto::StatusSet.create!(
         name: 'Test Status Set',
         is_default: true
       )
@@ -44,7 +48,7 @@ module FeedbackBoard
     end
 
     test "should include Subscribable concern" do
-      assert_includes TestSubscribableModel.included_modules, ::FeedbackBoard::Subscribable
+      assert_includes TestSubscribableModel.included_modules, ::Alto::Subscribable
     end
 
     test "should create subscription after_create when conditions are met" do
@@ -52,7 +56,8 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
@@ -69,10 +74,11 @@ module FeedbackBoard
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: nil,
-        board: @board
+        user_id: 999, # Use non-existent user ID instead of nil to avoid NOT NULL constraint
+        user_type: "User",
+        board_id: @board.id
       )
-      model.test_user_email = "test@example.com"
+      model.test_user_email = nil # Make sure no email is set
       model.test_ticket = @ticket
 
       assert_no_difference '@ticket.subscriptions.count' do
@@ -85,7 +91,8 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
       model.test_user_email = nil
       model.test_ticket = @ticket
@@ -100,7 +107,8 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
       model.test_user_email = "test@example.com"
       model.test_ticket = nil
@@ -115,7 +123,8 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
@@ -131,13 +140,14 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
 
       # Mock the subscription creation to raise an error
-      @ticket.subscriptions.stub :find_or_create_by, -> (*args) { raise StandardError.new("Database error") } do
+      @ticket.subscriptions.stub(:find_or_create_by, -> (*args) { raise StandardError.new("Database error") }) do
         # Should not raise the error, just log it
         assert_nothing_raised do
           model.save!
@@ -153,7 +163,8 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
@@ -169,8 +180,8 @@ module FeedbackBoard
     test "should raise NotImplementedError for subscribable_ticket if not implemented" do
       # Create a minimal test class without implementing the method
       minimal_class = Class.new(ActiveRecord::Base) do
-        self.table_name = 'feedback_board_tickets'
-        include ::FeedbackBoard::Subscribable
+        self.table_name = 'alto_tickets'
+        include ::Alto::Subscribable
 
         def user_email
           "test@example.com"
@@ -181,7 +192,8 @@ module FeedbackBoard
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
 
       assert_raises NotImplementedError do
@@ -192,21 +204,27 @@ module FeedbackBoard
     test "should raise NotImplementedError for user_email if not implemented" do
       # Create a minimal test class without implementing the method
       minimal_class = Class.new(ActiveRecord::Base) do
-        self.table_name = 'feedback_board_tickets'
-        include ::FeedbackBoard::Subscribable
+        self.table_name = 'alto_tickets'
+        include ::Alto::Subscribable
 
         def subscribable_ticket
-          nil
+          # Return a valid ticket so the subscription logic proceeds to call user_email
+          Alto::Ticket.first
         end
+
+        # Explicitly don't define user_email method - it should inherit the one from Subscribable
+        # that raises NotImplementedError
       end
 
       model = minimal_class.new(
         title: "Test",
         description: "Test",
         user_id: 1,
-        board: @board
+        user_type: "User",
+        board_id: @board.id
       )
 
+      # The error should be raised during the create_user_subscription callback
       assert_raises NotImplementedError do
         model.save!
       end

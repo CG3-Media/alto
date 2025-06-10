@@ -1,0 +1,133 @@
+<div class="space-y-6">
+  <!-- Ticket Header -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <!-- Top row: Title/Description + Voting -->
+    <div class="flex items-start justify-between mb-4">
+      <div class="flex-1">
+        <!-- Status Badge -->
+        <% if @board.has_status_tracking? %>
+          <div class="mb-3">
+            <span class="px-3 py-1 text-sm font-medium rounded-full <%= @ticket.status_color_classes %>">
+              <%= @ticket.status_name %>
+            </span>
+            <% if @ticket.locked? %>
+              <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800 ml-2">
+                🔒 Locked
+              </span>
+            <% end %>
+          </div>
+        <% else %>
+          <% if @ticket.locked? %>
+            <div class="mb-3">
+              <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
+                🔒 Locked
+              </span>
+            </div>
+          <% end %>
+        <% end %>
+
+        <!-- Title -->
+        <div class="mb-4">
+          <h1 class="text-2xl font-bold text-gray-900"><%= @ticket.title %></h1>
+        </div>
+
+        <div class="prose max-w-none">
+          <p class="text-gray-700 whitespace-pre-wrap"><%= @ticket.description %></p>
+        </div>
+      </div>
+
+      <!-- Upvote Button -->
+      <div class="flex flex-col items-center ml-6">
+        <%= upvote_button(@ticket, current_user, large: true) %>
+      </div>
+    </div>
+
+    <!-- Bottom row: Metadata -->
+    <div class="flex items-center space-x-4 text-sm text-gray-500">
+      <span>By <span class="font-medium text-gray-700"><%= user_display_name(@ticket.user_id) %></span></span>
+      <span><%= time_ago_in_words(@ticket.created_at) %> ago</span>
+      <span><%= link_to pluralize(@ticket.comments.count, 'comment'),
+          '#comments',
+          class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
+    </div>
+  </div>
+
+  <!-- Comments Section -->
+  <div id="comments" class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">
+        Comments (<%= @ticket.comments.count %>)
+      </h2>
+    </div>
+
+    <!-- Comment Form -->
+    <% if can_comment? && @ticket.can_be_commented_on? %>
+      <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <%= form_with model: [@board, @ticket, @comment], local: true, class: "space-y-4" do |form| %>
+          <div class="text-sm text-gray-600 mb-2">
+            Commenting as <span class="font-medium text-gray-700"><%= user_display_name(current_user.id) %></span>
+          </div>
+          <div>
+            <%= form.text_area :content, placeholder: "Add a comment...", rows: 3,
+                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          <div class="flex justify-end">
+            <%= form.submit "Post Comment",
+                class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+          </div>
+        <% end %>
+      </div>
+    <% elsif @ticket.locked? %>
+      <div class="p-6 border-b border-gray-200 bg-red-50">
+        <p class="text-red-600 text-sm">🔒 This ticket is locked. No new comments can be added.</p>
+      </div>
+    <% end %>
+
+    <!-- Threaded Comments List -->
+    <div class="divide-y divide-gray-200">
+      <% if @threaded_comments.any? %>
+        <% @threaded_comments.each do |comment_data| %>
+          <%= render 'alto/comments/threaded_comment',
+              comment: comment_data[:comment],
+              replies: comment_data[:replies] %>
+        <% end %>
+      <% else %>
+        <div class="p-6 text-center text-gray-500">
+          <div class="text-4xl mb-2">💬</div>
+          <p>No comments yet. Be the first to comment!</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Back Link -->
+  <div class="flex justify-between items-center">
+    <% if current_user_subscribed? %>
+      <%= render 'shared/button',
+          text: "Unsubscribe",
+          url: alto.unsubscribe_me_board_ticket_subscribers_path(@board, @ticket),
+          method: :delete,
+          button_type: :secondary,
+          html_options: {
+            data: {
+              confirm: "Are you sure you want to unsubscribe from this ticket?",
+              turbo_method: :delete
+            }
+          } %>
+    <% end %>
+
+    <div class="flex items-center space-x-2">
+
+      <% if can_user_edit_ticket?(@ticket) %>
+        <%= render 'shared/button',
+            text: "Manage Subscribers",
+            url: alto.board_ticket_subscribers_path(@board, @ticket),
+            button_type: :primary %>
+        <%= render 'shared/button',
+            text: "Edit Ticket",
+            url: alto.edit_board_ticket_path(@board, @ticket),
+            button_type: :secondary %>
+      <% end %>
+    </div>
+  </div>
+</div>
