@@ -56,6 +56,24 @@ This creates:
 
 **The installer is safe to run multiple times.**
 
+### ⚡ Migration Safety
+
+FeedbackBoard uses **idempotent migrations** that are safe to run multiple times. All database operations use `if_not_exists: true` to prevent conflicts during:
+
+- Development cycles with multiple install/uninstall
+- Production deployments and rollbacks
+- CI/CD pipeline runs
+- Host app migration conflicts
+
+This means you can safely:
+```bash
+# Safe to run multiple times
+rails generate feedback_board:install
+rails db:migrate
+```
+
+The migrations will gracefully handle existing tables and indexes without errors.
+
 ### 3. Configure permissions (optional)
 
 Edit `config/initializers/feedback_board.rb`:

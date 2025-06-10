@@ -12,6 +12,56 @@ alwaysApply: true
 - **Database Indexes**: Index all foreign keys and frequently queried columns
 - **Default Data**: Create essential default records (boards, statuses) in migrations
 - **Reversible Migrations**: Ensure all migrations are properly reversible
+- **Idempotent Migrations**: Use `if_not_exists: true` for safe reinstallation and redeployment
+
+## **Idempotent Migration Pattern**
+
+- **Safe Table Creation**: Always use `if_not_exists: true` for table creation
+- **Safe Index Creation**: Always use `if_not_exists: true` for index creation
+- **Reinstallation Safety**: Migrations must handle existing database objects gracefully
+- **Production Deployments**: Zero-downtime deployments require idempotent migrations
+- **Development Workflow**: Supports multiple install/uninstall cycles during development
+
+```ruby
+# ✅ DO: Idempotent migration with conditional creation
+class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
+  def change
+    # Tables with conditional creation
+    create_table :feedback_board_status_sets, if_not_exists: true do |t|
+      t.string :name, null: false
+      t.text :description
+      t.boolean :is_default, default: false, null: false
+      t.timestamps null: false
+    end
+
+    # Indexes with conditional creation
+    add_index :feedback_board_status_sets, :name, if_not_exists: true
+    add_index :feedback_board_status_sets, :is_default, if_not_exists: true
+
+    create_table :feedback_board_tickets, if_not_exists: true do |t|
+      t.string :title, null: false
+      t.text :description
+      t.string :status_slug
+      t.references :board, null: false, foreign_key: { to_table: :feedback_board_boards }
+      t.timestamps null: false
+    end
+
+    add_index :feedback_board_tickets, :status_slug, if_not_exists: true
+    add_index :feedback_board_tickets, [:board_id, :status_slug], if_not_exists: true
+  end
+end
+
+# ❌ DON'T: Non-idempotent migration
+class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
+  def change
+    create_table :feedback_board_status_sets do |t|  # Will fail if table exists
+      # ... table definition
+    end
+
+    add_index :feedback_board_status_sets, :name     # Will fail if index exists
+  end
+end
+```
 
 ```ruby
 # ✅ DO: Safe migration with proper constraints

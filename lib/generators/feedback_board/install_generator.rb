@@ -1,16 +1,29 @@
 module FeedbackBoard
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      desc "Install FeedbackBoard (automatically creates database tables by default)"
+                  desc <<~DESC
+        Install FeedbackBoard - complete setup in one command!
 
-      class_option :interactive, type: :boolean, default: false, desc: "Ask for confirmation before creating tables"
+        This automatically handles everything:
+        • Installs database migrations
+        • Runs migrations
+        • Creates configuration file
+        • Sets up default boards
+        • Ready to use immediately!
+
+        Examples:
+          rails generate feedback_board:install              # Complete install
+          rails generate feedback_board:install --skip-migrations  # Skip database setup
+      DESC
+
+      class_option :skip_migrations, type: :boolean, default: false, desc: "Skip running database migrations"
 
       def install_feedback_board
         say "Installing FeedbackBoard...", :green
         say ""
 
-        # Check and handle database setup
-        check_database_setup
+        # Install and run migrations using Rails conventions
+        install_migrations unless options[:skip_migrations]
 
         # Create initializer (if needed)
         check_and_create_initializer
@@ -26,63 +39,34 @@ module FeedbackBoard
 
       private
 
-      def check_database_setup
-        say "🔍 Checking database setup...", :blue
+                              def install_migrations
+        say "📦 Installing database migrations...", :blue
 
-        missing_tables = check_missing_tables
+        begin
+          # Copy ONLY FeedbackBoard migrations (avoid ActionMailbox/ActionText)
+          copy_feedback_board_migrations
 
-        if missing_tables.empty?
-          say "✅ All database tables exist", :green
-        else
-          say "📋 Missing tables: #{missing_tables.join(', ')}", :yellow
+          say "⚡ Running database migrations...", :blue
 
-          should_create = true
-          if options[:interactive]
-            should_create = yes?("Create missing database tables? (y/n)", :green)
+          # Check if tables already exist before migrating
+          if feedback_board_tables_exist?
+            say "✅ FeedbackBoard tables already exist - skipping migration", :green
           else
-            say "🛠️  Creating database tables automatically...", :blue
+            # Run migrations (Rails handles what's already been run)
+            rake "db:migrate"
+            say "✅ Database setup complete!", :green
           end
-
-          if should_create
-            say "🛠️  Creating database tables...", :blue unless options[:interactive]
-
-            begin
-              ::FeedbackBoard::DatabaseSetup.force_setup!
-              say "✅ Database tables created successfully!", :green
-            rescue => e
-              say "❌ Database setup failed: #{e.message}", :red
-              say ""
-              say "🛑 Installation aborted due to database error.", :red
-              say "💡 Possible solutions:", :yellow
-              say "   • Drop and recreate database: rails db:drop db:create db:migrate", :blue
-              say "   • Or run setup manually: rails feedback_board:setup", :blue
-              say ""
-              exit(1)
-            end
-          else
-            say "⏭️  Skipping database setup. Run 'rails feedback_board:setup' later if needed.", :yellow
-          end
+        rescue => e
+          say "❌ Migration failed: #{e.message}", :red
+          say ""
+          say "💡 Try running these commands manually:", :yellow
+          say "   rake railties:install:migrations SOURCE=feedback_board", :blue
+          say "   rake db:migrate", :blue
+          say ""
+          raise "Installation halted due to migration failure"
         end
+
         say ""
-      end
-
-      def check_missing_tables
-        required_tables = [
-          'feedback_board_status_sets',
-          'feedback_board_statuses',
-          'feedback_board_boards',
-          'feedback_board_tickets',
-          'feedback_board_comments',
-          'feedback_board_upvotes',
-          'feedback_board_settings',
-          'feedback_board_subscriptions'
-        ]
-
-        connection = ActiveRecord::Base.connection
-        required_tables.reject { |table| connection.table_exists?(table) }
-      rescue => e
-        Rails.logger.debug "Could not check tables: #{e.message}"
-        []
       end
 
       def check_and_create_initializer
@@ -99,62 +83,35 @@ module FeedbackBoard
       end
 
       def check_and_ask_about_default_boards
-        # Check if any boards exist
-        boards_exist = false
-        boards_count = 0
+        say "🎯 Setting up default boards...", :blue
 
         begin
-          boards_count = ::FeedbackBoard::Board.count
-          boards_exist = boards_count > 0
+          board_count = ::FeedbackBoard::Board.count
+          if board_count == 0
+            create_default_boards
+          else
+            say "✅ Found #{board_count} existing board(s) - skipping default board creation", :green
+          end
         rescue => e
-          say "⚠️  Could not check existing boards (database may not be ready)", :yellow
-          return
+          say "⚠️  Could not check existing boards: #{e.message}", :yellow
+          say "You can create boards manually in the admin area later.", :blue
         end
-
-        if boards_exist
-          say "✅ Found #{boards_count} existing board(s) - skipping default board creation", :green
-          say ""
-          return
-        end
-
-        say "🚀 Default Board Setup", :cyan
-        say "No boards found. Let's create some example boards with custom item labels!", :yellow
-        say ""
-        say "💡 Each board can have custom labels (e.g., 'post', 'bug', 'issue', 'request')", :blue
-        say ""
-
-        create_default_boards
         say ""
       end
 
       def create_default_boards
         begin
+          say "🚀 Default Board Setup", :cyan
+          say "Creating example boards with different workflows...", :yellow
+          say ""
+
           # Check if status sets already exist
           status_sets_exist = ::FeedbackBoard::StatusSet.exists?
 
-          boards_to_create = []
+          # Create all default boards for better initial experience
+          boards_to_create = [:features, :bugs, :discussion]
 
-          # Ask about Feature Requests board
-          if yes?("🛠  Create 'Feature Requests' board? (items called 'requests') (y/n)", :green)
-            boards_to_create << :features
-          end
-
-          # Ask about Bug Reports board
-          if yes?("🐞 Create 'Bug Reports' board? (items called 'bugs') (y/n)", :green)
-            boards_to_create << :bugs
-          end
-
-          # Ask about General Discussion board
-          if yes?("💬 Create 'General Discussion' board? (items called 'posts') (y/n)", :green)
-            boards_to_create << :discussion
-          end
-
-          if boards_to_create.empty?
-            say "⏭️  No boards selected. Create custom boards in the admin area later!", :yellow
-            return
-          end
-
-          say "📋 Creating #{boards_to_create.length} board(s)...", :blue
+          say "📋 Creating #{boards_to_create.length} default board(s)...", :blue
 
           # Create everything in a transaction for safety
           ActiveRecord::Base.transaction do
@@ -164,16 +121,9 @@ module FeedbackBoard
           say "✅ #{boards_to_create.length} board(s) created successfully!", :green
           say ""
           say "🎯 Available boards:", :cyan
-
-          if boards_to_create.include?(:features)
-            say "  • /feedback/boards/features (Feature Requests → 'New Request')", :blue
-          end
-          if boards_to_create.include?(:bugs)
-            say "  • /feedback/boards/bugs (Bug Reports → 'New Bug')", :blue
-          end
-          if boards_to_create.include?(:discussion)
-            say "  • /feedback/boards/discussion (General Discussion → 'New Post')", :blue
-          end
+          say "  • /feedback/boards/features (Feature Requests → 'New Request')", :blue
+          say "  • /feedback/boards/bugs (Bug Reports → 'New Bug')", :blue
+          say "  • /feedback/boards/discussion (General Discussion → 'New Post')", :blue
 
         rescue => e
           say "❌ Failed to create boards: #{e.message}", :red
@@ -301,6 +251,69 @@ module FeedbackBoard
         end
       end
 
+      def copy_feedback_board_migrations
+        # Get the source migrations directory from the engine
+        source_migrations = File.join(::FeedbackBoard::Engine.root, "db", "migrate")
+        destination_migrations = Rails.root.join("db", "migrate")
+
+        # Ensure destination directory exists
+        FileUtils.mkdir_p(destination_migrations)
+
+        # Get all FeedbackBoard migration files
+        migration_files = Dir.glob(File.join(source_migrations, "*.rb"))
+
+        if migration_files.empty?
+          say "⚠️  No FeedbackBoard migrations found", :yellow
+          return
+        end
+
+        copied_count = 0
+        migration_files.each do |source_file|
+          filename = File.basename(source_file)
+
+          # Generate a new timestamp for this migration
+          timestamp = Time.current.utc.strftime("%Y%m%d%H%M%S").to_i
+          timestamp += copied_count # Ensure unique timestamps
+
+          # Create new filename with current timestamp + feedback_board suffix
+          new_filename = "#{timestamp}_#{filename.gsub(/^\d+_/, '')}"
+          new_filename = new_filename.gsub('.rb', '.feedback_board.rb') unless new_filename.include?('feedback_board')
+
+          destination_file = File.join(destination_migrations, new_filename)
+
+          # Skip if migration already exists (check by content similarity)
+          if migration_already_exists?(source_file, destination_migrations)
+            say "   exists    #{new_filename}", :green
+          else
+            FileUtils.cp(source_file, destination_file)
+            say "   copied    #{new_filename}", :green
+            copied_count += 1
+          end
+        end
+
+        if copied_count > 0
+          say "📦 Copied #{copied_count} FeedbackBoard migration(s)", :green
+        else
+          say "📦 All FeedbackBoard migrations already present", :green
+        end
+      end
+
+      def migration_already_exists?(source_file, destination_dir)
+        source_content = File.read(source_file)
+
+        # Look for existing migrations with similar class names
+        class_name_match = source_content.match(/class\s+(\w+)\s+</)
+        return false unless class_name_match
+
+        class_name = class_name_match[1]
+
+        # Check if any existing migration has the same class name
+        Dir.glob(File.join(destination_dir, "*feedback_board*.rb")).any? do |existing_file|
+          existing_content = File.read(existing_file)
+          existing_content.include?("class #{class_name}")
+        end
+      end
+
       def show_final_status
         say "📋 Installation Summary:", :cyan
         say ""
@@ -321,11 +334,15 @@ module FeedbackBoard
         end
 
         # Check database
-        missing_tables = check_missing_tables
-        if missing_tables.empty?
-          say "✅ Database: All tables exist", :green
-        else
-          say "⚠️  Database: Missing tables - run 'rails feedback_board:setup'", :yellow
+        begin
+          connection = ActiveRecord::Base.connection
+          if connection.table_exists?('feedback_board_boards')
+            say "✅ Database: All tables ready", :green
+          else
+            say "⚠️  Database: Tables may not be ready", :yellow
+          end
+        rescue
+          say "⚠️  Database: Could not verify (may still be setting up)", :yellow
         end
 
         # Check boards
@@ -337,15 +354,27 @@ module FeedbackBoard
             say "⚠️  Boards: No boards found - create some in admin area", :yellow
           end
         rescue
-          say "⚠️  Boards: Could not check (database may not be ready)", :yellow
+          say "⚠️  Boards: Could not check (database may still be initializing)", :yellow
         end
 
         say ""
-        say "🚀 Next Steps:", :yellow
+                say "🚀 Next Steps:", :yellow
         say "1. Visit /feedback in your app to see the feedback board"
         say "2. Customize permissions in config/initializers/feedback_board.rb"
         say "3. Implement callback methods in your ApplicationController for notifications"
         say ""
+        say "💡 To uninstall: rails generate feedback_board:uninstall", :blue
+        say ""
+      end
+
+      def feedback_board_tables_exist?
+        begin
+          ActiveRecord::Base.connection.table_exists?('feedback_board_boards') &&
+          ActiveRecord::Base.connection.table_exists?('feedback_board_tickets') &&
+          ActiveRecord::Base.connection.table_exists?('feedback_board_status_sets')
+        rescue
+          false
+        end
       end
 
       def create_initializer
