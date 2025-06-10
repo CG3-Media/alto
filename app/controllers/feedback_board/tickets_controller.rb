@@ -37,6 +37,9 @@ module FeedbackBoard
       # Set this as the current board in session
       ensure_current_board_set(@board)
 
+      # Track view for subscribed users
+      track_ticket_view if current_user
+
       @comment = ::FeedbackBoard::Comment.new
       @threaded_comments = ::FeedbackBoard::Comment.threaded_for_ticket(@ticket)
     end
@@ -124,6 +127,23 @@ module FeedbackBoard
       return false unless current_user
       # Users can edit their own tickets, or admins can edit any ticket
       ticket.user_id == current_user.id || can_edit_tickets?
+    end
+
+    def track_ticket_view
+      return unless current_user
+
+      begin
+        # Get user email using the configuration system
+        user_email = ::FeedbackBoard.configuration.user_email.call(current_user.id)
+        return unless user_email.present?
+
+        # Find and update subscription if it exists
+        subscription = @ticket.subscriptions.find_by(email: user_email)
+        subscription&.update_column(:last_viewed_at, Time.current)
+      rescue => e
+        # Log error but don't break the page load
+        Rails.logger.warn "[FeedbackBoard] Failed to track ticket view: #{e.message}"
+      end
     end
 
   end

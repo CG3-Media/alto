@@ -80,6 +80,9 @@
                     <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Subscribed On
                     </th>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Last Viewed
+                    </th>
                     <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
                       <span class="sr-only">Actions</span>
                     </th>
@@ -93,6 +96,13 @@
                       </td>
                       <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <%= subscription.created_at.strftime("%B %d, %Y") %>
+                      </td>
+                      <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <% if subscription.last_viewed_at %>
+                          <%= time_ago_in_words(subscription.last_viewed_at) %> ago
+                        <% else %>
+                          <span class="text-gray-400">Never</span>
+                        <% end %>
                       </td>
                       <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                         <%= link_to "×", feedback_board.board_ticket_subscriber_path(@board, @ticket, subscription),
