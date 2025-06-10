@@ -10,6 +10,7 @@ FeedbackBoard::Engine.routes.draw do
     get 'activity', to: 'activity#index'
     resources :tickets do
       resources :comments, only: [:create, :destroy, :show]
+      resources :subscribers, only: [:index, :create, :destroy]
       resources :upvotes, only: [:create] do
         collection do
           delete :toggle  # DELETE /boards/:board_slug/tickets/:ticket_id/upvotes/toggle
