@@ -17,6 +17,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_002158) do
     t.text "description"
     t.integer "status_set_id"
     t.string "item_label_singular", default: "ticket"
+    t.boolean "is_admin_only", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_feedback_board_boards_on_name"
