@@ -55,7 +55,7 @@
         <% end %>
 
                 <!-- Breadcrumbs -->
-        <% unless controller_name == 'tickets' && action_name == 'index' %>
+        <% unless (controller_name == 'tickets' && action_name == 'index') || (controller_name == 'boards' && action_name == 'new' && params[:controller] == 'feedback_board/admin/boards') %>
           <%= render 'shared/breadcrumbs' %>
         <% end %>
 
