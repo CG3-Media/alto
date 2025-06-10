@@ -24,7 +24,7 @@ alwaysApply: true
 
 ```ruby
 # ✅ DO: Idempotent migration with conditional creation
-class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
+class CreateAltoV1 < ActiveRecord::Migration[7.0]
   def change
     # Tables with conditional creation
     create_table :feedback_board_status_sets, if_not_exists: true do |t|
@@ -52,7 +52,7 @@ class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
 end
 
 # ❌ DON'T: Non-idempotent migration
-class CreateFeedbackBoardV1 < ActiveRecord::Migration[7.0]
+class CreateAltoV1 < ActiveRecord::Migration[7.0]
   def change
     create_table :feedback_board_status_sets do |t|  # Will fail if table exists
       # ... table definition
@@ -65,7 +65,7 @@ end
 
 ```ruby
 # ✅ DO: Safe migration with proper constraints
-class CreateFeedbackBoardTickets < ActiveRecord::Migration[7.0]
+class CreateAltoTickets < ActiveRecord::Migration[7.0]
   def change
     create_table :feedback_board_tickets do |t|
       t.string :title, null: false
@@ -94,7 +94,7 @@ end
 
 ```ruby
 # ✅ DO: Enhanced Sluggable concern
-module FeedbackBoard::Sluggable
+module Alto::Sluggable
   extend ActiveSupport::Concern
 
   class_methods do

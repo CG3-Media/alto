@@ -3,14 +3,14 @@ description:
 globs:
 alwaysApply: true
 ---
-# FeedbackBoard Rails Engine Architecture
+# Alto Rails Engine Architecture
 
 ## **Core Engine Structure**
 
-- **Mount Pattern**: Always mount as `mount FeedbackBoard::Engine => "/feedback"` in host app routes
-- **Namespace Isolation**: Use `FeedbackBoard::` namespace for all models, controllers, and concerns
-- **ApplicationController**: Inherit from `FeedbackBoard::ApplicationController` for all engine controllers
-- **Configuration**: Use `FeedbackBoard.configuration` object for engine-wide settings
+- **Mount Pattern**: Always mount as `mount Alto::Engine => "/feedback"` in host app routes
+- **Namespace Isolation**: Use `Alto::` namespace for all models, controllers, and concerns
+- **ApplicationController**: Inherit from `Alto::ApplicationController` for all engine controllers
+- **Configuration**: Use `Alto.configuration` object for engine-wide settings
 
 ## **Permission Integration**
 
@@ -31,7 +31,7 @@ alwaysApply: true
 
 ## **User Model Integration**
 
-- **Configurable User Model**: Support different user model names via `FeedbackBoard.configuration.user_class`
+- **Configurable User Model**: Support different user model names via `Alto.configuration.user_class`
 - **Polymorphic Associations**: Use `belongs_to :user, polymorphic: true` when appropriate
 - **Display Name Flexibility**: Support configurable user display methods (`email`, `name`, `username`)
 
@@ -50,7 +50,7 @@ alwaysApply: true
 ## **Module Organization**
 
 - **Concerns**: Place shared functionality in `app/models/concerns/feedback_board/`
-- **Helpers**: Namespace helpers under `FeedbackBoard::` module
+- **Helpers**: Namespace helpers under `Alto::` module
 - **Services**: Use service objects for complex business logic
 - **Callback System**: Implement callback hooks for host app integration
 

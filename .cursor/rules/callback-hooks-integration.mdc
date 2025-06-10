@@ -35,7 +35,7 @@ def self.execute_callback(method_name, *args)
   begin
     Rails.application.send(method_name, *args)
   rescue => e
-    Rails.logger.error "FeedbackBoard callback #{method_name} failed: #{e.message}"
+    Rails.logger.error "Alto callback #{method_name} failed: #{e.message}"
     # Never re-raise - callbacks must not break main flow
   end
 end
@@ -61,7 +61,7 @@ after_update :trigger_status_change_callback, if: :saved_change_to_status?
 private
 
 def trigger_created_callback
-  FeedbackBoard::CallbackManager.execute_callback(
+  Alto::CallbackManager.execute_callback(
     :ticket_created, self, board, user
   )
 end

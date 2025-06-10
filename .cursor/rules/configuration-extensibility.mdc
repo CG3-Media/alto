@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## **Configuration Architecture**
 
-- **Centralized Configuration**: Use `FeedbackBoard.configuration` object for all settings
+- **Centralized Configuration**: Use `Alto.configuration` object for all settings
 - **Initializer Support**: Generate configuration initializer for host app customization
 - **Sensible Defaults**: Provide working defaults for all configuration options
 - **Runtime Configuration**: Support runtime configuration changes where appropriate
@@ -15,7 +15,7 @@ alwaysApply: true
 
 ```ruby
 # ✅ DO: Proper configuration structure
-module FeedbackBoard
+module Alto
   class Configuration
     attr_accessor :user_class, :user_display_method, :from_email,
                   :admin_email, :enable_notifications, :items_per_page
@@ -32,7 +32,7 @@ module FeedbackBoard
     def user_model
       @user_class.constantize
     rescue NameError
-      raise "User class #{@user_class} not found. Please configure FeedbackBoard.configuration.user_class"
+      raise "User class #{@user_class} not found. Please configure Alto.configuration.user_class"
     end
   end
 
@@ -56,7 +56,7 @@ end
 
 ```ruby
 # ✅ DO: Flexible permission integration
-module FeedbackBoard::PermissionHelpers
+module Alto::PermissionHelpers
   def can_access_feedback_board?(user = current_user)
     return false unless user
 
@@ -94,7 +94,7 @@ end
 
 ```ruby
 # ✅ DO: Reusable component helpers
-module FeedbackBoard::ApplicationHelper
+module Alto::ApplicationHelper
   def render_button(text, options = {})
     render 'shared/button', {
       text: text,
@@ -126,8 +126,8 @@ end
 
 ```ruby
 # ✅ DO: Flexible email configuration
-class FeedbackBoard::NotificationMailer < ApplicationMailer
-  default from: -> { FeedbackBoard.configuration.from_email }
+class Alto::NotificationMailer < ApplicationMailer
+  default from: -> { Alto.configuration.from_email }
 
   def ticket_created(ticket, user)
     @ticket = ticket
@@ -147,7 +147,7 @@ class FeedbackBoard::NotificationMailer < ApplicationMailer
 
     # Board-specific notification settings
     if ticket.board.notify_admins?
-      recipients << FeedbackBoard.configuration.admin_email
+      recipients << Alto.configuration.admin_email
     end
 
     # User-specific notification preferences
@@ -177,7 +177,7 @@ end
 
 ```ruby
 # ✅ DO: Comprehensive install generator
-class FeedbackBoard::InstallGenerator < Rails::Generators::Base
+class Alto::InstallGenerator < Rails::Generators::Base
   source_root File.expand_path('templates', __dir__)
 
   def copy_initializer
