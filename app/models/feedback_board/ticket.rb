@@ -3,6 +3,7 @@ module FeedbackBoard
     include ::FeedbackBoard::Subscribable
 
     belongs_to :board
+    belongs_to :user, polymorphic: true
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
     has_many :subscriptions, class_name: 'FeedbackBoard::Subscription', dependent: :destroy
@@ -19,6 +20,8 @@ module FeedbackBoard
 
     # Set default status when ticket is created
     before_create :set_default_status
+    # Set user_type for polymorphic association
+    before_validation :set_user_type, if: -> { user_id.present? && user_type.blank? }
 
     scope :by_status, ->(status_slug) { where(status_slug: status_slug) }
     scope :unlocked, -> { where(locked: false) }
@@ -169,6 +172,10 @@ module FeedbackBoard
       elsif !board.has_status_tracking?
         self.status_slug = nil
       end
+    end
+
+    def set_user_type
+      self.user_type = ::FeedbackBoard.configuration.user_model if user_id.present?
     end
   end
 end

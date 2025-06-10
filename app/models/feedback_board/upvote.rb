@@ -3,9 +3,13 @@ module FeedbackBoard
     include ::FeedbackBoard::Subscribable
 
     belongs_to :upvotable, polymorphic: true
+    belongs_to :user, polymorphic: true
 
     validates :user_id, presence: true
     validates :user_id, uniqueness: { scope: [:upvotable_type, :upvotable_id] }
+
+    # Set user_type for polymorphic association
+    before_validation :set_user_type, if: -> { user_id.present? && user_type.blank? }
 
     # Host app callback hooks
     after_create :trigger_upvote_created_callback
@@ -50,6 +54,10 @@ module FeedbackBoard
       return nil unless user_class
 
       user_class.find_by(id: user_id)
+    end
+
+    def set_user_type
+      self.user_type = ::FeedbackBoard.configuration.user_model if user_id.present?
     end
   end
 end

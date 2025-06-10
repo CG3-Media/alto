@@ -3,6 +3,7 @@ module FeedbackBoard
     include ::FeedbackBoard::Subscribable
 
     belongs_to :ticket
+    belongs_to :user, polymorphic: true
     belongs_to :parent, class_name: 'FeedbackBoard::Comment', optional: true
     has_many :replies, class_name: 'FeedbackBoard::Comment', foreign_key: 'parent_id', dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
@@ -14,6 +15,8 @@ module FeedbackBoard
     validate :depth_must_be_parent_depth_plus_one, if: :parent_id?
 
     before_validation :set_depth
+    # Set user_type for polymorphic association
+    before_validation :set_user_type, if: -> { user_id.present? && user_type.blank? }
 
     # Host app callback hooks
     after_create :trigger_comment_created_callback
@@ -122,6 +125,10 @@ module FeedbackBoard
       return nil unless user_class
 
       user_class.find_by(id: user_id)
+    end
+
+    def set_user_type
+      self.user_type = ::FeedbackBoard.configuration.user_model if user_id.present?
     end
   end
 end

@@ -24,6 +24,11 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
           <!-- Card Header -->
           <div class="p-6 pb-4">
+            <% if board.admin_only? %>
+              <div class="mb-2 whitespace-nowrap inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                🔒 Admin Only
+              </div>
+            <% end %>
             <div class="flex items-start justify-between">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center">
@@ -31,11 +36,6 @@
                     <%= link_to board.name, feedback_board.board_tickets_path(board),
                         class: "hover:text-blue-600 transition-colors" %>
                   </h3>
-                  <% if board.admin_only? %>
-                    <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      🔒 Admin Only
-                    </span>
-                  <% end %>
                 </div>
                 <p class="text-sm text-gray-500 mt-1">/<%= board.slug %></p>
               </div>

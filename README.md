@@ -361,6 +361,120 @@ The engine uses Tailwind CSS via CDN. To use your own CSS framework, override th
 
 See the [Callback Hooks](#-callback-hooks) section for integrating with external services like Slack, analytics, and ticketing systems.
 
+## 🔗 Polymorphic User Architecture
+
+FeedbackBoard uses Rails polymorphic associations to support **any user model** in your host application. This flexible design allows the engine to work with different user model names across different applications.
+
+### 🏗️ How It Works
+
+The engine stores user references using two columns:
+- `user_id` - The ID of the user record
+- `user_type` - The class name of your user model (e.g., "User", "Account", "Member")
+
+This is automatically configured based on your initializer:
+
+```ruby
+# config/initializers/feedback_board.rb
+FeedbackBoard.configure do |config|
+  config.user_model = "User"        # → user_type = "User"
+  # config.user_model = "Account"   # → user_type = "Account"
+  # config.user_model = "Member"    # → user_type = "Member"
+end
+```
+
+### 🎯 Benefits
+
+**✅ Flexible User Models** - Works with any user model name:
+```ruby
+# E-commerce app
+config.user_model = "Customer"
+
+# SaaS platform
+config.user_model = "Account"
+
+# Membership site
+config.user_model = "Member"
+
+# Corporate app
+config.user_model = "Employee"
+```
+
+**✅ Multi-Tenant Support** - Different user types in the same database:
+```ruby
+# One feedback board can handle tickets from:
+# - Customer users (user_type: "Customer", user_id: 123)
+# - Admin users (user_type: "AdminUser", user_id: 456)
+# - Vendor users (user_type: "Vendor", user_id: 789)
+```
+
+**✅ Host App Integration** - No forced naming conventions:
+```ruby
+# Your existing user model works as-is
+class Account < ApplicationRecord
+  has_many :feedback_tickets, class_name: 'FeedbackBoard::Ticket'
+end
+
+# Configure the engine to use it
+FeedbackBoard.configure do |config|
+  config.user_model = "Account"
+end
+```
+
+### 🔧 Technical Implementation
+
+The engine automatically handles polymorphic associations:
+
+```ruby
+# In FeedbackBoard models:
+class Ticket < ApplicationRecord
+  belongs_to :user, polymorphic: true  # Uses user_type + user_id
+end
+
+class Comment < ApplicationRecord
+  belongs_to :user, polymorphic: true  # Uses user_type + user_id
+end
+
+class Upvote < ApplicationRecord
+  belongs_to :user, polymorphic: true  # Uses user_type + user_id
+end
+```
+
+When you create a ticket, the engine automatically sets:
+```ruby
+ticket = Ticket.create!(
+  title: "Bug report",
+  user: current_account  # If config.user_model = "Account"
+)
+# → user_type = "Account", user_id = current_account.id
+```
+
+### 💡 User Display Configuration
+
+Configure how users are displayed in the interface:
+
+```ruby
+FeedbackBoard.configure do |config|
+  config.user_model = "Account"
+
+  # Customize display names
+  config.user_display_name do |user_id|
+    account = Account.find_by(id: user_id)
+    return "Anonymous" unless account
+
+    # Try different name formats
+    if account.full_name.present?
+      account.full_name
+    elsif account.first_name.present?
+      account.first_name
+    else
+      account.email
+    end
+  end
+end
+```
+
+This architecture ensures FeedbackBoard integrates seamlessly with your existing user model, regardless of what you call it! 🎉
+
 ## Troubleshooting
 
 ### "undefined method 'humanize'" error
@@ -395,6 +509,27 @@ Ensure you've run the installer to create proper database indexes:
 ```bash
 rails generate feedback_board:install
 ```
+
+### "user_type violates not-null constraint" error
+
+This error occurs when the polymorphic user associations aren't properly configured. This was fixed in recent versions, but if you encounter it:
+
+1. **Ensure you're using the latest version** with proper polymorphic associations
+2. **Check your user model configuration**:
+   ```ruby
+   # config/initializers/feedback_board.rb
+   FeedbackBoard.configure do |config|
+     config.user_model = "User"  # Must match your actual user model
+   end
+   ```
+
+3. **Verify your models have the polymorphic associations** (automatically included in recent versions):
+   ```ruby
+   # These should be present in app/models/feedback_board/*.rb
+   belongs_to :user, polymorphic: true
+   ```
+
+If you're still having issues, the engine automatically sets `user_type` based on your `config.user_model` setting.
 
 ## Uninstall
 
