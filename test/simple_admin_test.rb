@@ -54,7 +54,16 @@ class SimpleAdminTest < ActionDispatch::IntegrationTest
     User.delete_all
 
     user = User.create!(id: 1, email: 'admin@example.com')
-    board = Alto::Board.create!(name: "Test Board", item_label_singular: "ticket")
+
+    # Create a status set first
+    status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
+    status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+
+    board = Alto::Board.create!(
+      name: "Test Board",
+      item_label_singular: "ticket",
+      status_set: status_set
+    )
 
     # Test admin root first
     get '/feedback/admin'

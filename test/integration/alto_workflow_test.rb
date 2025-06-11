@@ -27,15 +27,16 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "complete feedback board workflow" do
-    # 1. Create a board
+    # 1. Create a board (use unique name to avoid fixture collision)
     board = Alto::Board.create!(
-      name: "Feature Requests",
+      name: "Workflow Test Board",
       description: "Submit your feature ideas here",
-      status_set: @status_set
+      status_set: @status_set,
+      item_label_singular: "feature"
     )
 
     assert board.persisted?
-    assert_equal "feature-requests", board.slug
+    assert_equal "workflow-test-board", board.slug
     assert board.has_status_tracking?
 
     # 2. Create a ticket
@@ -115,9 +116,9 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal nested_reply, reply_thread[:replies].first[:comment]
 
     # 9. Update ticket status
-    ticket.update!(status_slug: 'in_progress')
+    ticket.update!(status_slug: 'in-progress')
 
-    assert_equal 'in_progress', ticket.status_slug
+    assert_equal 'in-progress', ticket.status_slug
     assert_equal 'In Progress', ticket.status_name
 
     # 10. Lock the ticket
@@ -140,7 +141,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_includes tickets_for_board, ticket
 
     # 13. Test status filtering
-    in_progress_tickets = Alto::Ticket.by_status('in_progress')
+    in_progress_tickets = Alto::Ticket.by_status('in-progress')
     assert_includes in_progress_tickets, ticket
 
     open_tickets = Alto::Ticket.by_status('open')
@@ -148,11 +149,17 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "board without status tracking workflow" do
-    # Create board without status set
+    # Create board with empty status set (no statuses) instead of nil
+    empty_status_set = ::Alto::StatusSet.create!(
+      name: "Empty Status Set",
+      description: "No statuses for testing"
+    )
+
     simple_board = Alto::Board.create!(
       name: "Simple Discussion",
       description: "Basic discussion board",
-      status_set: nil
+      status_set: empty_status_set,
+      item_label_singular: "discussion"
     )
 
     assert_not simple_board.has_status_tracking?
@@ -188,7 +195,8 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
   test "search functionality" do
     board = Alto::Board.create!(
       name: "Search Test Board",
-      status_set: @status_set
+      status_set: @status_set,
+      item_label_singular: "feature"
     )
 
     # Create tickets with different content
@@ -239,7 +247,11 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "upvote uniqueness and deletion" do
-    board = Alto::Board.create!(name: "Vote Test", status_set: @status_set)
+    board = Alto::Board.create!(
+      name: "Vote Test",
+      status_set: @status_set,
+      item_label_singular: "feature"
+    )
     ticket = board.tickets.create!(title: "Vote Test", description: "Test", user_id: 1)
 
     # Create upvote

@@ -9,7 +9,8 @@ module Alto
     end
 
     test "Board generates slug from name automatically" do
-      board = Board.new(name: "Test Board with Special Characters!!!")
+      status_set = alto_status_sets(:default)
+      board = Board.new(name: "Test Board with Special Characters!!!", status_set: status_set, item_label_singular: "ticket")
       assert board.valid?
 
       board.save!
@@ -18,8 +19,9 @@ module Alto
     end
 
     test "Board handles duplicate slugs by adding counter" do
-      board1 = Board.create!(name: "Duplicate Name")
-      board2 = Board.new(name: "Duplicate Name")
+      status_set = alto_status_sets(:default)
+      board1 = Board.create!(name: "Duplicate Name", status_set: status_set, item_label_singular: "ticket")
+      board2 = Board.new(name: "Duplicate Name", status_set: status_set, item_label_singular: "ticket")
 
       assert board2.valid?
       board2.save!
@@ -29,7 +31,8 @@ module Alto
     end
 
     test "Board slug updates when name changes" do
-      board = Board.create!(name: "Original Name")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Original Name", status_set: status_set, item_label_singular: "ticket")
       original_slug = board.slug
 
       board.update!(name: "Updated Name")
@@ -38,7 +41,8 @@ module Alto
     end
 
     test "Board slug only contains valid characters" do
-      board = Board.create!(name: "Test!@#$%^&*()+={}[]|\\:;\"'<>?/.,`~ Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test!@#$%^&*()+={}[]|\\:;\"'<>?/.,`~ Board", status_set: status_set, item_label_singular: "ticket")
 
       # Should only contain lowercase letters, numbers, hyphens, and underscores
       assert_match /\A[a-z0-9\-_]+\z/, board.slug
@@ -46,7 +50,8 @@ module Alto
     end
 
     test "Board by_slug scope works" do
-      board = Board.create!(name: "Test Scope Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test Scope Board", status_set: status_set, item_label_singular: "ticket")
       found_board = Board.by_slug(board.slug).first
 
       assert_equal board, found_board
@@ -58,8 +63,9 @@ module Alto
     end
 
     test "Board slug must be unique" do
-      board1 = Board.create!(name: "Test Board")
-      board2 = Board.create(name: "Different Name")
+      status_set = alto_status_sets(:default)
+      board1 = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
+      board2 = Board.create(name: "Different Name", status_set: status_set, item_label_singular: "ticket")
 
       # Manually set duplicate slug after creation to test uniqueness
       board2.update(slug: board1.slug)
@@ -69,7 +75,8 @@ module Alto
     end
 
     test "Board slug validation format accepts valid slugs" do
-      board = Board.create!(name: "Test Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
       original_slug = board.slug
 
       # Valid slugs when manually set
@@ -84,7 +91,8 @@ module Alto
     end
 
     test "Board slug validation rejects invalid slugs" do
-      board = Board.create!(name: "Test Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
 
       # Invalid slugs when manually set
       ["test board", "test@board", "test.board", "Test-Board"].each do |invalid_slug|
@@ -96,12 +104,14 @@ module Alto
     end
 
     test "Board can_be_deleted? returns true when no tickets" do
-      board = Board.create!(name: "Empty Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Empty Board", status_set: status_set, item_label_singular: "ticket")
       assert board.can_be_deleted?
     end
 
     test "Board tickets_count returns correct count" do
-      board = Board.create!(name: "Test Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
       assert_equal 0, board.tickets_count
 
       # This would require creating tickets in a real test with proper associations
@@ -111,7 +121,7 @@ module Alto
 
     test "Board has_status_tracking? works correctly" do
       # Use a unique name to avoid conflicts
-      status_set = StatusSet.create!(name: "Test Status Set #{Time.current.to_i}")
+      status_set = Alto::StatusSet.create!(name: "Test Status Set #{Time.current.to_i}")
       board_with_status = Board.create!(name: "Status Board #{Time.current.to_i}", status_set: status_set, item_label_singular: "ticket")
 
       # Will return false until status_set has statuses
@@ -123,7 +133,7 @@ module Alto
     end
 
     test "Board status-related methods work with empty status sets" do
-      status_set = StatusSet.create!(name: "Empty Status Set #{Time.current.to_i}")
+      status_set = Alto::StatusSet.create!(name: "Empty Status Set #{Time.current.to_i}")
       board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
 
       assert_empty board.available_statuses
@@ -133,17 +143,23 @@ module Alto
     end
 
     test "Board ordered scope works" do
-      board_b = Board.create!(name: "B Board")
-      board_a = Board.create!(name: "A Board")
-      board_c = Board.create!(name: "C Board")
+      status_set = alto_status_sets(:default)
+      board_b = Board.create!(name: "B Board", status_set: status_set, item_label_singular: "ticket")
+      board_a = Board.create!(name: "A Board", status_set: status_set, item_label_singular: "ticket")
+      board_c = Board.create!(name: "C Board", status_set: status_set, item_label_singular: "ticket")
 
-      ordered_boards = Board.ordered.pluck(:name)
-      assert_equal ["A Board", "B Board", "C Board"], ordered_boards
+      # Get all board names in order and filter to just the ones we created
+      all_ordered_boards = Board.ordered.pluck(:name)
+      created_board_names = ["A Board", "B Board", "C Board"]
+      ordered_created_boards = all_ordered_boards.select { |name| created_board_names.include?(name) }
+
+      assert_equal ["A Board", "B Board", "C Board"], ordered_created_boards
     end
 
     # Item labeling tests
     test "Board has default item label of ticket" do
-      board = Board.create!(name: "Test Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
       assert_equal "ticket", board.item_name
       assert_equal "tickets", board.item_name.pluralize
       assert_equal "Ticket", board.item_name.capitalize
@@ -151,7 +167,8 @@ module Alto
     end
 
     test "Board uses custom item label when set" do
-      board = Board.create!(name: "Discussion Board", item_label_singular: "post")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Discussion Board", status_set: status_set, item_label_singular: "post")
       assert_equal "post", board.item_name
       assert_equal "posts", board.item_name.pluralize
       assert_equal "Post", board.item_name.capitalize
@@ -159,18 +176,20 @@ module Alto
     end
 
     test "Board handles irregular pluralization correctly" do
-      board = Board.create!(name: "Feature Board", item_label_singular: "request")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Feature Board", status_set: status_set, item_label_singular: "request")
       assert_equal "request", board.item_name
       assert_equal "requests", board.item_name.pluralize
 
       # Test a tricky one
-      board2 = Board.create!(name: "Bug Board", item_label_singular: "person")
+      board2 = Board.create!(name: "Bug Board", status_set: status_set, item_label_singular: "person")
       assert_equal "person", board2.item_name
       assert_equal "people", board2.item_name.pluralize  # Rails pluralize should handle this
     end
 
     test "Board validates item_label_singular format" do
-      board = Board.new(name: "Test Board", item_label_singular: "invalid123!")
+      status_set = alto_status_sets(:default)
+      board = Board.new(name: "Test Board", status_set: status_set, item_label_singular: "invalid123!")
       assert_not board.valid?
       assert board.errors[:item_label_singular].present?
 
@@ -179,55 +198,61 @@ module Alto
     end
 
     test "Board requires item_label_singular when set" do
-      board = Board.new(name: "Test Board", item_label_singular: "")
+      status_set = alto_status_sets(:default)
+      board = Board.new(name: "Test Board", status_set: status_set, item_label_singular: "")
       assert_not board.valid?
       assert board.errors[:item_label_singular].present?
     end
 
     test "Board slug generation handles edge cases" do
+      status_set = alto_status_sets(:default)
       # Empty spaces and special chars only - should fallback to "item"
-      board1 = Board.create!(name: "   !@#$%   ")
+      board1 = Board.create!(name: "   !@#$%   ", status_set: status_set, item_label_singular: "ticket")
       assert_equal "item", board1.slug
 
       # Single character
-      board2 = Board.create!(name: "A")
+      board2 = Board.create!(name: "A", status_set: status_set, item_label_singular: "ticket")
       assert_equal "a", board2.slug
 
       # Numbers only
-      board3 = Board.create!(name: "123")
+      board3 = Board.create!(name: "123", status_set: status_set, item_label_singular: "ticket")
       assert_equal "123", board3.slug
 
       # Multiple spaces and hyphens
-      board4 = Board.create!(name: "Test   ---   Board")
+      board4 = Board.create!(name: "Test   ---   Board", status_set: status_set, item_label_singular: "ticket")
       assert_equal "test-board", board4.slug
     end
 
     test "Board has correct item label pluralization" do
-      board = Board.create!(name: "Post Board", item_label_singular: "post")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Post Board", status_set: status_set, item_label_singular: "post")
       assert_equal "posts", board.item_name.pluralize
       assert_equal "Posts", board.item_name.pluralize.capitalize
     end
 
     # Admin-only board tests
     test "Board admin_only? method works correctly" do
-      public_board = Board.create!(name: "Public Board", is_admin_only: false)
-      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+      status_set = alto_status_sets(:default)
+      public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
       assert_not public_board.admin_only?
       assert admin_board.admin_only?
     end
 
     test "Board publicly_accessible? method works correctly" do
-      public_board = Board.create!(name: "Public Board", is_admin_only: false)
-      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+      status_set = alto_status_sets(:default)
+      public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
       assert public_board.publicly_accessible?
       assert_not admin_board.publicly_accessible?
     end
 
     test "Board scopes work correctly" do
-      public_board = Board.create!(name: "Public Board", is_admin_only: false)
-      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+      status_set = alto_status_sets(:default)
+      public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
       assert_includes Board.public_boards, public_board
       assert_not_includes Board.public_boards, admin_board
@@ -237,8 +262,9 @@ module Alto
     end
 
       test "Board accessible_to_user scope works for regular users" do
-    public_board = Board.create!(name: "Public Board", is_admin_only: false)
-    admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+    status_set = alto_status_sets(:default)
+    public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+    admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
     accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: false)
 
@@ -247,8 +273,9 @@ module Alto
   end
 
   test "Board accessible_to_user scope works for admin users" do
-    public_board = Board.create!(name: "Public Board", is_admin_only: false)
-    admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+    status_set = alto_status_sets(:default)
+    public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+    admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
     accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: true)
 
@@ -257,7 +284,8 @@ module Alto
   end
 
     test "Board defaults to public when created" do
-      board = Board.create!(name: "Default Board")
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Default Board", status_set: status_set, item_label_singular: "ticket")
       assert_not board.admin_only?
       assert board.publicly_accessible?
     end

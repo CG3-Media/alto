@@ -118,7 +118,7 @@ module Alto
     end
 
     def can_change_status?
-      true
+      board.has_status_tracking?
     end
 
     # Subscribable concern implementation

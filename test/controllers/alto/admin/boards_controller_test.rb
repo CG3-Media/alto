@@ -13,11 +13,16 @@ module Alto
         # Create test user
         @user = User.create!(email: 'test@example.com')
 
+        # Create test status set
+        @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
+        @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+
         # Create test board
         @board = Board.create!(
           name: "Test Board",
           is_admin_only: false,
-          item_label_singular: "ticket"
+          item_label_singular: "ticket",
+          status_set: @status_set
         )
       end
 

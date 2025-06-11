@@ -24,8 +24,18 @@ module Alto
       @controller = TicketsController.new
       @user = MockUser.new
 
+      # Create test status set
+      @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
+      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+
       # Create a board for testing
-      @board = Board.create!(name: 'Test Board', slug: 'test-board', description: 'Test board')
+      @board = Board.create!(
+        name: 'Test Board',
+        slug: 'test-board',
+        description: 'Test board',
+        status_set: @status_set,
+        item_label_singular: "ticket"
+      )
 
       # Mock current_user using Ruby singleton methods (MiniTest compatible)
       @controller.define_singleton_method(:current_user) { @user }
@@ -69,7 +79,12 @@ module Alto
 
     # Admin-only board access tests
     test "should deny access to admin-only board for regular users" do
-      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+      admin_board = Board.create!(
+        name: "Admin Board",
+        is_admin_only: true,
+        status_set: @status_set,
+        item_label_singular: "ticket"
+      )
 
       # Mock regular user permissions
       @controller.define_singleton_method(:can_access_admin?) { false }
@@ -88,7 +103,12 @@ module Alto
     end
 
     test "should allow access to admin-only board for admin users" do
-      admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+      admin_board = Board.create!(
+        name: "Admin Board",
+        is_admin_only: true,
+        status_set: @status_set,
+        item_label_singular: "ticket"
+      )
 
       # Mock admin user permissions
       @controller.define_singleton_method(:can_access_admin?) { true }
@@ -114,7 +134,12 @@ module Alto
     end
 
     test "should allow access to public board for regular users" do
-      public_board = Board.create!(name: "Public Board", is_admin_only: false)
+      public_board = Board.create!(
+        name: "Public Board",
+        is_admin_only: false,
+        status_set: @status_set,
+        item_label_singular: "ticket"
+      )
 
       # Mock regular user permissions
       @controller.define_singleton_method(:can_access_admin?) { false }

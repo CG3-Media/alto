@@ -31,8 +31,23 @@ module Alto
 
     def setup
       @controller = TestController.new
-      @public_board = Board.create!(name: "Public Board", is_admin_only: false)
-      @admin_board = Board.create!(name: "Admin Board", is_admin_only: true)
+
+      # Create test status set
+      @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
+      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+
+      @public_board = Board.create!(
+        name: "Public Board",
+        is_admin_only: false,
+        status_set: @status_set,
+        item_label_singular: "ticket"
+      )
+      @admin_board = Board.create!(
+        name: "Admin Board",
+        is_admin_only: true,
+        status_set: @status_set,
+        item_label_singular: "ticket"
+      )
       @user = double("user", id: 1)
     end
 

@@ -9,18 +9,9 @@ module Alto
       @user1 = User.find_or_create_by!(id: 1, email: 'test1@example.com')
       @user2 = User.find_or_create_by!(id: 2, email: 'test2@example.com')
 
-      # Create test board with status set
-      @status_set = ::Alto::StatusSet.create!(
-        name: 'Test Status Set',
-        is_default: true
-      )
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
-      @status_set.statuses.create!(name: 'Closed', color: 'gray', position: 1, slug: 'closed')
-
-      @board = Board.create!(
-        name: "Test Board",
-        status_set: @status_set
-      )
+      # Use fixtures instead of manually creating status sets and boards
+      @status_set = alto_status_sets(:default)
+      @board = alto_boards(:general)
     end
 
     test "should create ticket with valid attributes" do
