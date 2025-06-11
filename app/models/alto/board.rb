@@ -11,6 +11,9 @@ module Alto
               format: { with: /\A[a-z ]+\z/i, message: 'only letters and spaces allowed' }
     validates :status_set, presence: true
 
+    # View enforcement enum
+    enum :single_view, { card: 'card', list: 'list' }, suffix: true
+
     scope :ordered, -> { order(:name) }
     scope :public_boards, -> { where(is_admin_only: false) }
     scope :admin_only_boards, -> { where(is_admin_only: true) }
@@ -78,6 +81,15 @@ module Alto
 
     def publicly_accessible?
       !is_admin_only?
+    end
+
+    # View enforcement methods
+    def allows_view_toggle?
+      single_view.blank?
+    end
+
+    def enforced_view_type
+      single_view.presence
     end
 
     # Scope boards based on user's admin status

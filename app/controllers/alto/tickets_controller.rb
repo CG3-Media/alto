@@ -32,6 +32,9 @@ module Alto
       @tickets = @tickets.page(params[:page]) if respond_to?(:page)
       @statuses = @board.available_statuses
       @search_query = params[:search]
+
+      # Determine view type based on board settings
+      determine_view_type
     end
 
     def show
@@ -165,6 +168,11 @@ module Alto
       if @ticket.archived?
         redirect_to [@board, @ticket], alert: 'Archived tickets cannot be modified.'
       end
+    end
+
+    def determine_view_type
+      @view_type = @board.single_view.presence || (params[:view] == 'list' ? 'list' : 'card')
+      @show_toggle = @board.single_view.blank?
     end
 
   end

@@ -54,27 +54,29 @@
 
   <hr class="border-gray-200">
 
-  <div class="space-y-2">
-    <%= form.label :status_set_id, "Status Set", class: "block text-sm font-medium text-gray-700" %>
-    <p class="text-sm text-gray-500">
-      Choose how items on this board will be tracked through different statuses.
-      <%= link_to "Manage status sets", alto.admin_status_sets_path, class: "text-blue-600 hover:text-blue-500" %>
-    </p>
-    <%= form.select :status_set_id,
-                      options_from_collection_for_select(::Alto::StatusSet.ordered, :id, :name, @board.status_set_id),
-        { prompt: 'Select a status set...', include_blank: false },
-        { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
-    <% if @board.errors[:status_set_id].any? %>
-      <% @board.errors[:status_set_id].each do |error| %>
-        <p class="text-sm text-red-600"><%= error %></p>
-      <% end %>
-    <% end %>
-    <% if @board.errors[:status_set].any? %>
-      <% @board.errors[:status_set].each do |error| %>
-        <p class="text-sm text-red-600"><%= error %></p>
-      <% end %>
-    <% end %>
-  </div>
+  <%= render 'shared/forms/dropdown',
+      form: form,
+      field_name: :status_set_id,
+      label_text: "Status Set",
+      description: raw("Choose how items on this board will be tracked through different statuses. #{link_to "Manage status sets", alto.admin_status_sets_path, class: "text-blue-600 hover:text-blue-500"}"),
+      options: options_from_collection_for_select(::Alto::StatusSet.ordered, :id, :name, @board.status_set_id),
+      prompt: 'Select a status set...',
+      include_blank: false,
+      model: @board %>
+
+  <hr class="border-gray-200">
+
+    <%= render 'shared/forms/dropdown',
+      form: form,
+      field_name: :single_view,
+      label_text: "View Mode",
+      description: "Control how users can view items on this board. Choose \"Both\" to let users toggle between card and list views, or enforce a specific view for boards like discussions that work better in list format.",
+      options: options_for_select([
+        ['Both (user can choose)', ''],
+        ['Card only', 'card'],
+        ['List only', 'list']
+      ], @board.single_view),
+      model: @board %>
 
   <hr class="border-gray-200">
 

@@ -58,7 +58,7 @@ module Alto
       end
 
             def board_params
-        params.require(:board).permit(:name, :description, :item_label_singular, :status_set_id, :is_admin_only)
+        params.require(:board).permit(:name, :description, :item_label_singular, :status_set_id, :is_admin_only, :single_view)
       end
     end
   end

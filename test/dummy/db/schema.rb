@@ -20,7 +20,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_170538) do
     t.boolean "is_admin_only", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "single_view"
     t.index ["name"], name: "index_alto_boards_on_name"
+    t.index ["single_view"], name: "index_alto_boards_on_single_view"
     t.index ["slug"], name: "index_alto_boards_on_slug", unique: true
     t.index ["status_set_id"], name: "index_alto_boards_on_status_set_id"
   end
@@ -94,9 +96,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_170538) do
     t.integer "board_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.boolean "archived", default: false, null: false
-    t.index ["archived"], name: "index_alto_tickets_on_archived"
-    t.index ["board_id", "archived"], name: "index_alto_tickets_on_board_id_and_archived"
     t.index ["board_id"], name: "index_alto_tickets_on_board_id"
     t.index ["created_at"], name: "index_alto_tickets_on_created_at"
     t.index ["description"], name: "index_alto_tickets_on_description"

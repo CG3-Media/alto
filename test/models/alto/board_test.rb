@@ -261,33 +261,191 @@ module Alto
       assert_not_includes Board.admin_only_boards, public_board
     end
 
-      test "Board accessible_to_user scope works for regular users" do
-    status_set = alto_status_sets(:default)
-    public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
-    admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
+    test "Board accessible_to_user scope works for regular users" do
+      status_set = alto_status_sets(:default)
+      public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
-    accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: false)
+      accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: false)
 
-    assert_includes accessible_boards, public_board
-    assert_not_includes accessible_boards, admin_board
-  end
+      assert_includes accessible_boards, public_board
+      assert_not_includes accessible_boards, admin_board
+    end
 
-  test "Board accessible_to_user scope works for admin users" do
-    status_set = alto_status_sets(:default)
-    public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
-    admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
+    test "Board accessible_to_user scope works for admin users" do
+      status_set = alto_status_sets(:default)
+      public_board = Board.create!(name: "Public Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: false)
+      admin_board = Board.create!(name: "Admin Board", status_set: status_set, item_label_singular: "ticket", is_admin_only: true)
 
-    accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: true)
+      accessible_boards = Board.accessible_to_user(nil, current_user_is_admin: true)
 
-    assert_includes accessible_boards, public_board
-    assert_includes accessible_boards, admin_board
-  end
+      assert_includes accessible_boards, public_board
+      assert_includes accessible_boards, admin_board
+    end
 
     test "Board defaults to public when created" do
       status_set = alto_status_sets(:default)
       board = Board.create!(name: "Default Board", status_set: status_set, item_label_singular: "ticket")
       assert_not board.admin_only?
       assert board.publicly_accessible?
+    end
+
+        # Single view tests
+    test "Board single_view enum accepts valid values" do
+      status_set = alto_status_sets(:default)
+
+      # Test card view
+      card_board = Board.create!(name: "Card Board", status_set: status_set, item_label_singular: "ticket", single_view: "card")
+      assert_equal "card", card_board.single_view
+      assert card_board.card_single_view?
+      assert_not card_board.list_single_view?
+
+      # Test list view
+      list_board = Board.create!(name: "List Board", status_set: status_set, item_label_singular: "ticket", single_view: "list")
+      assert_equal "list", list_board.single_view
+      assert list_board.list_single_view?
+      assert_not list_board.card_single_view?
+    end
+
+    test "Board single_view defaults to nil when not specified" do
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Flexible Board", status_set: status_set, item_label_singular: "ticket")
+
+      assert_nil board.single_view
+      assert_not board.card_single_view?
+      assert_not board.list_single_view?
+    end
+
+    test "Board single_view can be set to nil/blank for flexible viewing" do
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket", single_view: "card")
+
+      # Verify it starts as card
+      assert board.card_single_view?
+
+      # Change to nil
+      board.update!(single_view: nil)
+      assert_nil board.single_view
+      assert_not board.card_single_view?
+      assert_not board.list_single_view?
+
+      # Change to blank string (Rails converts to nil for enums)
+      board.update!(single_view: "")
+      assert_nil board.single_view
+      assert_not board.card_single_view?
+      assert_not board.list_single_view?
+    end
+
+    test "Board single_view rejects invalid values" do
+      status_set = alto_status_sets(:default)
+      board = Board.new(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
+
+      # Invalid enum values should raise an error
+      assert_raises(ArgumentError) do
+        board.single_view = "invalid"
+      end
+
+      assert_raises(ArgumentError) do
+        board.single_view = "grid"
+      end
+
+      assert_raises(ArgumentError) do
+        board.single_view = "table"
+      end
+    end
+
+        test "Board allows_view_toggle? method works correctly" do
+      status_set = alto_status_sets(:default)
+
+      # Board with no single_view set should allow toggle
+      flexible_board = Board.create!(name: "Flexible Board", status_set: status_set, item_label_singular: "ticket")
+      assert flexible_board.allows_view_toggle?
+
+      # Board with blank single_view should allow toggle
+      flexible_board.update!(single_view: "")
+      assert flexible_board.allows_view_toggle?
+
+      # Board with card view enforced should not allow toggle
+      card_board = Board.create!(name: "Card Board", status_set: status_set, item_label_singular: "ticket", single_view: "card")
+      assert_not card_board.allows_view_toggle?
+
+      # Board with list view enforced should not allow toggle
+      list_board = Board.create!(name: "List Board", status_set: status_set, item_label_singular: "ticket", single_view: "list")
+      assert_not list_board.allows_view_toggle?
+    end
+
+    test "Board enforced_view_type method returns correct values" do
+      status_set = alto_status_sets(:default)
+
+      # Board with no single_view set should return nil
+      flexible_board = Board.create!(name: "Flexible Board", status_set: status_set, item_label_singular: "ticket")
+      assert_nil flexible_board.enforced_view_type
+
+      # Board with blank single_view should return nil
+      flexible_board.update!(single_view: "")
+      assert_nil flexible_board.enforced_view_type
+
+      # Board with card view should return "card"
+      card_board = Board.create!(name: "Card Board", status_set: status_set, item_label_singular: "ticket", single_view: "card")
+      assert_equal "card", card_board.enforced_view_type
+
+      # Board with list view should return "list"
+      list_board = Board.create!(name: "List Board", status_set: status_set, item_label_singular: "ticket", single_view: "list")
+      assert_equal "list", list_board.enforced_view_type
+    end
+
+        test "Board single_view can be updated between valid values" do
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Changeable Board", status_set: status_set, item_label_singular: "ticket")
+
+      # Start with no restriction
+      assert_nil board.single_view
+      assert board.allows_view_toggle?
+
+      # Change to card view
+      board.update!(single_view: "card")
+      assert board.card_single_view?
+      assert_not board.allows_view_toggle?
+      assert_equal "card", board.enforced_view_type
+
+      # Change to list view
+      board.update!(single_view: "list")
+      assert board.list_single_view?
+      assert_not board.allows_view_toggle?
+      assert_equal "list", board.enforced_view_type
+
+      # Change back to flexible
+      board.update!(single_view: nil)
+      assert_nil board.single_view
+      assert board.allows_view_toggle?
+      assert_nil board.enforced_view_type
+    end
+
+    test "Board single_view works with mass assignment" do
+      status_set = alto_status_sets(:default)
+
+      # Test creation with card view
+      card_board = Board.create!(
+        name: "Card Board",
+        status_set: status_set,
+        item_label_singular: "ticket",
+        single_view: "card"
+      )
+      assert card_board.card_single_view?
+
+      # Test creation with list view
+      list_board = Board.create!(
+        name: "List Board",
+        status_set: status_set,
+        item_label_singular: "ticket",
+        single_view: "list"
+      )
+      assert list_board.list_single_view?
+
+      # Test update with single_view
+      board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
+      board.update!(single_view: "card")
+      assert board.card_single_view?
     end
   end
 end

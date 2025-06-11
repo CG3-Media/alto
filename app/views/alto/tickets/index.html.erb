@@ -23,26 +23,25 @@
       actions: actions %>
 
       <%
-    # Read view preference from URL parameter, default to 'card'
-    view_type = params[:view] == 'list' ? 'list' : 'card'
-    show_status_filters = view_type == 'list'
+    # View type is now determined by controller
+    show_status_filters = @view_type == 'list'
   %>
 
   <!-- View Toggle | Status Filters | Sort Options -->
   <div class="flex justify-between items-center flex-wrap gap-4">
     <div class="flex items-center gap-4">
       <!-- View Toggle -->
-      <% if @board.has_status_tracking? && params[:status].blank? %>
+      <% if @show_toggle && @board.has_status_tracking? && params[:status].blank? %>
         <div class="flex bg-gray-100 rounded-md p-1">
           <%= link_to alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: 'card'),
-              class: "px-3 py-1 text-sm rounded-md transition-colors #{'bg-white text-gray-900 shadow-sm' if view_type == 'card'} #{'text-gray-600 hover:text-gray-900' if view_type != 'card'}" do %>
+              class: "px-3 py-1 text-sm rounded-md transition-colors #{'bg-white text-gray-900 shadow-sm' if @view_type == 'card'} #{'text-gray-600 hover:text-gray-900' if @view_type != 'card'}" do %>
             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
             </svg>
             Board
           <% end %>
           <%= link_to alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: 'list'),
-              class: "px-3 py-1 text-sm rounded-md transition-colors #{'bg-white text-gray-900 shadow-sm' if view_type == 'list'} #{'text-gray-600 hover:text-gray-900' if view_type != 'list'}" do %>
+              class: "px-3 py-1 text-sm rounded-md transition-colors #{'bg-white text-gray-900 shadow-sm' if @view_type == 'list'} #{'text-gray-600 hover:text-gray-900' if @view_type != 'list'}" do %>
             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
             </svg>
@@ -92,7 +91,7 @@
   <% end %>
 
   <!-- Card View (Kanban Style) -->
-  <div id="card-view" class="kanban-view min-h-screen" <%= 'style="display: none;"'.html_safe if view_type == 'list' %>>
+  <div id="card-view" class="kanban-view min-h-screen" <%= 'style="display: none;"'.html_safe if @view_type == 'list' %>>
     <% if @tickets.any? && @board.has_status_tracking? %>
       <div class="flex overflow-x-auto pb-4 min-h-full">
         <% @statuses.each do |status| %>
@@ -168,7 +167,7 @@
   </div>
 
   <!-- Row View (Traditional List) -->
-  <div id="row-view" class="space-y-4" <%= 'style="display: none;"'.html_safe if view_type == 'card' %>>
+  <div id="row-view" class="space-y-4" <%= 'style="display: none;"'.html_safe if @view_type == 'card' %>>
     <% if @tickets.any? %>
       <% @tickets.each do |ticket| %>
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
