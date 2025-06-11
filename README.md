@@ -1,5 +1,8 @@
 <img width="1663" alt="image" src="https://github.com/user-attachments/assets/4e17ab33-cb16-42ef-b514-725344b7ee0b" />
 
+# ⚠️ Development Status
+Note: This gem is currently in early beta. But try it out (on some non-critical apps)!
+
 # Alto Rails Engine
 
 A mountable Rails engine for collecting user feedback with multiple boards, threaded comments, and voting.
