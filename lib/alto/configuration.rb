@@ -1,7 +1,7 @@
 module Alto
   class Configuration
     attr_accessor :user_model, :default_board_name, :default_board_slug,
-                  :allow_board_deletion_with_tickets
+                  :allow_board_deletion_with_tickets, :current_user_proc
 
     # Permission method blocks - much cleaner than delegation!
     attr_accessor :permission_methods
@@ -22,6 +22,20 @@ module Alto
 
       # Initialize permission methods hash
       @permission_methods = {}
+
+      # Default current_user proc - tries common authentication patterns safely
+      @current_user_proc = proc do
+        # Try standard Rails current_user method first
+        if respond_to?(:current_user)
+          current_user
+        # Try Current.user pattern (thread-local storage)
+        elsif defined?(Current) && Current.respond_to?(:user)
+          Current.user
+        else
+          # Safe fallback - no user
+          nil
+        end
+      end
     end
 
     # Define permission methods with blocks or procs
@@ -46,7 +60,7 @@ module Alto
       @user_email_block
     end
 
-            # Call a permission method block or proc
+    # Call a permission method block or proc
     def call_permission(method_name, controller_context, *args)
       block_or_proc = @permission_methods[method_name.to_sym]
       return nil unless block_or_proc
@@ -68,6 +82,12 @@ module Alto
         # During setup/migrations, just store in memory
         @default_app_name = value
       end
+    end
+
+    # Set current_user proc for authentication integration
+    def current_user(&block)
+      @current_user_proc = block if block_given?
+      @current_user_proc
     end
 
     private

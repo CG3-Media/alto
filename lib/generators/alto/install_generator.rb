@@ -486,6 +486,18 @@ module Alto
             # User model configuration
             config.user_model = "User"
 
+            # Current user configuration (optional - smart defaults usually work)
+            # Uncomment and customize only if you have non-standard authentication:
+            #
+            # For apps using Current.user pattern:
+            # config.current_user { Current.user }
+            #
+            # For session-based authentication:
+            # config.current_user { User.find_by(id: session[:user_id]) }
+            #
+            # For custom authentication:
+            # config.current_user { your_authentication_method }
+
             # User display name (customize for your user model)
             # config.user_display_name do |user_id|
             #   user = User.find_by(id: user_id)
