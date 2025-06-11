@@ -19,7 +19,7 @@ namespace :alto do
       sample_users = []
       if user_model_class
         sample_users = create_sample_users(user_model_class)
-        puts "✅ Created #{sample_users.length} sample users"
+        puts "✅ Created #{sample_users.length} sample users (password: 'password')"
       end
 
       # Create status sets and statuses
@@ -61,21 +61,14 @@ namespace :alto do
     end
   end
 
-  desc "Clear all Alto data (alias for clear_dev_data)"
+  desc "Clear all Alto data without confirmation (alias for clear_dev_data)"
   task clear: :clear_dev_data
 
-  desc "Clear all Alto development data"
+  desc "Clear all Alto development data (WARNING: No confirmation prompt)"
   task clear_dev_data: :environment do
     puts "🗑️  Clearing Alto development data..."
+    puts "⚠️  Removing ALL Alto data without confirmation..."
     puts ""
-
-    print "⚠️  This will remove ALL Alto data. Continue? (y/N): "
-    input = STDIN.gets.chomp.downcase
-
-    unless ['y', 'yes'].include?(input)
-      puts "❌ Cancelled."
-      exit
-    end
 
     # Delete in proper order to avoid foreign key constraints
     upvotes_count = Alto::Upvote.destroy_all.length
@@ -121,8 +114,12 @@ private
         # Create user with attributes that most user models support
         user_attrs = { email: user_data[:email] }
         user_attrs[:name] = user_data[:name] if user_model_class.column_names.include?('name')
-        user_attrs[:password] = 'password123' if user_model_class.column_names.include?('password')
-        user_attrs[:password_confirmation] = 'password123' if user_model_class.column_names.include?('password_confirmation')
+
+        # Add password fields if user model supports them (Devise, etc.)
+        if user_model_class.column_names.include?('encrypted_password') || user_model_class.column_names.include?('password_digest')
+          user_attrs[:password] = 'password'
+          user_attrs[:password_confirmation] = 'password' if user_model_class.column_names.include?('password_confirmation')
+        end
 
         begin
           user = user_model_class.create!(user_attrs)
