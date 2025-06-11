@@ -54,6 +54,9 @@ feedback_board = Alto::Board.find_or_create_by!(slug: 'feedback') do |board|
   board.is_admin_only = false
 end
 
+# Ensure the feedback board is set to list-only view
+feedback_board.update!(single_view: 'list')
+
 features_board = Alto::Board.find_or_create_by!(slug: 'features') do |board|
   board.name = 'Feature Requests'
   board.description = 'Request new features and enhancements'

@@ -229,7 +229,8 @@ private
         description: 'Share general thoughts, suggestions, and feedback about your experience.',
         item_label_singular: 'feedback',
         status_set: status_sets.find { |s| s.name == 'Feature Workflow' },
-        is_admin_only: false
+        is_admin_only: false,
+        single_view: 'list'
       },
       {
         name: 'Internal Issues',
@@ -248,7 +249,14 @@ private
         b.item_label_singular = data[:item_label_singular]
         b.status_set = data[:status_set]
         b.is_admin_only = data[:is_admin_only]
+        b.single_view = data[:single_view] if data[:single_view].present?
       end
+
+      # Ensure single_view is set correctly even for existing boards
+      if data[:single_view].present?
+        board.update!(single_view: data[:single_view])
+      end
+
       boards << board
     end
 
