@@ -15,11 +15,11 @@ namespace :alto do
         puts "   Creating data without user associations..."
       end
 
-      # Create sample users if user model exists
+            # Create sample users if user model exists
       sample_users = []
       if user_model_class
         sample_users = create_sample_users(user_model_class)
-        puts "✅ Created #{sample_users.length} sample users (password: 'password')"
+        puts "✅ Created #{sample_users.length} sample users with secure random passwords"
       end
 
       # Create status sets and statuses
@@ -115,10 +115,12 @@ private
         user_attrs = { email: user_data[:email] }
         user_attrs[:name] = user_data[:name] if user_model_class.column_names.include?('name')
 
-        # Add password fields if user model supports them (Devise, etc.)
+                # Add password fields if user model supports them (Devise, etc.)
         if user_model_class.column_names.include?('encrypted_password') || user_model_class.column_names.include?('password_digest')
-          user_attrs[:password] = 'password'
-          user_attrs[:password_confirmation] = 'password' if user_model_class.column_names.include?('password_confirmation')
+          # Generate secure random password to avoid "password has been breached" errors
+          secure_password = SecureRandom.alphanumeric(12)
+          user_attrs[:password] = secure_password
+          user_attrs[:password_confirmation] = secure_password if user_model_class.column_names.include?('password_confirmation')
         end
 
         begin
