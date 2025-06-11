@@ -2,7 +2,7 @@ module Alto
   module Admin
     class BoardsController < ::Alto::ApplicationController
       before_action :ensure_admin_access
-      before_action :set_board, only: [:show, :edit, :update, :destroy]
+      before_action :set_board, only: [:edit, :update, :destroy]
 
       def index
         @boards = ::Alto::Board.includes(:tickets).ordered
@@ -57,17 +57,8 @@ module Alto
         @board = ::Alto::Board.find(params[:slug])
       end
 
-      def board_params
+            def board_params
         params.require(:board).permit(:name, :description, :item_label_singular, :status_set_id, :is_admin_only)
-      end
-
-            def ensure_admin_access
-        # Allow access in test environment for easier testing
-        return if Rails.env.test?
-
-        unless can_access_admin?
-          redirect_to alto.root_path, alert: 'You do not have permission to access the admin area'
-        end
       end
     end
   end

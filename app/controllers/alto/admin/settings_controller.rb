@@ -22,12 +22,6 @@ module Alto
       end
 
       private
-
-      def ensure_admin_access
-        unless can_access_admin?
-          redirect_to alto.root_path, alert: 'You do not have permission to access the admin area'
-        end
-      end
     end
   end
 end

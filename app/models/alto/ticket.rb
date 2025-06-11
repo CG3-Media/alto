@@ -26,6 +26,8 @@ module Alto
     scope :by_status, ->(status_slug) { where(status_slug: status_slug) }
     scope :unlocked, -> { where(locked: false) }
     scope :locked, -> { where(locked: true) }
+    scope :active, -> { where(archived: false) }
+    scope :archived, -> { where(archived: true) }
     scope :recent, -> { order(created_at: :desc) }
     scope :popular, -> { left_joins(:upvotes).group(:id).order('count(alto_upvotes.id) desc') }
     scope :for_board, ->(board) { where(board: board) }
@@ -91,7 +93,11 @@ module Alto
     end
 
     def locked?
-      locked
+      locked || archived?
+    end
+
+    def archived?
+      archived
     end
 
     # Status-related methods

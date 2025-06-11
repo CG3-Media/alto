@@ -1,30 +1,45 @@
-<div class="space-y-6">
+<div class="space-y-6 <%= 'opacity-60' if @ticket.archived? %>">
+  <!-- Archive Banner -->
+  <% if @ticket.archived? %>
+    <div class="bg-amber-50 border-l-4 border-amber-400 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-amber-700">
+            <span class="font-medium">📦 This <%= board_item_name(@board) %> is archived</span> - it is read-only and cannot be modified.
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Ticket Header -->
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <!-- Top row: Title/Description + Voting -->
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
         <!-- Status Badge -->
-        <% if @board.has_status_tracking? %>
-          <div class="mb-3">
+        <div class="mb-3 flex items-center gap-2 flex-wrap">
+          <% if @ticket.archived? %>
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600">
+              📦 Archived
+            </span>
+          <% end %>
+          <% if @board.has_status_tracking? %>
             <span class="px-3 py-1 text-sm font-medium rounded-full <%= @ticket.status_color_classes %>">
               <%= @ticket.status_name %>
             </span>
-            <% if @ticket.locked? %>
-              <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800 ml-2">
-                🔒 Locked
-              </span>
-            <% end %>
-          </div>
-        <% else %>
-          <% if @ticket.locked? %>
-            <div class="mb-3">
-              <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
-                🔒 Locked
-              </span>
-            </div>
           <% end %>
-        <% end %>
+          <% if @ticket.locked? && !@ticket.archived? %>
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
+              🔒 Locked
+            </span>
+          <% end %>
+        </div>
 
         <!-- Title -->
         <div class="mb-4">
@@ -61,7 +76,7 @@
     </div>
 
     <!-- Comment Form -->
-    <% if can_comment? && @ticket.can_be_commented_on? %>
+    <% if can_comment? && @ticket.can_be_commented_on? && !@ticket.archived? %>
       <div class="p-6 border-b border-gray-200 bg-gray-50">
         <%= form_with model: [@board, @ticket, @comment], local: true, class: "space-y-4" do |form| %>
           <div class="text-sm text-gray-600 mb-2">
@@ -76,6 +91,10 @@
                 class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
           </div>
         <% end %>
+      </div>
+    <% elsif @ticket.archived? %>
+      <div class="p-6 border-b border-gray-200 bg-amber-50">
+        <p class="text-amber-700 text-sm">📦 This ticket is archived. No new comments can be added.</p>
       </div>
     <% elsif @ticket.locked? %>
       <div class="p-6 border-b border-gray-200 bg-red-50">
@@ -117,8 +136,7 @@
     <% end %>
 
     <div class="flex items-center space-x-2">
-
-      <% if can_user_edit_ticket?(@ticket) %>
+      <% if can_user_edit_ticket?(@ticket) && !@ticket.archived? %>
         <%= render 'shared/button',
             text: "Manage Subscribers",
             url: alto.board_ticket_subscribers_path(@board, @ticket),
@@ -127,6 +145,20 @@
             text: "Edit Ticket",
             url: alto.edit_board_ticket_path(@board, @ticket),
             button_type: :secondary %>
+      <% end %>
+
+      <% if can_access_admin? && @ticket.archived? %>
+        <%= render 'shared/button',
+            text: "Unarchive",
+            url: alto.unarchive_board_ticket_path(@board, @ticket),
+            method: :patch,
+            button_type: :secondary,
+            html_options: {
+              data: {
+                confirm: "Are you sure you want to unarchive this #{board_item_name(@board)}?",
+                turbo_method: :patch
+              }
+            } %>
       <% end %>
     </div>
   </div>

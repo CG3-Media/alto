@@ -5,6 +5,7 @@ module Alto
     before_action :check_comment_permission, only: [:create]
     before_action :set_comment, only: [:show, :destroy]
     before_action :set_parent_comment, only: [:create], if: -> { params[:comment] && params[:comment][:parent_id].present? }
+    before_action :ensure_not_archived, only: [:create, :destroy]
 
     def create
       @comment = @ticket.comments.build(comment_params)
@@ -127,6 +128,12 @@ module Alto
       # This should be overridden by the host application
       # Example: current_user.admin? || current_user.can?(:moderate_feedback_comments)
       false
+    end
+
+    def ensure_not_archived
+      if @ticket.archived?
+        redirect_to [@board, @ticket], alert: 'Archived tickets cannot be modified.'
+      end
     end
   end
 end

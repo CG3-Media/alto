@@ -75,6 +75,33 @@
               <p class="mt-1 text-sm text-gray-500">Lock to prevent further discussion</p>
             </div>
           </div>
+
+          <!-- Archive Controls -->
+          <% if can_access_admin? && !@ticket.archived? %>
+            <div class="mt-6 pt-4 border-t border-gray-200">
+              <h4 class="text-sm font-medium text-gray-900 mb-3">🗄️ Archive Controls</h4>
+              <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
+                <div class="flex items-start space-x-3">
+                  <svg class="h-5 w-5 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clip-rule="evenodd" />
+                  </svg>
+                  <div class="flex-1">
+                    <p class="text-sm text-amber-800 mb-3">
+                      <strong>Archive this ticket</strong> to make it read-only. Archived tickets cannot be edited, commented on, or voted on.
+                    </p>
+                    <%= link_to "Archive Ticket",
+                        alto.archive_board_ticket_path(@board, @ticket),
+                        method: :patch,
+                        class: "inline-flex items-center px-3 py-2 border border-amber-300 shadow-sm text-sm leading-4 font-medium rounded-md text-amber-700 bg-white hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
+                        data: {
+                          confirm: "Are you sure you want to archive this #{board_item_name(@board)}? It will become read-only and cannot be easily undone.",
+                          turbo_method: :patch
+                        } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
         </div>
       <% end %>
 

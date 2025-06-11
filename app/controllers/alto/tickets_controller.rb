@@ -4,6 +4,7 @@ module Alto
     before_action :set_ticket, only: [:show, :edit, :update, :destroy]
     before_action :check_submit_permission, only: [:new, :create]
     before_action :check_board_access
+    before_action :ensure_not_archived, only: [:edit, :update, :destroy]
 
     # Make helper methods available to views
     helper_method :can_user_edit_ticket?, :current_user_subscribed?
@@ -12,7 +13,7 @@ module Alto
       # Set this as the current board in session
       ensure_current_board_set(@board)
 
-      @tickets = @board.tickets.includes(:upvotes, :comments)
+      @tickets = @board.tickets.active.includes(:upvotes, :comments)
 
       # Apply search filter
       @tickets = @tickets.search(params[:search]) if params[:search].present?
@@ -157,6 +158,12 @@ module Alto
       rescue => e
         # Log error but don't break the page load
         Rails.logger.warn "[Alto] Failed to track ticket view: #{e.message}"
+      end
+    end
+
+    def ensure_not_archived
+      if @ticket.archived?
+        redirect_to [@board, @ticket], alert: 'Archived tickets cannot be modified.'
       end
     end
 

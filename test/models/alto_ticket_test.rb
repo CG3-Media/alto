@@ -175,6 +175,139 @@ module Alto
       assert_not ticket.can_be_commented_on?
     end
 
+    # Archive functionality tests
+    test "should not be archived by default" do
+      ticket = Ticket.create!(
+        title: "Regular Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board
+      )
+
+      assert_not ticket.archived?
+      assert_not ticket.locked? # Should not be locked if only regular
+    end
+
+    test "should be archived when archived flag is true" do
+      ticket = Ticket.create!(
+        title: "Archived Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        archived: true
+      )
+
+      assert ticket.archived?
+    end
+
+    test "archived tickets should be locked" do
+      ticket = Ticket.create!(
+        title: "Archived Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        archived: true
+      )
+
+      assert ticket.archived?
+      assert ticket.locked? # Archived tickets should be locked
+      assert_not ticket.can_be_voted_on?
+      assert_not ticket.can_be_commented_on?
+    end
+
+    test "should filter active tickets" do
+      active_ticket = Ticket.create!(
+        title: "Active Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        archived: false
+      )
+
+      archived_ticket = Ticket.create!(
+        title: "Archived Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        archived: true
+      )
+
+      active_tickets = Ticket.active
+      assert_includes active_tickets, active_ticket
+      assert_not_includes active_tickets, archived_ticket
+    end
+
+    test "should filter archived tickets" do
+      active_ticket = Ticket.create!(
+        title: "Active Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        archived: false
+      )
+
+      archived_ticket = Ticket.create!(
+        title: "Archived Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        archived: true
+      )
+
+      archived_tickets = Ticket.archived
+      assert_includes archived_tickets, archived_ticket
+      assert_not_includes archived_tickets, active_ticket
+    end
+
+    test "should archive and unarchive tickets" do
+      ticket = Ticket.create!(
+        title: "Toggle Archive Test",
+        description: "Description",
+        user_id: 1,
+        board: @board
+      )
+
+      # Initially not archived
+      assert_not ticket.archived?
+      assert_not ticket.locked?
+
+      # Archive the ticket
+      ticket.update!(archived: true)
+      ticket.reload
+
+      assert ticket.archived?
+      assert ticket.locked?
+
+      # Unarchive the ticket
+      ticket.update!(archived: false)
+      ticket.reload
+
+      assert_not ticket.archived?
+      assert_not ticket.locked? # Should not be locked anymore (unless manually locked)
+    end
+
+    test "manually locked and archived ticket should remain locked when unarchived" do
+      ticket = Ticket.create!(
+        title: "Double Lock Test",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        locked: true,
+        archived: true
+      )
+
+      # Should be locked (both manually and archived)
+      assert ticket.locked?
+      assert ticket.archived?
+
+      # Unarchive but keep manual lock
+      ticket.update!(archived: false)
+      ticket.reload
+
+      assert_not ticket.archived?
+      assert ticket.locked? # Still locked because of manual lock
+    end
+
     test "should get status information" do
       ticket = Ticket.create!(
         title: "Status Ticket",

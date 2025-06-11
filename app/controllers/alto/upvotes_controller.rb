@@ -2,6 +2,7 @@ module Alto
   class UpvotesController < ::Alto::ApplicationController
     before_action :check_vote_permission
     before_action :set_board_and_upvotable
+    before_action :ensure_not_archived
 
     def create
       @upvote = @upvotable.upvotes.build(user_id: current_user.id)
@@ -88,6 +89,24 @@ module Alto
         respond_to do |format|
           format.html { redirect_back(fallback_location: fallback_path, alert: 'You do not have permission to vote') }
           format.json { render json: { error: 'Permission denied' }, status: :forbidden }
+        end
+      end
+    end
+
+    def ensure_not_archived
+      # Check if upvotable is a ticket and archived, or if it's a comment on an archived ticket
+      archived = if @upvotable.is_a?(Ticket)
+                   @upvotable.archived?
+                 elsif @upvotable.is_a?(Comment)
+                   @upvotable.ticket.archived?
+                 else
+                   false
+                 end
+
+      if archived
+        respond_to do |format|
+          format.html { redirect_back(fallback_location: fallback_path, alert: 'Archived content cannot be upvoted') }
+          format.json { render json: { error: 'Archived content cannot be upvoted' }, status: :unprocessable_entity }
         end
       end
     end

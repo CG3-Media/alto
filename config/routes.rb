@@ -8,7 +8,12 @@ Alto::Engine.routes.draw do
   # Board routes
   resources :boards, param: :slug, path: 'boards' do
     get 'activity', to: 'activity#index'
+    get 'archive', to: 'archive#show'
     resources :tickets do
+      member do
+        patch :archive, to: 'archive#archive'
+        patch :unarchive, to: 'archive#unarchive'
+      end
       resources :comments, only: [:create, :destroy, :show]
       resources :subscribers, only: [:index, :create, :destroy] do
         collection do
