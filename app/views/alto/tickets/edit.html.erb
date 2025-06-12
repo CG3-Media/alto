@@ -55,14 +55,14 @@
           <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Additional Information</h3>
           <div class="space-y-4">
             <% @board.fields.ordered.each do |field| %>
-              <%= render 'alto/shared/custom_board_fields', field: field, ticket: @ticket, form: form %>
+               <%= render 'alto/shared/custom_board_fields', field: field, ticket: @ticket, form: form %>
             <% end %>
           </div>
         </div>
       <% end %>
 
       <!-- Admin Controls -->
-      <% if can_edit_tickets? %>
+      <% if can_access_admin? %>
         <div class="border-t border-gray-200 pt-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Controls</h3>
 
