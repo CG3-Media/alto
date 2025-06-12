@@ -13,3 +13,14 @@ if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
   ActiveSupport::TestCase.file_fixture_path = File.expand_path("fixtures", __dir__) + "/files"
   ActiveSupport::TestCase.fixtures :all
 end
+
+# Configure proper test isolation strategy
+class ActiveSupport::TestCase
+  # Use transactional rollback for test isolation instead of manual cleanup
+  self.use_transactional_tests = true
+end
+
+class ActionDispatch::IntegrationTest
+  # Use transactional rollback for integration tests too
+  self.use_transactional_tests = true
+end

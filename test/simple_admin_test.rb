@@ -49,11 +49,9 @@ class SimpleAdminTest < ActionDispatch::IntegrationTest
       puts "❌ Manual dispatch error: #{e.message}"
     end
 
-    # Create test data
-    Alto::Board.delete_all
-    User.delete_all
+    # Let Rails transactional fixtures handle data isolation
 
-    user = User.create!(id: 1, email: 'admin@example.com')
+    user = User.create!(email: 'admin@example.com')
 
     # Create a status set first
     status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)

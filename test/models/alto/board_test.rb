@@ -215,11 +215,12 @@ module Alto
 
     test "Board can have multiple fields" do
       board = alto_boards(:bugs)
+      initial_count = board.fields.count
 
       field1 = board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
       field2 = board.fields.create!(label: "Description", field_type: "textarea")
 
-      assert_equal 2, board.fields.count
+      assert_equal initial_count + 2, board.fields.count
       assert_includes board.fields, field1
       assert_includes board.fields, field2
     end

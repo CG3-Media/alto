@@ -5,10 +5,7 @@ module Alto
     include ::Alto::Engine.routes.url_helpers
 
     def setup
-      # Clear existing data
-      Alto::Board.delete_all
-      User.delete_all
-
+      # Let Rails transactional fixtures handle data isolation
       # Create test user
       @user = User.create!(email: 'test@example.com')
 
