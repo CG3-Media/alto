@@ -65,8 +65,23 @@
 
   <% if form && field_name %>
     <%= form.select field_name, options, select_options, input_options %>
-  <% else %>
+  <% elsif field_name %>
     <%= select_tag field_name, options_for_select(options), select_options.merge(input_options) %>
+  <% else %>
+    <!-- No field_name = no form submission, just styling -->
+    <select <%= input_options.reject { |k, v| (k == :disabled && !v) || (k == :required && !v) }.map { |k, v| "#{k}=\"#{v}\"" }.join(' ').html_safe %>>
+      <% if prompt %>
+        <option value=""><%= prompt %></option>
+      <% end %>
+      <% options.each do |option| %>
+        <% if option.is_a?(Array) %>
+          <% text, value = option %>
+          <option value="<%= value %>" <%= 'selected' if html_options[:value] == value %>><%= text %></option>
+        <% else %>
+          <option value="<%= option %>" <%= 'selected' if html_options[:value] == option %>><%= option %></option>
+        <% end %>
+      <% end %>
+    </select>
   <% end %>
 
   <% if show_errors && has_errors %>

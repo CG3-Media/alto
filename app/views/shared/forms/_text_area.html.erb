@@ -13,7 +13,6 @@
   show_errors ||= true
   model ||= nil  # For error checking
   helper_text ||= nil
-
   # Error checking
   has_errors = model&.errors&.[](field_name)&.any? || false
 
@@ -53,8 +52,11 @@
 
   <% if form && field_name %>
     <%= form.text_area field_name, textarea_options %>
-  <% else %>
+  <% elsif field_name %>
     <%= text_area_tag field_name, nil, textarea_options %>
+  <% else %>
+    <!-- No field_name = no form submission, just styling -->
+    <textarea <%= textarea_options.reject { |k, v| (k == :disabled && !v) || (k == :required && !v) }.map { |k, v| "#{k}=\"#{v}\"" }.join(' ').html_safe %>><%= html_options[:value] %></textarea>
   <% end %>
 
   <% if helper_text.present? %>

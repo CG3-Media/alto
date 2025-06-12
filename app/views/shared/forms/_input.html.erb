@@ -13,7 +13,6 @@
   show_errors ||= true
   model ||= nil  # For error checking
   helper_text ||= nil
-
   # Error checking
   has_errors = model&.errors&.[](field_name)&.any? || false
 
@@ -52,8 +51,11 @@
 
   <% if form && field_name %>
     <%= form.send("#{input_type}_field", field_name, input_options) %>
-  <% else %>
+  <% elsif field_name %>
     <%= send("#{input_type}_field_tag", field_name, nil, input_options) %>
+  <% else %>
+    <!-- No field_name = no form submission, just styling -->
+    <input type="<%= input_type %>" <%= input_options.reject { |k, v| (k == :disabled && !v) || (k == :required && !v) }.map { |k, v| "#{k}=\"#{v}\"" }.join(' ').html_safe %>>
   <% end %>
 
   <% if show_errors && has_errors %>

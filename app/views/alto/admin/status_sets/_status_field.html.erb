@@ -1,12 +1,12 @@
-<div data-nested-field data-nested-index="<%= form.index %>" class="status-field border border-gray-200 rounded-lg p-4 bg-gray-50">
+<div rf-nest-item class="status-field border border-gray-200 rounded-lg p-4 bg-gray-50">
   <%= form.hidden_field :_destroy, value: false %>
   <%= form.hidden_field :position %>
 
   <div class="flex justify-between items-start mb-3">
-    <h4 class="text-sm font-medium text-gray-700">
+    <h4 data-nested-title="Status {index}" class="text-sm font-medium text-gray-700">
       Status <%= form.object.position.to_i + 1 if form.object.position.present? %>
     </h4>
-    <button type="button" data-remove-nested class="text-red-600 hover:text-red-800 text-sm">
+    <button type="button" rf-nest-remove class="text-red-600 hover:text-red-800 text-sm">
       ✕ Remove
     </button>
   </div>
@@ -20,8 +20,7 @@
       <%= form.text_field :name,
           placeholder: "e.g., Open, In Progress, Complete",
           class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-          required: true,
-          data: { nested_field: "name" } %>
+          required: true %>
     </div>
 
     <!-- Status Slug -->
@@ -53,11 +52,8 @@
             ['🩷 Pink', 'pink']
           ], form.object.color),
           { prompt: 'Select a color' },
-          { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-            data: { nested_field: "color" } } %>
+          { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
     </div>
-
-
   </div>
 
   <!-- Color Preview -->

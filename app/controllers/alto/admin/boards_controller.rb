@@ -18,6 +18,8 @@ module Alto
 
       def new
         @board = ::Alto::Board.new
+        # Build one initial field so form shows at least one field by default
+        @board.fields.build(position: 0)
       end
 
       def create
@@ -26,6 +28,8 @@ module Alto
         if @board.save
           redirect_to admin_boards_path, notice: "Board was successfully created."
         else
+          # Ensure at least one field is present for re-rendering the form
+          @board.fields.build(position: 0) if @board.fields.empty?
           render :new, status: :unprocessable_entity
         end
       end
@@ -37,6 +41,8 @@ module Alto
         if @board.update(board_params)
           redirect_to admin_boards_path, notice: "Board was successfully updated."
         else
+          # Ensure at least one field is present for re-rendering the form
+          @board.fields.build(position: 0) if @board.fields.empty?
           render :edit, status: :unprocessable_entity
         end
       end

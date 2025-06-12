@@ -1,629 +1,796 @@
 /**
- * ReactiveRailsForm (RRF) - Minimal reactive forms for Rails
- * Provides scoped reactive behavior for form fields with automatic cleanup
+ * ReactiveRailsForm (RRF) v2.0 - Modern reactive forms for Rails
+ *
+ * Features:
+ * - rf-* attributes for cleaner syntax
+ * - Auto-initialization (no manual setup needed)
+ * - Custom events for field changes, additions, and removals
+ * - Template-free nested forms (clones first rendered item)
+ * - Full Rails nested attributes support with auto field naming
+ * - Efficient event delegation and memory management
  *
  * Usage:
- *   // Auto initialization
- *   <div data-rrf>...</div>
- *
- *   // Manual initialization with handlers
- *   RRF.init('#my-form', {
- *     onFieldChange: ({ fieldName, field, fieldContainer, meta }) => {
- *       // Handle field changes
- *     },
- *     onFieldAdd: ({ fieldContainer, meta }) => {
- *       // Handle new fields
- *     }
- *   })
+ *   <div rf rf-model="project">
+ *     <select rf-key="category">...</select>
+ *     <div rf-show-if="category=engineering">...</div>
+ *     <div rf-nest-for="tasks">
+ *       <%= f.fields_for :tasks do |tf| %>
+ *         <div rf-nest-item>...</div>
+ *       <% end %>
+ *     </div>
+ *     <button rf-nest-add="tasks">Add Task</button>
+ *   </div>
  */
+
+// Constants for maintainability
+const RF_CONSTANTS = {
+  SELECTORS: {
+    CONTAINER: '[rf]:not([rf-initialized])',
+    REACTIVE_FIELD: '[rf-key]',
+    CONDITIONAL: '[rf-show-if]',
+    NEST_CONTAINER: '[rf-nest-for]',
+    NEST_ITEM: '[rf-nest-item]',
+    NEST_REMOVE: '[rf-nest-remove]',
+    FORM_FIELDS: 'input, select, textarea',
+    HIDDEN_INPUTS: 'input[type="hidden"][name*="_data"]'
+  },
+  FIELD_CLASSES: {
+    LABEL: '.field-label',
+    TYPE: '.field-type',
+    REQUIRED: '.field-required',
+    PLACEHOLDER: '.field-placeholder',
+    OPTIONS_SELECT: '.field-options-select',
+    OPTIONS_MULTISELECT: '.field-options-multiselect'
+  },
+  EVENTS: {
+    FIELD_CHANGE: 'rf:field:change',
+    FIELD_ADD: 'rf:field:add',
+    FIELD_REMOVE: 'rf:field:remove',
+    UPDATED: 'rf:updated',
+    SERIALIZE: 'rf:serialize'
+  },
+  FIELD_TYPES: {
+    HIDDEN: 'hidden',
+    CHECKBOX: 'checkbox',
+    RADIO: 'radio',
+    TEXT: 'text',
+    TEXTAREA: 'textarea'
+  }
+}
+
 const ReactiveRailsForm = {
-      // Manual initialization API (for custom handlers)
-  init(selector, options = {}) {
-    const container = typeof selector === 'string' ? document.querySelector(selector) : selector
-    if (!container) {
-      throw new Error(`ReactiveRailsForm: Could not find container with selector "${selector}"`)
-    }
+  // Global state management
+  instances: new Map(),
+  nextInstanceId: 1,
 
-    const instance = this.create(container, options)
+  // Auto-initialize all rf containers
+  init() {
+    document.querySelectorAll(RF_CONSTANTS.SELECTORS.CONTAINER).forEach(container => {
+      this.createInstance(container)
+    })
+  },
+
+  // Create a new RRF instance for a container
+  createInstance(container) {
+    const instanceId = this.nextInstanceId++
+    const instance = new RFInstance(container, instanceId)
+
+    this.instances.set(instanceId, instance)
+    container.setAttribute('rf-initialized', instanceId)
+    container._rfInstance = instance
+
     instance.init()
-
-    // Store instance on container for access
-    container._rrf = instance
-    container._rrfManualInit = true // Mark as manually initialized
-
-    if (options.debug || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-      const debugInstance = instance.enableDebug()
-      container._rrf = debugInstance
-    }
-
     return instance
   },
 
-  // Factory function to create scoped instances
-  create(container, options = {}) {
-    if (!container) {
-      throw new Error('ReactiveRailsForm requires a container element')
-    }
-
-    const subs = new Map()
-    const cleanup = new WeakMap()
-    const listeners = new Map()
-    let debug = false
-    let fieldCounter = 1000
-
-    // Event handlers from options
-    const handlers = {
-      onFieldChange: options.onFieldChange || null,
-      onFieldAdd: options.onFieldAdd || null,
-      onFieldRemove: options.onFieldRemove || null,
-      ...options
-    }
-
-    // Enhanced error handling
-    function safeExecute(context, fn, fallback = null) {
-      try {
-        return fn()
-      } catch (error) {
-        logError(context, error)
-        return fallback
-      }
-    }
-
-    function logError(context, error) {
-      if (debug) {
-        console.error(`RRF[${container.id || 'unnamed'}][${context}]:`, error)
-      }
-    }
-
-    // Enhanced signal with better memory management
-    function signal(initial) {
-      let v = initial
-      const get = () => v
-      get.set = nv => {
-        safeExecute('signal.set', () => {
-          if (v !== nv) {
-            v = nv
-            const subscribers = subs.get(get)
-            if (subscribers) {
-              Array.from(subscribers).forEach(fn => {
-                safeExecute('subscriber', () => fn(v))
-              })
-            }
-          }
-        })
-      }
-
-      get.cleanup = () => {
-        if (subs.has(get)) {
-          subs.delete(get)
-        }
-      }
-
-      return get
-    }
-
-    function watch(get, fn) {
-      safeExecute('watch.setup', () => {
-        if (!subs.has(get)) subs.set(get, new Set())
-        subs.get(get).add(fn)
-        safeExecute('watch.initial', () => fn(get()))
-      })
-    }
-
-    // Enhanced state management
-    const formState = signal({})
-    const computedCache = new Map()
-    const nestedCounters = new Map() // Track indices for nested attributes
-
-    function computed(fn) {
-      if (!computedCache.has(fn)) {
-        const computedSignal = signal(null)
-        watch(formState, () => {
-          const newValue = safeExecute('computed', fn)
-          computedSignal.set(newValue)
-        })
-        computedCache.set(fn, computedSignal)
-      }
-      return computedCache.get(fn)
-    }
-
-    // Memory management helpers
-    function addListener(element, event, handler, key) {
-      if (!listeners.has(key)) {
-        listeners.set(key, [])
-      }
-
-      const wrappedHandler = (e) => safeExecute(`listener.${event}`, () => handler(e))
-      element.addEventListener(event, wrappedHandler)
-      listeners.get(key).push({ element, event, handler: wrappedHandler })
-    }
-
-    function removeListeners(key) {
-      if (listeners.has(key)) {
-        listeners.get(key).forEach(({ element, event, handler }) => {
-          safeExecute('removeListener', () => {
-            element.removeEventListener(event, handler)
-          })
-        })
-        listeners.delete(key)
-      }
-    }
-
-    function cleanupElement(element) {
-      safeExecute('cleanup', () => {
-        const reactiveKey = element.dataset.reactive
-        if (reactiveKey) {
-          const state = { ...formState() }
-          delete state[reactiveKey]
-          formState.set(state)
-          removeListeners(reactiveKey)
-        }
-
-        if (cleanup.has(element)) {
-          cleanup.get(element)()
-          cleanup.delete(element)
-        }
-      })
-    }
-
-    // Helper to register a reactive field with consistent setup
-    function registerField(field, key, element = field) {
-      safeExecute('registerField', () => {
-        // Set initial state
-        const state = { ...formState() }
-        state[key] = field.value
-        formState.set(state)
-
-        // Add change listener if not already present
-        if (!listeners.has(key)) {
-          addListener(field, 'change', () => {
-            const newState = { ...formState() }
-            newState[key] = field.value
-            formState.set(newState)
-          }, key)
-        }
-
-        // Store cleanup function if element provided
-        if (element && element !== field) {
-          cleanup.set(element, () => {
-            removeListeners(key)
-          })
-        }
-      })
-    }
-
-    // Auto-generate initial state and setup reactive fields
-    function initReactives() {
-      container.querySelectorAll('[data-reactive]').forEach(field => {
-        const key = field.dataset.reactive
-        if (key) {
-          registerField(field, key)
-        }
-      })
-
-      // Watch for state changes and trigger conditional display
-      watch(formState, (state) => {
-        updateVisibility(state)
-      })
-
-      // Trigger initial display state
-      updateVisibility(formState())
-    }
-
-    function updateVisibility(state) {
-      container.querySelectorAll('[data-show-when]').forEach(element => {
-        safeExecute('updateVisibility', () => {
-          const condition = element.dataset.showWhen
-          let shouldShow = false
-
-          const conditions = condition.split(',')
-          for (const cond of conditions) {
-            const [field, value] = cond.trim().split('=')
-            if (state[field] === value) {
-              shouldShow = true
-              break
-            }
-          }
-
-          // Smooth visibility changes
-          if (shouldShow && element.style.display === 'none') {
-            element.style.display = ''
-            element.style.opacity = '0'
-            requestAnimationFrame(() => {
-              element.style.transition = 'opacity 150ms ease'
-              element.style.opacity = '1'
-            })
-          } else if (!shouldShow && element.style.display !== 'none') {
-            element.style.transition = 'opacity 150ms ease'
-            element.style.opacity = '0'
-            setTimeout(() => {
-              if (element.style.opacity === '0') {
-                element.style.display = 'none'
-              }
-            }, 150)
-          }
-        })
-      })
-    }
-
-    // Setup dynamic field arrays
-    function initArrays() {
-      container.querySelectorAll('[data-add-field]').forEach(button => {
-        const arrayName = button.dataset.addField
-        const arrayContainer = container.querySelector(`[data-field-array="${arrayName}"]`)
-        const template = container.querySelector('#field-template') || document.getElementById('field-template')
-
-        if (!arrayContainer || !template) {
-          logError('initArrays', new Error(`Missing container or template for ${arrayName}`))
-          return
-        }
-
-        addListener(button, 'click', () => {
-          safeExecute('addField', () => {
-            const newField = template.content.cloneNode(true)
-            const fieldItem = newField.querySelector('.field-item')
-
-            const uniqueId = `field-type-${fieldCounter++}`
-            const selectField = newField.querySelector('select[data-reactive]')
-
-            if (!selectField) {
-              logError('addField', new Error('No select field found in template'))
-              return
-            }
-
-            selectField.dataset.reactive = uniqueId
-
-            // Update conditional show-when attributes
-            newField.querySelectorAll('[data-show-when]').forEach(conditionalElement => {
-              const currentCondition = conditionalElement.dataset.showWhen
-              const updatedCondition = currentCondition.replace(/field-type-new/g, uniqueId)
-              conditionalElement.dataset.showWhen = updatedCondition
-            })
-
-            arrayContainer.appendChild(newField)
-
-            // Register the new field with cleanup
-            registerField(selectField, uniqueId, fieldItem)
-
-            const removeBtn = fieldItem.querySelector('[data-remove-field]')
-            if (removeBtn) {
-              addListener(removeBtn, 'click', () => {
-                cleanupElement(fieldItem)
-                fieldItem.remove()
-              }, `${uniqueId}-remove`)
-            }
-          })
-        }, `add-${arrayName}`)
-      })
-
-      // Scoped event delegation for remove buttons
-      addListener(container, 'click', (e) => {
-        if (e.target.closest('[data-remove-field]')) {
-          const fieldItem = e.target.closest('.field-item')
-          if (fieldItem) {
-            cleanupElement(fieldItem)
-            fieldItem.remove()
-          }
-        }
-      }, 'scoped-remove')
-    }
-
-        // Rails nested attributes support
-    function initNestedAttributes() {
-      container.querySelectorAll('[data-nested-attributes]').forEach(arrayContainer => {
-        const associationName = arrayContainer.dataset.nestedAttributes
-        const addButton = container.querySelector(`[data-add-nested="${associationName}"]`)
-        // Look for template inside container first, then document-wide
-        let template = container.querySelector(`#${associationName}-template`) ||
-                      container.querySelector('[data-nested-template]')
-
-        if (!template) {
-          template = document.querySelector(`#${associationName}-template`) ||
-                    document.querySelector('[data-nested-template]')
-        }
-
-        if (!addButton || !template) {
-          logError('initNestedAttributes', new Error(`Missing button or template for ${associationName}`))
-          return
-        }
-
-        // Initialize counter from existing fields and set up their reactivity
-        const existingFields = arrayContainer.querySelectorAll('[data-nested-field]')
-        let counter = existingFields.length
-
-        // Set up reactivity for existing server-rendered fields
-        existingFields.forEach((fieldContainer, index) => {
-          if (!fieldContainer.dataset.nestedIndex) {
-            fieldContainer.dataset.nestedIndex = index
-          }
-          setupNestedFieldReactivity(fieldContainer, associationName, parseInt(fieldContainer.dataset.nestedIndex))
-        })
-
-        nestedCounters.set(associationName, counter)
-
-        addListener(addButton, 'click', () => {
-          safeExecute('addNestedField', () => {
-            const currentCounter = nestedCounters.get(associationName)
-            const newField = createNestedField(template, associationName, currentCounter)
-
-            if (newField) {
-              arrayContainer.appendChild(newField)
-              nestedCounters.set(associationName, currentCounter + 1)
-
-              // Setup reactive fields in the new nested field
-              setupNestedFieldReactivity(newField, associationName, currentCounter)
-            }
-          })
-        }, `add-nested-${associationName}`)
-      })
-
-      // Handle removal of nested fields
-      addListener(container, 'click', (e) => {
-        if (e.target.closest('[data-remove-nested]')) {
-          const fieldContainer = e.target.closest('[data-nested-field]')
-          if (fieldContainer) {
-            handleNestedFieldRemoval(fieldContainer)
-          }
-        }
-      }, 'remove-nested')
-    }
-
-    function createNestedField(template, associationName, index) {
-      const templateContent = template.content.cloneNode(true)
-      const fieldContainer = templateContent.querySelector('[data-nested-field]')
-
-      if (!fieldContainer) {
-        logError('createNestedField', new Error('Template must contain element with data-nested-field'))
-        return null
-      }
-
-      // Set the nested index
-      fieldContainer.dataset.nestedIndex = index
-
-      // Replace field names for Rails nested attributes
-      const fields = fieldContainer.querySelectorAll('input, select, textarea')
-      fields.forEach(field => {
-        const fieldName = field.dataset.nestedField
-        if (fieldName) {
-          field.name = `${container.dataset.nestedModel || 'model'}[${associationName}_attributes][${index}][${fieldName}]`
-          field.id = `${container.dataset.nestedModel || 'model'}_${associationName}_attributes_${index}_${fieldName}`
-        }
-      })
-
-      // Update labels to match new field IDs
-      fieldContainer.querySelectorAll('label[for]').forEach(label => {
-        const forAttr = label.getAttribute('for')
-        if (forAttr && forAttr.includes('TEMPLATE')) {
-          label.setAttribute('for', forAttr.replace(/TEMPLATE_\w+/g,
-            `${container.dataset.nestedModel || 'model'}_${associationName}_attributes_${index}_${label.dataset.nestedField || 'field'}`))
-        }
-      })
-
-      // Set computed values (like position)
-      const positionField = fieldContainer.querySelector('[data-nested-field="position"]')
-      if (positionField) {
-        positionField.value = index
-      }
-
-      // Update dynamic content (like titles)
-      const titleElement = fieldContainer.querySelector('[data-nested-title]')
-      if (titleElement) {
-        const titleTemplate = titleElement.dataset.nestedTitle
-        titleElement.textContent = titleTemplate.replace('{index}', index + 1)
-      }
-
-      return fieldContainer
-    }
-
-        // Helper to trigger field change handlers
-    function triggerFieldChangeHandler(field, fieldContainer, associationName, index) {
-      if (handlers.onFieldChange) {
-        safeExecute('fieldChangeHandler', () => {
-          // Extract field name from data attribute or name attribute
-          let fieldName = field.dataset.nestedField
-          if (!fieldName && field.name) {
-            // Extract from Rails field name pattern: model[association_attributes][index][field_name]
-            const match = field.name.match(/\[([^\]]+)\]$/)
-            fieldName = match ? match[1] : null
-          }
-
-          if (fieldName) {
-            handlers.onFieldChange({
-              fieldName,
-              field,
-              fieldContainer,
-              meta: {
-                associationName,
-                index,
-                container
-              }
-            })
-          }
-        })
-      }
-    }
-
-    function setupNestedFieldReactivity(fieldContainer, associationName, index) {
-      // Setup reactive fields within the nested field
-      fieldContainer.querySelectorAll('[data-reactive]').forEach(field => {
-        const reactiveKey = `${associationName}_${index}_${field.dataset.reactive}`
-        registerField(field, reactiveKey, fieldContainer)
-      })
-
-      // Auto-detect and setup event handlers for all input fields
-      const formFields = fieldContainer.querySelectorAll('input, select, textarea')
-      formFields.forEach(field => {
-        // Skip hidden fields and readonly fields unless they have data attributes
-        if (field.type === 'hidden' && !field.dataset.nestedField) return
-        if (field.readOnly && !field.dataset.nestedField) return
-
-        const fieldName = field.dataset.nestedField ||
-                         (field.name ? field.name.match(/\[([^\]]+)\]$/)?.[1] : null)
-
-        if (fieldName) {
-          // Setup change listener that triggers the handler
-          const eventType = field.type === 'text' || field.tagName === 'TEXTAREA' ? 'input' : 'change'
-
-          addListener(field, eventType, () => {
-            triggerFieldChangeHandler(field, fieldContainer, associationName, index)
-          }, `${fieldName}-${associationName}-${index}`)
-
-          // Trigger initial handler call for existing values
-          if (field.value) {
-            triggerFieldChangeHandler(field, fieldContainer, associationName, index)
-          }
-        }
-      })
-
-      // Trigger onFieldAdd handler if provided
-      if (handlers.onFieldAdd) {
-        safeExecute('fieldAddHandler', () => {
-          handlers.onFieldAdd({
-            fieldContainer,
-            meta: {
-              associationName,
-              index,
-              container
-            }
-          })
-        })
-      }
-    }
-
-    function handleNestedFieldRemoval(fieldContainer) {
-      safeExecute('handleNestedFieldRemoval', () => {
-        const destroyField = fieldContainer.querySelector('input[name*="_destroy"]')
-
-        // Trigger onFieldRemove handler if provided
-        if (handlers.onFieldRemove) {
-          handlers.onFieldRemove({
-            fieldContainer,
-            isDestroy: !!destroyField,
-            meta: {
-              container
-            }
-          })
-        }
-
-        if (destroyField) {
-          // Existing record - mark for destruction
-          destroyField.value = '1'
-
-          // Disable required fields to prevent validation issues
-          const requiredFields = fieldContainer.querySelectorAll('[required]')
-          requiredFields.forEach(field => {
-            field.removeAttribute('required')
-            field.disabled = true
-          })
-
-          // Hide the field with smooth transition
-          fieldContainer.style.transition = 'opacity 300ms ease'
-          fieldContainer.style.opacity = '0'
-          setTimeout(() => {
-            fieldContainer.style.display = 'none'
-          }, 300)
-        } else {
-          // New record - remove from DOM
-          cleanupElement(fieldContainer)
-          fieldContainer.remove()
-        }
-      })
-    }
-
-    // Instance cleanup
-    function destroy() {
-      formState.cleanup()
-      computedCache.forEach(signal => signal.cleanup())
-      listeners.clear()
-      subs.clear()
-      computedCache.clear()
-    }
-
-    // Initialize the instance
-    function init() {
-      safeExecute('init', () => {
-        initReactives()
-        initArrays()
-        initNestedAttributes()
-      })
-    }
-
-    // Development helper
-    function enableDebug() {
-      debug = true
-      console.log(`RRF debug mode enabled for container: ${container.id || 'unnamed'}`)
-      return {
-        container: container,
-        state: () => formState(),
-        listeners: () => listeners.size,
-        subscriptions: () => subs.size,
-        cleanup: () => cleanup
-      }
-    }
-
-    // Return the instance
-    return {
-      init,
-      destroy,
-      enableDebug,
-      cleanup: cleanupElement,
-      state: formState,
-      computed
+  // Get instance for a container
+  getInstance(container) {
+    const instanceId = container.getAttribute('rf-initialized')
+    return instanceId ? this.instances.get(parseInt(instanceId)) : null
+  },
+
+  // Clean up instance
+  destroyInstance(container) {
+    const instance = this.getInstance(container)
+    if (instance) {
+      instance.destroy()
+      this.instances.delete(instance.id)
+      container.removeAttribute('rf-initialized')
+      delete container._rfInstance
     }
   }
 }
 
-// Auto-initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  autoInitializeRRF()
+// Simple Signals system for predictable reactive updates
+class RFSignals {
+  constructor() {
+    this.signals = new Map()
+    this.effects = new Set()
+    this.updateScheduled = false
+  }
+
+  // Create or get a signal
+  signal(key, initialValue) {
+    if (!this.signals.has(key)) {
+      this.signals.set(key, {
+        value: initialValue,
+        subscribers: new Set()
+      })
+    }
+    return {
+      get: () => this.signals.get(key).value,
+      set: (newValue) => this.setSignal(key, newValue),
+      subscribe: (fn) => this.subscribe(key, fn)
+    }
+  }
+
+  // Set signal value and notify subscribers
+  setSignal(key, newValue) {
+    const signal = this.signals.get(key)
+    if (!signal || signal.value === newValue) return
+
+    signal.value = newValue
+    this.scheduleUpdate(() => {
+      signal.subscribers.forEach(fn => {
+        try {
+          fn(newValue, signal.value)
+        } catch (error) {
+          console.error('Signal subscriber error:', error)
+        }
+      })
+    })
+  }
+
+  // Subscribe to signal changes
+  subscribe(key, fn) {
+    const signal = this.signals.get(key)
+    if (signal) {
+      signal.subscribers.add(fn)
+    }
+    return () => signal?.subscribers.delete(fn)
+  }
+
+  // Batch updates using requestAnimationFrame
+  scheduleUpdate(fn) {
+    this.effects.add(fn)
+
+    if (!this.updateScheduled) {
+      this.updateScheduled = true
+      requestAnimationFrame(() => {
+        const effectsToRun = Array.from(this.effects)
+        this.effects.clear()
+        this.updateScheduled = false
+        effectsToRun.forEach(effect => effect())
+      })
+    }
+  }
+
+  // Get current value without subscribing
+  peek(key) {
+    return this.signals.get(key)?.value
+  }
+
+  // Debug helper
+  debug() {
+    console.log('🎯 RF Signals State:', Object.fromEntries(
+      Array.from(this.signals.entries()).map(([key, signal]) => [key, signal.value])
+    ))
+  }
+}
+
+class RFInstance {
+  constructor(container, id) {
+    this.container = container
+    this.id = id
+    this.listeners = []
+    this.nestedCounters = new Map()
+    this.modelName = container.getAttribute('rf-model') || 'model'
+    this.signals = new RFSignals()
+  }
+
+  init() {
+    this.setupReactiveFields()
+    this.setupConditionalVisibility()
+    this.setupNestedForms()
+    this.setupAutoSerialization()
+    this.logDebug('RRF instance initialized', { id: this.id, model: this.modelName })
+  }
+
+  destroy() {
+    this.listeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler)
+    })
+    this.listeners = []
+    this.signals.signals.clear()
+    this.signals.effects.clear()
+    this.nestedCounters.clear()
+  }
+
+  // HELPER METHODS (DRY principle)
+
+  // Add event listener with cleanup tracking
+  addListener(element, event, handler, context = 'unknown') {
+    const wrappedHandler = (e) => {
+      try {
+        handler(e)
+      } catch (error) {
+        this.logError(`Event handler error [${context}]`, error)
+      }
+    }
+
+    element.addEventListener(event, wrappedHandler)
+    this.listeners.push({ element, event, handler: wrappedHandler, context })
+  }
+
+  // Unified field detection helper - finds visible fields when multiple exist
+  getFieldElements(item) {
+    return {
+      label: item.querySelector(`input${RF_CONSTANTS.FIELD_CLASSES.LABEL}, textarea${RF_CONSTANTS.FIELD_CLASSES.LABEL}`),
+      type: item.querySelector(`select${RF_CONSTANTS.FIELD_CLASSES.TYPE}`),
+      required: item.querySelector(`input${RF_CONSTANTS.FIELD_CLASSES.REQUIRED}`),
+      placeholder: this.findVisibleField(item, `input${RF_CONSTANTS.FIELD_CLASSES.PLACEHOLDER}, textarea${RF_CONSTANTS.FIELD_CLASSES.PLACEHOLDER}`),
+      options: this.findVisibleField(item, `textarea${RF_CONSTANTS.FIELD_CLASSES.OPTIONS_SELECT}, textarea${RF_CONSTANTS.FIELD_CLASSES.OPTIONS_MULTISELECT}`)
+    }
+  }
+
+  // Find the field whose container is actually visible (handles multiple conditional fields)
+  findVisibleField(item, selector) {
+    const fields = item.querySelectorAll(selector)
+    for (const field of fields) {
+      if (this.isFieldContainerVisible(field)) {
+        return field
+      }
+    }
+    return null
+  }
+
+  // Unified visibility check
+  isVisible(element) {
+    return element?.offsetParent !== null && getComputedStyle(element).display !== 'none'
+  }
+
+  // Get appropriate event type for field
+  getFieldEventType(field) {
+    const { TEXT, TEXTAREA } = RF_CONSTANTS.FIELD_TYPES
+    return (field.type === TEXT || field.type === TEXTAREA || field.tagName === 'TEXTAREA') ? 'input' : 'change'
+  }
+
+  // Unified event dispatching
+  dispatchEvent(eventType, detail) {
+    this.container.dispatchEvent(new CustomEvent(eventType, {
+      bubbles: true,
+      detail: { ...detail, instance: this }
+    }))
+  }
+
+  // REACTIVE FIELDS SETUP
+
+  setupReactiveFields() {
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.REACTIVE_FIELD).forEach(field => {
+      this.setupReactiveField(field)
+    })
+  }
+
+  setupReactiveField(field) {
+    const key = field.getAttribute('rf-key')
+    if (!key) return
+
+    const signal = this.createReactiveState(key, field.value)
+    const eventType = this.getFieldEventType(field)
+
+    this.addListener(field, eventType, () => {
+      const newValue = field.value
+      signal.set(newValue)
+      this.dispatchEvent(RF_CONSTANTS.EVENTS.FIELD_CHANGE, { key, value: newValue, field })
+      this.dispatchEvent(RF_CONSTANTS.EVENTS.UPDATED, {
+        action: 'field_changed',
+        data: { key, value: newValue, field },
+        serializedData: this.previewSerialization()
+      })
+      this.previewSerialization()
+    }, `reactive-${key}`)
+
+    this.logDebug(`🎯 Reactive field registered: ${key}`, { value: field.value })
+  }
+
+  setupReactiveFieldsInElement(element) {
+    element.querySelectorAll(RF_CONSTANTS.SELECTORS.REACTIVE_FIELD).forEach(field => {
+      this.setupReactiveField(field)
+    })
+  }
+
+  // Create reactive state with automatic conditional visibility updates
+  createReactiveState(key, initialValue) {
+    const signal = this.signals.signal(key, initialValue)
+    signal.subscribe((newValue, oldValue) => {
+      this.logDebug(`🎯 Signal ${key} changed: ${oldValue} → ${newValue}`)
+      this.signals.scheduleUpdate(() => {
+        this.updateConditionalVisibility()
+        this.signals.debug()
+      })
+    })
+    return signal
+  }
+
+  // CONDITIONAL VISIBILITY
+
+  setupConditionalVisibility() {
+    this.updateConditionalVisibility()
+  }
+
+  updateConditionalVisibility() {
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.CONDITIONAL).forEach(element => {
+      const condition = element.getAttribute('rf-show-if')
+      const shouldShow = this.evaluateCondition(condition)
+
+      if (shouldShow !== (element.style.display !== 'none')) {
+        shouldShow ? this.showElement(element) : this.hideElement(element)
+      }
+    })
+  }
+
+  evaluateCondition(condition) {
+    return condition.split(',')
+      .map(c => c.trim())
+      .some(cond => {
+        const [key, value] = cond.split('=').map(s => s.trim())
+        return this.signals.peek(key) === value
+      })
+  }
+
+  showElement(element) {
+    element.style.display = ''
+    element.style.opacity = ''
+    element.style.transition = ''
+  }
+
+  hideElement(element) {
+    element.style.display = 'none'
+    element.style.opacity = ''
+    element.style.transition = ''
+  }
+
+  // NESTED FORMS
+
+  setupNestedForms() {
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_CONTAINER).forEach(nestedContainer => {
+      const groupName = nestedContainer.getAttribute('rf-nest-for')
+      if (!groupName) return
+
+      this.initNestedGroup(nestedContainer, groupName)
+      this.setupNestedAddButtons(groupName, nestedContainer)
+      this.setupNestedRemoveButtons(nestedContainer, groupName)
+    })
+  }
+
+  initNestedGroup(container, groupName) {
+    const existingItems = container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_ITEM)
+    this.nestedCounters.set(groupName, existingItems.length)
+    this.logDebug(`Nested form setup: ${groupName}`, { count: existingItems.length })
+  }
+
+  setupNestedAddButtons(groupName, container) {
+    this.container.querySelectorAll(`[rf-nest-add="${groupName}"]`).forEach(addBtn => {
+      this.addListener(addBtn, 'click', (e) => {
+        e.preventDefault()
+        this.addNestedItem(container, groupName)
+      }, `nest-add-${groupName}`)
+    })
+  }
+
+  setupNestedRemoveButtons(container, groupName) {
+    this.addListener(container, 'click', (e) => {
+      const removeBtn = e.target.closest(RF_CONSTANTS.SELECTORS.NEST_REMOVE)
+      if (removeBtn) {
+        e.preventDefault()
+        const item = removeBtn.closest(RF_CONSTANTS.SELECTORS.NEST_ITEM)
+        if (item) this.removeNestedItem(item, groupName)
+      }
+    }, `nest-remove-${groupName}`)
+  }
+
+  addNestedItem(container, groupName) {
+    const template = container.querySelector(RF_CONSTANTS.SELECTORS.NEST_ITEM)
+    if (!template) {
+      this.logError('No template item found for nested form', { groupName })
+      return
+    }
+
+    const currentIndex = this.nestedCounters.get(groupName)
+    const newItem = template.cloneNode(true)
+
+    this.processNewNestedItem(newItem, groupName, currentIndex)
+    container.appendChild(newItem)
+    this.nestedCounters.set(groupName, currentIndex + 1)
+
+    this.finalizeNestedItem(newItem, groupName, currentIndex)
+  }
+
+  processNewNestedItem(newItem, groupName, index) {
+    this.updateNestedFieldNames(newItem, groupName, index)
+    this.clearFieldValues(newItem)
+    this.logDebug(`🔄 Keys updated for ${groupName}[${index}]`)
+  }
+
+  finalizeNestedItem(newItem, groupName, index) {
+    this.setupReactiveFieldsInElement(newItem)
+    this.updateConditionalVisibility()
+
+    this.dispatchEvent(RF_CONSTANTS.EVENTS.FIELD_ADD, { groupName, item: newItem, index })
+    this.dispatchEvent(RF_CONSTANTS.EVENTS.UPDATED, {
+      action: 'field_added',
+      data: { groupName, item: newItem, index },
+      serializedData: this.previewSerialization()
+    })
+
+    this.previewSerialization()
+    this.logDebug(`Added nested item: ${groupName}[${index}]`)
+  }
+
+  removeNestedItem(item, groupName) {
+    const destroyField = item.querySelector('input[name*="_destroy"]')
+    const isDestroy = !!destroyField
+
+    if (destroyField) {
+      destroyField.value = '1'
+      this.hideElement(item)
+      this.disableRequiredFields(item)
+      this.logDebug(`Marked for destruction: ${groupName}`)
+    } else {
+      item.remove()
+      this.logDebug(`Removed from DOM: ${groupName}`)
+    }
+
+    this.dispatchEvent(RF_CONSTANTS.EVENTS.FIELD_REMOVE, { groupName, item, isDestroy })
+    this.dispatchEvent(RF_CONSTANTS.EVENTS.UPDATED, {
+      action: 'field_removed',
+      data: { groupName, item, isDestroy },
+      serializedData: this.previewSerialization()
+    })
+    this.previewSerialization()
+  }
+
+  // FIELD MANIPULATION
+
+  updateNestedFieldNames(element, groupName, index) {
+    this.updateFormFieldNames(element, groupName, index)
+    this.updateReactiveFieldKeys(element, index)
+    this.updateConditionalAttributes(element, index)
+    this.updateFieldLabels(element, groupName, index)
+  }
+
+  updateFormFieldNames(element, groupName, index) {
+    element.querySelectorAll(RF_CONSTANTS.SELECTORS.FORM_FIELDS).forEach(field => {
+      if (field.name) {
+        field.name = field.name.replace(
+          new RegExp(`\\[${groupName}_attributes\\]\\[\\d+\\]`),
+          `[${groupName}_attributes][${index}]`
+        )
+      }
+      if (field.id) {
+        field.id = field.id.replace(
+          new RegExp(`_${groupName}_attributes_\\d+_`),
+          `_${groupName}_attributes_${index}_`
+        )
+      }
+    })
+  }
+
+  updateReactiveFieldKeys(element, index) {
+    element.querySelectorAll(RF_CONSTANTS.SELECTORS.REACTIVE_FIELD).forEach(field => {
+      const currentKey = field.getAttribute('rf-key')
+      if (currentKey?.startsWith('field-type-')) {
+        field.setAttribute('rf-key', `field-type-new-${index}`)
+      }
+    })
+  }
+
+  updateConditionalAttributes(element, index) {
+    element.querySelectorAll(RF_CONSTANTS.SELECTORS.CONDITIONAL).forEach(conditionalElement => {
+      const currentCondition = conditionalElement.getAttribute('rf-show-if')
+      const updatedCondition = currentCondition.replace(/field-type-[^=]+=/g, `field-type-new-${index}=`)
+      conditionalElement.setAttribute('rf-show-if', updatedCondition)
+      this.logDebug(`Updated rf-show-if: ${currentCondition} → ${updatedCondition}`)
+    })
+  }
+
+  updateFieldLabels(element, groupName, index) {
+    element.querySelectorAll('label[for]').forEach(label => {
+      const currentFor = label.getAttribute('for')
+      if (currentFor) {
+        label.setAttribute('for', currentFor.replace(
+          new RegExp(`_${groupName}_attributes_\\d+_`),
+          `_${groupName}_attributes_${index}_`
+        ))
+      }
+    })
+  }
+
+  clearFieldValues(element) {
+    element.querySelectorAll(RF_CONSTANTS.SELECTORS.FORM_FIELDS).forEach(field => {
+      if (this.isDestroyField(field)) {
+        field.value = 'false'
+      } else if (field.type !== RF_CONSTANTS.FIELD_TYPES.HIDDEN) {
+        this.clearFieldValue(field)
+      }
+    })
+  }
+
+  isDestroyField(field) {
+    return field.type === RF_CONSTANTS.FIELD_TYPES.HIDDEN &&
+           field.name?.includes('_destroy')
+  }
+
+  clearFieldValue(field) {
+    const { CHECKBOX, RADIO, TEXTAREA } = RF_CONSTANTS.FIELD_TYPES
+
+    if (field.tagName === 'SELECT') {
+      field.selectedIndex = 0
+    } else if (field.type === CHECKBOX || field.type === RADIO) {
+      field.checked = false
+    } else if (field.tagName === 'TEXTAREA') {
+      this.clearTextareaValue(field)
+    } else {
+      this.clearInputValue(field)
+    }
+  }
+
+  clearTextareaValue(field) {
+    field.value = ''
+    field.textContent = ''
+    field.innerHTML = ''
+    field.removeAttribute('value')
+  }
+
+  clearInputValue(field) {
+    field.value = ''
+    field.removeAttribute('value')
+  }
+
+  disableRequiredFields(element) {
+    element.querySelectorAll('[required]').forEach(field => {
+      field.removeAttribute('required')
+      field.disabled = true
+    })
+  }
+
+  // SERIALIZATION
+
+  setupAutoSerialization() {
+    const form = this.container.closest('form')
+    if (!form) return
+
+    this.createHiddenInputs(form)
+    this.setupSerializationEvents(form)
+  }
+
+  createHiddenInputs(form) {
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_CONTAINER).forEach(container => {
+      const groupName = container.getAttribute('rf-nest-for')
+      const inputName = `${this.modelName}[${groupName}_data]`
+
+      if (!form.querySelector(`input[name="${inputName}"]`)) {
+        const hiddenInput = document.createElement('input')
+        Object.assign(hiddenInput, {
+          type: 'hidden',
+          name: inputName,
+          id: `${groupName}-data-input`
+        })
+        form.appendChild(hiddenInput)
+        this.logDebug(`Auto-created hidden input: ${inputName}`)
+      }
+    })
+  }
+
+  setupSerializationEvents(form) {
+    const dataInputs = form.querySelectorAll(RF_CONSTANTS.SELECTORS.HIDDEN_INPUTS)
+    if (dataInputs.length === 0) return
+
+    this.addListener(form, 'submit', () => this.serializeToForm(form), 'auto-serialize')
+    this.setupLivePreview()
+    this.logDebug('Auto-serialization enabled', { inputs: dataInputs.length })
+  }
+
+  setupLivePreview() {
+    const previewHandler = (e) => {
+      const target = e.target
+      if (target.closest(RF_CONSTANTS.SELECTORS.NEST_ITEM) &&
+          target.matches(RF_CONSTANTS.SELECTORS.FORM_FIELDS) &&
+          !target.matches(RF_CONSTANTS.SELECTORS.REACTIVE_FIELD)) {
+        setTimeout(() => {
+          this.previewSerialization()
+          this.dispatchEvent(RF_CONSTANTS.EVENTS.UPDATED, {
+            action: 'form_input',
+            data: { field: target, value: target.type === 'checkbox' ? target.checked : target.value },
+            serializedData: this.previewSerialization()
+          })
+        }, 0)
+      }
+    }
+
+    this.addListener(this.container, 'input', previewHandler, 'live-preview')
+    this.addListener(this.container, 'change', previewHandler, 'live-preview-change')
+  }
+
+  serializeToForm(form) {
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_CONTAINER).forEach(nestedContainer => {
+      const groupName = nestedContainer.getAttribute('rf-nest-for')
+      const serializedData = this.serializeNestedGroup(groupName, nestedContainer)
+      const hiddenInput = form.querySelector(`input[name*="${groupName}_data"]`)
+
+      if (hiddenInput) {
+        hiddenInput.value = JSON.stringify(serializedData)
+        this.logDebug(`Serialized ${groupName}:`, serializedData)
+      }
+    })
+
+    this.dispatchEvent(RF_CONSTANTS.EVENTS.SERIALIZE, { form })
+  }
+
+  previewSerialization() {
+    const preview = {}
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_CONTAINER).forEach(nestedContainer => {
+      const groupName = nestedContainer.getAttribute('rf-nest-for')
+      preview[groupName] = this.serializeNestedGroup(groupName, nestedContainer)
+    })
+
+    console.group(`🔥 RRF Live Preview - ${this.modelName}`)
+    console.log('📦 Current form data:', preview)
+    console.log('📤 JSON for backend:', JSON.stringify(preview, null, 2))
+    console.groupEnd()
+
+    return preview
+  }
+
+  serializeNestedGroup(groupName, container) {
+    const items = container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_ITEM)
+    const serializedItems = []
+
+    items.forEach((item, index) => {
+      if (this.shouldSkipItem(item)) return
+
+      const itemData = this.serializeItem(item, index)
+      if (itemData && Object.keys(itemData).length > 0) {
+        serializedItems.push(itemData)
+      }
+    })
+
+    return serializedItems
+  }
+
+  shouldSkipItem(item) {
+    const destroyField = item.querySelector('input[name*="_destroy"]')
+    return destroyField?.value === '1' && item.style.display === 'none'
+  }
+
+  serializeItem(item, index) {
+    const data = { position: index }
+    const itemId = item.dataset.fieldId || item.querySelector('input[name*="[id]"]')?.value
+
+    if (itemId) data.id = itemId
+
+    const fields = this.getFieldElements(item)
+    this.extractFieldData(fields, data)
+    this.extractOtherFields(item, data)
+
+    return data
+  }
+
+      extractFieldData(fields, data) {
+    if (fields.label) data.label = fields.label.value || ''
+    if (fields.type) data.field_type = fields.type.value || 'text_field'
+    if (fields.required) data.required = fields.required.checked || false
+
+    if (fields.placeholder) {
+      data.placeholder = fields.placeholder.value || ''
+      this.logDebug(`Found visible placeholder field: ${fields.placeholder.className}`, { value: data.placeholder })
+    }
+
+    if (fields.options) {
+      data.options = fields.options.value || ''
+      this.logDebug(`Found visible options field: ${fields.options.className}`, { value: data.options })
+    }
+  }
+
+  // Check if the parent container of a form field is visible (has rf-show-if logic)
+  isFieldContainerVisible(field) {
+    const container = field.closest('[rf-show-if]')
+    return !container || this.isVisible(container)
+  }
+
+  extractOtherFields(item, data) {
+    const excludeClasses = ['field-label', 'field-required', 'field-placeholder', 'field-options']
+    const excludeSelector = excludeClasses.map(cls => `:not(.${cls})`).join('')
+    const selector = `input${excludeSelector}, select:not(.field-type), textarea:not([class*="field-options"])`
+
+    item.querySelectorAll(selector).forEach(field => {
+      if (!field.name || field.type === RF_CONSTANTS.FIELD_TYPES.HIDDEN) return
+
+      const fieldName = this.extractFieldName(field.name)
+      if (fieldName) {
+        data[fieldName] = this.getFieldValue(field)
+      }
+    })
+  }
+
+  getFieldValue(field) {
+    if (field.type === RF_CONSTANTS.FIELD_TYPES.CHECKBOX) {
+      return field.checked
+    } else if (field.type === 'number') {
+      return field.value ? parseFloat(field.value) : null
+    }
+    return field.value
+  }
+
+  extractFieldName(fullName) {
+    const match = fullName.match(/\[([^\]]+)\]$/)
+    return match ? match[1] : null
+  }
+
+  // PUBLIC API
+
+  serialize(options = {}) {
+    const { format = 'json' } = options
+    const data = {}
+
+    if (this.signals.signals.size > 0) {
+      data.state = Object.fromEntries(
+        Array.from(this.signals.signals.entries()).map(([key, signal]) => [key, signal.value])
+      )
+    }
+
+    this.container.querySelectorAll(RF_CONSTANTS.SELECTORS.NEST_CONTAINER).forEach(container => {
+      const groupName = container.getAttribute('rf-nest-for')
+      data[groupName] = this.serializeNestedGroup(groupName, container)
+    })
+
+    return format === 'rails' ? this.convertToRailsFormat(data) : data
+  }
+
+  convertToRailsFormat(data) {
+    const railsData = {}
+    Object.keys(data).forEach(key => {
+      if (key === 'state') return
+
+      const items = data[key]
+      if (Array.isArray(items)) {
+        railsData[`${key}_attributes`] = {}
+        items.forEach((item, index) => {
+          railsData[`${key}_attributes`][index] = item
+        })
+      }
+    })
+    return railsData
+  }
+
+  // UTILITIES
+
+  logDebug(message, data = {}) {
+    if (this.isDebugMode()) {
+      console.log(`RRF[${this.id}]: ${message}`, data)
+    }
+  }
+
+  logError(message, error) {
+    console.error(`RRF[${this.id}] ERROR: ${message}`, error)
+  }
+
+  isDebugMode() {
+    return window.location.hostname === 'localhost' ||
+           window.location.hostname === '127.0.0.1' ||
+           window.RRF_DEBUG === true
+  }
+}
+
+// Auto-initialize on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  ReactiveRailsForm.init()
 })
 
-function autoInitializeRRF() {
-  // Auto-initialize any containers with data-rrf attribute
-  document.querySelectorAll('[data-rrf]').forEach(container => {
-    // Skip if already manually initialized
-    if (container._rrfManualInit) return
+// Re-initialize when new content is added (Turbo compatibility)
+document.addEventListener('turbo:render', () => {
+  ReactiveRailsForm.init()
+})
 
-    initializeContainer(container)
-  })
-
-  // Legacy support for data-miniui attribute
-  document.querySelectorAll('[data-miniui]').forEach(container => {
-    // Skip if already manually initialized
-    if (container._rrfManualInit) return
-
-    initializeContainer(container)
-  })
-
-  // For backward compatibility, initialize the field customization form
-  const fieldCustomizationContainer = document.querySelector('[data-field-array="custom-fields"]')?.closest('.space-y-4')
-  if (fieldCustomizationContainer &&
-      !fieldCustomizationContainer.hasAttribute('data-rrf') &&
-      !fieldCustomizationContainer.hasAttribute('data-miniui') &&
-      !fieldCustomizationContainer._rrfManualInit) {
-
-    const rrf = ReactiveRailsForm.create(fieldCustomizationContainer)
-    rrf.init()
-
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      window.RRF = rrf.enableDebug()
-    }
-  }
-}
-
-function initializeContainer(container) {
-  const rrf = ReactiveRailsForm.create(container)
-  rrf.init()
-
-  // Enable debug in development
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    const debugInstance = rrf.enableDebug()
-    // Store on container for access
-    container._rrf = debugInstance
-  } else {
-    container._rrf = rrf
-  }
-}
-
-// Global alias for convenience
+// Global access for debugging
 window.RRF = ReactiveRailsForm

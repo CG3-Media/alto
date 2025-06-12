@@ -1,306 +1,314 @@
-# ReactiveRailsForm (RRF)
+# ReactiveRailsForm (RRF) v2.0
 
-A minimal reactive form library for Rails applications that provides scoped reactive behavior with automatic cleanup.
+A modern, zero-config, Rails-friendly reactive form library for dynamic forms with automatic serialization and event-driven updates.
 
-## Features
+---
 
-- **Scoped Instances**: Each form gets its own isolated reactive state
-- **Automatic Cleanup**: Memory leak prevention with proper listener management
-- **Error Handling**: Graceful error handling that doesn't break user experience
-- **Smooth Animations**: Subtle fade transitions for conditional fields
-- **Development Debug**: Debug mode with state inspection in development
-- **Rails Nested Attributes**: Full support for Rails nested attributes with automatic field naming
-- **Dynamic Color Previews**: Built-in support for color field previews and dynamic content updates
+## ✨ Features
 
-## Usage
+- **rf-* attributes** for clean, declarative markup
+- **Zero configuration**: just add `rf` to your form container
+- **Auto-serialization**: automatically populates hidden fields on form submit
+- **Rails nested attributes**: full support for `accepts_nested_attributes_for`
+- **No templates needed**: clones the first rendered item as a template
+- **Conditional visibility**: show/hide fields based on other field values
+- **Real-time events**: `rf:updated` fires on any form change with serialized data
+- **Turbo/Hotwire compatible**: auto-initializes on page change
+- **Memory safe**: automatic cleanup of listeners
 
-### Basic Usage
+---
 
-```html
-<div data-rrf id="my-form">
-  <select data-reactive="field-type">
-    <option value="text">Text</option>
-    <option value="number">Number</option>
-  </select>
+## 🚀 Quick Start
 
-  <div data-show-when="field-type=text">
-    Text field options...
-  </div>
-
-  <div data-show-when="field-type=number">
-    Number field options...
-  </div>
-</div>
-```
-
-### Two Ways to Initialize
-
-**Option 1: Auto-initialization (zero config)**
-```html
-<div data-rrf>
-  <!-- Your form fields -->
-</div>
-```
-
-**Option 2: Manual initialization (with custom handlers)**
-```javascript
-RRF.init('#my-form', {
-  onFieldChange: ({ fieldName, field, fieldContainer, meta }) => {
-    if (fieldName === 'color') {
-      updateColorPreview(fieldContainer)
-    }
-  },
-
-  onFieldAdd: ({ fieldContainer, meta }) => {
-    setupCustomBehavior(fieldContainer)
-  },
-
-  onFieldRemove: ({ fieldContainer, isDestroy, meta }) => {
-    console.log(isDestroy ? 'Marking for deletion' : 'Removing from DOM')
-  }
-})
-```
-
-**When to use which:**
-- **Auto-init (`data-rrf`)**: Simple forms with standard RRF behavior
-- **Manual init (`RRF.init()`)**: Forms needing custom logic (previews, validation, etc.)
-
-### Data Attributes
-
-- `data-rrf`: Auto-initialize container
-- `data-reactive="key"`: Make field reactive
-- `data-show-when="key=value"`: Conditional visibility
-- `data-show-when="key=value1,key=value2"`: Multiple conditions
-- `data-add-field="array-name"`: Add button for field arrays
-- `data-field-array="array-name"`: Container for field arrays
-- `data-remove-field`: Remove button for field items
-- **Rails Nested Attributes**:
-  - `data-nested-attributes="association_name"`: Container for nested attributes
-  - `data-add-nested="association_name"`: Add button for nested fields
-  - `data-nested-template`: Template for nested fields
-  - `data-nested-field="field_name"`: Field within nested template
-  - `data-remove-nested`: Remove button for nested fields
-  - `data-nested-index`: Auto-set index for nested fields
-  - `data-nested-title="{index}"`: Dynamic title with index placeholder
-  - `data-color-preview`: Element for color preview updates
-  - `data-nested-model="model_name"`: Override model name for field naming
-
-### Field Arrays
-
-```html
-<div data-rrf>
-  <div data-field-array="skills">
-    <!-- Existing fields -->
-  </div>
-
-  <template id="field-template">
-    <div data-field-template>
-      <input type="text" data-reactive="skill-name">
-      <button data-remove-field>Remove</button>
-    </div>
-  </template>
-
-  <button data-add-field="skills">Add Skill</button>
-</div>
-```
-
-### Development Debug
-
-In development (localhost), access debug information:
-
-```javascript
-// Global access
-window.RRF.state()        // Current state
-window.RRF.listeners()    // Listener count
-
-// Per-container access
-container._rrf.state()    // Container-specific state
-container._rrf.container  // Container reference
-```
-
-### Instance Methods
-
-```javascript
-const rrf = ReactiveRailsForm.create(container)
-
-rrf.init()              // Auto-discover and initialize all reactive fields
-rrf.destroy()           // Clean up everything
-rrf.state()             // Access form state
-rrf.computed(fn)        // Create computed property
-rrf.enableDebug()       // Enable debug mode
-```
-
-### Internal Architecture
-
-- **Auto-Discovery**: `init()` automatically finds all `[data-reactive]` fields and sets up reactivity
-- **DRY Field Registration**: `registerField()` helper eliminates duplication in field setup
-- **Concise Method Names**: `initReactives()`, `initArrays()`, `updateVisibility()`
-- **Smart Cleanup**: Automatic cleanup registration when fields are created/destroyed
-
-### Event Handlers
-
-RRF provides event hooks for custom application logic:
-
-```javascript
-RRF.init('#my-form', {
-  // Triggered when any field value changes
-  onFieldChange: ({ fieldName, field, fieldContainer, meta }) => {
-    console.log(`Field ${fieldName} changed to: ${field.value}`)
-
-    // Custom logic based on field name
-    if (fieldName === 'color') {
-      updateColorPreview(fieldContainer)
-    } else if (fieldName === 'name') {
-      generateSlug(field, fieldContainer)
-    }
-  },
-
-  // Triggered when a new nested field is added
-  onFieldAdd: ({ fieldContainer, meta }) => {
-    console.log(`New field added to ${meta.associationName}`)
-    setupCustomValidation(fieldContainer)
-  },
-
-  // Triggered when a field is removed
-  onFieldRemove: ({ fieldContainer, isDestroy, meta }) => {
-    if (isDestroy) {
-      console.log('Existing record marked for deletion')
-    } else {
-      console.log('New record removed from DOM')
-    }
-  }
-})
-```
-
-**Event Parameters:**
-- **onFieldChange**: `{ fieldName, field, fieldContainer, meta }`
-- **onFieldAdd**: `{ fieldContainer, meta }`
-- **onFieldRemove**: `{ fieldContainer, isDestroy, meta }`
-
-**Meta Object**: `{ associationName, index, container }`
-
-## Examples
-
-### Conditional Field Visibility
-
-```html
-<div data-rrf>
-  <select data-reactive="payment-method">
-    <option value="credit-card">Credit Card</option>
-    <option value="paypal">PayPal</option>
-    <option value="bank">Bank Transfer</option>
-  </select>
-
-  <div data-show-when="payment-method=credit-card">
-    <input type="text" placeholder="Card Number">
-    <input type="text" placeholder="CVV">
-  </div>
-
-  <div data-show-when="payment-method=paypal">
-    <input type="email" placeholder="PayPal Email">
-  </div>
-
-  <div data-show-when="payment-method=bank">
-    <input type="text" placeholder="Account Number">
-    <input type="text" placeholder="Routing Number">
-  </div>
-</div>
-```
-
-### Dynamic Field Arrays
-
-```html
-<div data-rrf id="contact-form">
-  <div data-field-array="phone-numbers">
-    <!-- Phone numbers will be added here -->
-  </div>
-
-  <template id="phone-template">
-    <div data-field-template class="phone-entry">
-      <select data-reactive="phone-type">
-        <option value="mobile">Mobile</option>
-        <option value="home">Home</option>
-        <option value="work">Work</option>
-      </select>
-      <input type="tel" placeholder="Phone Number">
-      <button data-remove-field>Remove</button>
-    </div>
-  </template>
-
-  <button data-add-field="phone-numbers">Add Phone Number</button>
-</div>
-```
-
-### Rails Nested Attributes
-
-Perfect for Rails `accepts_nested_attributes_for` with automatic field naming and destroy handling:
-
-```html
-<div data-rrf data-nested-model="status_set">
-  <!-- Container for nested statuses -->
-  <div data-nested-attributes="statuses" class="space-y-4">
-    <!-- Existing status fields render here -->
-  </div>
-
-  <!-- Template for new status fields -->
-  <template id="statuses-template">
-    <div data-nested-field data-nested-index class="status-field">
-      <h4 data-nested-title="Status {index}">Status</h4>
-
-      <input type="hidden" data-nested-field="_destroy" value="false">
-      <input type="hidden" data-nested-field="position">
-
-      <input type="text" data-nested-field="name" placeholder="Status Name" required>
-      <input type="text" data-nested-field="slug" placeholder="slug">
-
-      <select data-nested-field="color" data-reactive="color">
-        <option value="green">🟢 Green</option>
-        <option value="blue">🔵 Blue</option>
-        <option value="red">🔴 Red</option>
-      </select>
-
-      <!-- Color preview -->
-      <span data-color-preview class="badge">Status Name</span>
-
-      <button type="button" data-remove-nested>Remove</button>
-    </div>
-  </template>
-
-  <button type="button" data-add-nested="statuses">Add Status</button>
-</div>
-```
-
-**Key Features:**
-- **Automatic Field Naming**: Generates proper Rails nested attribute names like `status_set[statuses_attributes][0][name]`
-- **Destroy Handling**: Automatically handles `_destroy` fields for existing records vs DOM removal for new records
-- **Position Management**: Auto-sets position values for ordering
-- **Color Previews**: Built-in color preview functionality with dynamic styling
-- **Index Tracking**: Maintains proper indices even when fields are removed
-- **Validation Handling**: Disables required validation when marking fields for destruction
-
-## Browser Support
-
-- Modern browsers (ES6+)
-- Graceful degradation without JavaScript
-- No external dependencies
-
-## Integration with Rails
-
-Include in your Rails application:
+### Basic Rails Nested Form
 
 ```erb
-<%= javascript_include_tag 'reactive_rails_form' %>
+<%= form_with model: @project, local: true do |f| %>
+  <div rf rf-model="project" id="project-form">
+    <%= f.label :category %>
+    <%= f.select :category, [["General", "general"], ["Engineering", "engineering"]], {}, { 'rf-key': "category" } %>
+
+    <div rf-show-if="category=engineering">
+      <%= f.label :tech_lead %>
+      <%= f.text_field :tech_lead %>
+    </div>
+
+    <div rf-nest-for="tasks">
+      <%= f.fields_for :tasks do |tf| %>
+        <div rf-nest-item>
+          <%= tf.text_field :title %>
+          <%= tf.date_field :due_date %>
+          <%= tf.hidden_field :_destroy %>
+          <button type="button" rf-nest-remove>Remove</button>
+        </div>
+      <% end %>
+    </div>
+    <button type="button" rf-nest-add="tasks">Add Task</button>
+    <%= f.submit %>
+  </div>
+<% end %>
 ```
 
-Or in your layout:
+### Custom Data Structure (Non-Rails Models)
 
 ```html
-<script src="/assets/reactive_rails_form.js"></script>
+<form>
+  <div rf>
+    <div rf-nest-for="fields">
+      <div rf-nest-item>
+        <input type="text" class="field-label" placeholder="Field name">
+        <select class="field-type" rf-key="field-type-0">
+          <option value="text_field">Text Input</option>
+          <option value="select_field">Dropdown</option>
+        </select>
+        <div rf-show-if="field-type-0=text_field">
+          <input type="text" class="field-placeholder-input" placeholder="Placeholder text">
+        </div>
+        <div rf-show-if="field-type-0=select_field">
+          <textarea class="field-options-input" placeholder="Option 1&#10;Option 2"></textarea>
+        </div>
+        <button type="button" rf-nest-remove>Remove</button>
+      </div>
+    </div>
+    <button type="button" rf-nest-add="fields">Add Field</button>
+
+    <!-- RRF automatically populates this on form submit -->
+    <input type="hidden" name="board[fields_data]" id="fields-data-input">
+  </div>
+</form>
 ```
 
-## Performance
+---
 
-- Minimal footprint (~8KB uncompressed)
-- Efficient event delegation
-- Memory leak prevention
-- Smart change detection (only updates when values change)
+## 🏷️ Attribute Reference
+
+### Container
+- `rf` — enables RRF on this container
+- `rf-model="model_name"` — (optional) model name for debugging
+
+### Reactive Fields
+- `rf-key="field_name"` — makes a field reactive (updates state, triggers conditions)
+- `rf-show-if="key=value"` — shows element if condition matches (supports multiple: `key1=value1,key2=value2`)
+
+### Nested Groups
+- `rf-nest-for="group_name"` — container for repeatable items
+- `rf-nest-item` — a single item within the group (at least one required)
+- `rf-nest-add="group_name"` — button to add new items
+- `rf-nest-remove` — button to remove an item
+
+---
+
+## 🔄 Auto-Serialization
+
+RRF automatically detects hidden inputs with `*_data` in their name and populates them on form submit:
+
+```html
+<!-- This gets auto-populated with JSON data -->
+<input type="hidden" name="board[fields_data]" id="fields-data-input">
+```
+
+**Serialization works by:**
+1. **CSS Class Detection**: Uses classes like `.field-label`, `.field-type`, `.field-required`
+2. **Smart Type Conversion**: Booleans for checkboxes, numbers for number inputs
+3. **Rails Integration**: Preserves existing record IDs and handles `_destroy` fields
+4. **Position Tracking**: Maintains field ordering with position indexes
+
+**Example Output:**
+```json
+[
+  {
+    "id": "123",
+    "label": "Full Name",
+    "field_type": "text_field",
+    "required": true,
+    "placeholder": "Enter your name",
+    "position": 0
+  }
+]
+```
+
+---
+
+## 📡 Events
+
+### General Update Event
+```js
+// Fires on ANY form change with full serialized data
+container.addEventListener('rf:updated', (e) => {
+  console.log(`Action: ${e.detail.action}`, e.detail.serializedData)
+  // Actions: 'field_added', 'field_removed', 'field_changed', 'form_input', 'form_change'
+})
+```
+
+### Specific Events
+```js
+const form = document.getElementById('project-form')
+
+form.addEventListener('rf:field:add', e => {
+  // { groupName, item, index, instance }
+})
+
+form.addEventListener('rf:field:remove', e => {
+  // { groupName, item, isDestroy, instance }
+})
+
+form.addEventListener('rf:field:change', e => {
+  // { key, value, field, instance } - for rf-key fields
+})
+
+form.addEventListener('rf:serialize', e => {
+  // Fires when form is submitted and data is serialized
+})
+```
+
+---
+
+## 🧑‍💻 How It Works
+
+### No Templates Needed
+The first `rf-nest-item` element is automatically cloned when adding new items. Values are cleared and field names/IDs are updated for Rails compatibility.
+
+### Rails Nested Attributes
+For Rails forms, RRF handles:
+- Field name updates: `model[tasks_attributes][0][title]` → `model[tasks_attributes][1][title]`
+- ID updates for labels and form fields
+- `_destroy` field handling for existing records
+
+### Conditional Visibility
+Elements with `rf-show-if` automatically show/hide based on reactive field values:
+```html
+<div rf-show-if="category=engineering,type=complex">
+  <!-- Shows when category=engineering OR type=complex -->
+</div>
+```
+
+### Smart Serialization
+RRF automatically:
+- Detects form structure from CSS classes
+- Converts data types appropriately
+- Preserves existing record relationships
+- Handles destroyed vs removed items
+- Maintains field ordering
+
+---
+
+## 🛠️ Real-World Example: Dynamic Field Builder
+
+```erb
+<%= form_with model: @board, local: true do |f| %>
+  <div rf id="field-customization-form">
+    <div rf-nest-for="fields">
+      <% @board.fields.each do |field| %>
+        <div rf-nest-item data-field-id="<%= field.id %>">
+          <input type="text" value="<%= field.label %>" class="field-label">
+          <select class="field-type" rf-key="field-type-<%= field.id %>">
+            <option value="text_field" <%= 'selected' if field.text_field? %>>Text Input</option>
+            <option value="select_field" <%= 'selected' if field.select_field? %>>Dropdown</option>
+          </select>
+          <input type="checkbox" class="field-required" <%= 'checked' if field.required %>>
+
+          <div rf-show-if="field-type-<%= field.id %>=text_field">
+            <input type="text" class="field-placeholder-input" value="<%= field.placeholder %>">
+          </div>
+
+          <div rf-show-if="field-type-<%= field.id %>=select_field">
+            <textarea class="field-options-input"><%= field.options_array.join("\n") %></textarea>
+          </div>
+
+          <button type="button" rf-nest-remove>Remove</button>
+        </div>
+      <% end %>
+    </div>
+
+    <button type="button" rf-nest-add="fields">Add Field</button>
+    <input type="hidden" name="board[fields_data]">
+    <%= f.submit %>
+  </div>
+<% end %>
+```
+
+---
+
+## 🔧 Manual Serialization API
+
+```js
+// Get RRF instance
+const container = document.querySelector('[rf]')
+const rfInstance = ReactiveRailsForm.getInstance(container)
+
+// Manual serialization
+const data = rfInstance.serialize()                    // JSON format
+const railsData = rfInstance.serialize({ format: 'rails' })  // Rails nested attributes format
+
+// Current reactive state
+console.log(rfInstance.state)  // Map of all rf-key values
+```
+
+---
+
+## 🐛 Debugging
+
+RRF provides comprehensive logging in development:
+
+- **Auto-enabled**: localhost/127.0.0.1 automatically enable debug mode
+- **Manual**: Set `window.RRF_DEBUG = true` to force debug mode
+- **Live Preview**: Real-time console output showing serialized data
+- **Event Tracking**: All events logged with context
+- **Error Handling**: Graceful error handling with detailed logging
+
+**Console Output Example:**
+```
+🔥 RRF Live Preview - board
+📦 Current form data: { fields: [...] }
+📤 JSON for backend: [prettified JSON]
+```
+
+---
+
+## 📦 Installation
+
+### Rails Asset Pipeline
+```erb
+<%= javascript_include_tag 'alto/reactive_rails_form' %>
+```
+
+### Direct Include
+```html
+<script src="path/to/reactive_rails_form.js"></script>
+```
+
+**No dependencies required** - works with vanilla JavaScript, Rails UJS, and Turbo/Hotwire.
+
+---
+
+## 🚦 Browser Support
+
+- **Modern browsers** (ES6+ features used)
+- **No polyfills needed** for supported browsers
+- **Memory efficient** with automatic cleanup
+
+---
+
+## 🎯 Migration from v1.x
+
+### Attribute Changes
+- `data-rrf` → `rf`
+- `data-reactive="key"` → `rf-key="key"`
+- `data-show-when="key=value"` → `rf-show-if="key=value"`
+- `data-nested-attributes="assoc"` → `rf-nest-for="assoc"`
+- `data-add-nested="assoc"` → `rf-nest-add="assoc"`
+- `data-remove-nested` → `rf-nest-remove`
+- `data-nested-field` → `rf-nest-item`
+
+### New Features in v2.0
+- ✅ Auto-serialization (no manual form handling needed)
+- ✅ `rf:updated` event for general form changes
+- ✅ Simplified unified syntax (removed rf-field-array complexity)
+- ✅ Real-time console preview during development
+- ✅ Better Rails integration with proper field naming
+
+---
+
+## 🎉 That's it!
+
+ReactiveRailsForm v2.0 makes dynamic Rails forms simple, powerful, and developer-friendly. No more complex JavaScript, no more manual serialization - just clean, declarative markup that works! 🚀
