@@ -4,6 +4,7 @@ module Alto
 
     has_many :tickets, dependent: :restrict_with_error
     has_many :fields, dependent: :destroy, class_name: "Alto::Field"
+    has_many :tags, dependent: :destroy, class_name: "Alto::Tag"
     belongs_to :status_set
 
     # Enable nested attributes for fields - this is our Rails Way foundation!
@@ -175,6 +176,27 @@ module Alto
 
     def enforced_view_type
       single_view.presence
+    end
+
+    # Tagging methods
+    def available_tags
+      tags.ordered
+    end
+
+    def tags_for_select
+      tags.ordered.pluck(:name, :id)
+    end
+
+    def find_or_create_tag(name)
+      tags.find_or_create_by(name: name.to_s.strip.downcase)
+    end
+
+    def most_used_tags(limit = 10)
+      tags.popular.limit(limit)
+    end
+
+    def allow_public_tagging?
+      allow_public_tagging
     end
 
     # Scope boards based on user's admin status

@@ -7,6 +7,8 @@ module Alto
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
     has_many :subscriptions, class_name: "Alto::Subscription", dependent: :destroy
+    has_many :taggings, as: :taggable, dependent: :destroy
+    has_many :tags, through: :taggings
 
     validates :title, presence: true, length: { maximum: 255 }
     validates :description, presence: true
@@ -79,6 +81,32 @@ module Alto
       end
     }
 
+    # Tagging scopes
+    scope :tagged_with, ->(tag_names) {
+      tag_names = Array(tag_names)
+      return all if tag_names.empty?
+
+      # Join with taggings and tags, filter by tag names
+      joins(taggings: :tag)
+        .where(alto_tags: { name: tag_names })
+        .group(:id)
+        .having("COUNT(DISTINCT alto_tags.id) = ?", tag_names.length)
+        .distinct
+    }
+
+    scope :tagged_with_any, ->(tag_names) {
+      tag_names = Array(tag_names)
+      return all if tag_names.empty?
+
+      joins(taggings: :tag)
+        .where(alto_tags: { name: tag_names })
+        .distinct
+    }
+
+    scope :untagged, -> {
+      left_joins(:taggings).where(alto_taggings: { id: nil })
+    }
+
     def upvoted_by?(user)
       return false unless user
       upvotes.exists?(user_id: user.id)
@@ -149,6 +177,65 @@ module Alto
 
     def user_email
       ::Alto.configuration.user_email.call(user_id)
+    end
+
+    # Tagging methods
+    def tag_with(tag_objects_or_names)
+      tag_objects_or_names = Array(tag_objects_or_names)
+      
+      # Convert names to tag objects if needed
+      tag_objects = tag_objects_or_names.map do |item|
+        if item.is_a?(String)
+          board.tags.find_by(name: item)
+        else
+          item
+        end
+      end.compact
+
+      # Replace all current tags with new ones
+      self.tags = tag_objects
+    end
+
+    def tag_list
+      tags.order(:name).pluck(:name)
+    end
+
+    def tag_list=(tag_names)
+      tag_names = Array(tag_names).map(&:to_s).reject(&:blank?)
+      
+      # Find existing tags for this board
+      existing_tags = board.tags.where(name: tag_names)
+      
+      # Only assign existing tags (don't create new ones)
+      self.tags = existing_tags
+    end
+
+    def tagged_with?(tag_name)
+      tags.exists?(name: tag_name)
+    end
+
+    def add_tag(tag_or_name)
+      tag = if tag_or_name.is_a?(String)
+        board.tags.find_by(name: tag_or_name)
+      else
+        tag_or_name
+      end
+
+      if tag && !tags.include?(tag)
+        tags << tag
+      end
+    end
+
+    def remove_tag(tag_or_name)
+      tag = if tag_or_name.is_a?(String)
+        tags.find_by(name: tag_or_name)
+      else
+        tag_or_name
+      end
+
+      if tag
+        tags.delete(tag)
+      end
     end
 
     private

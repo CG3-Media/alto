@@ -738,5 +738,284 @@ module Alto
       assert_includes ticket.errors.attribute_names, :field_values_severity
       assert_includes ticket.errors[:field_values_severity], "Severity is required"
     end
+
+    # Tagging system tests
+    test "should have many taggings" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      assert_respond_to ticket, :taggings
+      assert_equal [], ticket.taggings.to_a
+    end
+
+    test "should have many tags through taggings" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      assert_respond_to ticket, :tags
+      assert_equal [], ticket.tags.to_a
+    end
+
+    test "should allow tagging with board tags" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      tag1 = Tag.create!(name: "bug", board: @board)
+      tag2 = Tag.create!(name: "urgent", board: @board)
+
+      ticket.tags << tag1
+      ticket.tags << tag2
+
+      assert_equal 2, ticket.tags.count
+      assert_includes ticket.tags, tag1
+      assert_includes ticket.tags, tag2
+    end
+
+    test "should not allow tagging with tags from different boards" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      other_board = alto_boards(:bugs)
+      other_board_tag = Tag.create!(name: "other-tag", board: other_board)
+
+      assert_raises(ActiveRecord::RecordInvalid) do
+        ticket.tags << other_board_tag
+      end
+    end
+
+    test "should provide tag_with method" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      tag1 = Tag.create!(name: "feature", board: @board)
+      tag2 = Tag.create!(name: "enhancement", board: @board)
+
+      ticket.tag_with([tag1, tag2])
+
+      assert_equal 2, ticket.tags.count
+      assert_includes ticket.tags, tag1
+      assert_includes ticket.tags, tag2
+    end
+
+    test "should provide tag_with method with tag names" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      Tag.create!(name: "bug", board: @board)
+      Tag.create!(name: "critical", board: @board)
+
+      ticket.tag_with(["bug", "critical"])
+
+      assert_equal 2, ticket.tags.count
+      assert_equal ["bug", "critical"], ticket.tags.pluck(:name).sort
+    end
+
+    test "should have tagged_with scope" do
+      tag1 = Tag.create!(name: "bug", board: @board)
+      tag2 = Tag.create!(name: "feature", board: @board)
+
+      ticket1 = Ticket.create!(
+        title: "Bug Ticket",
+        description: "A bug ticket",
+        user_id: 1,
+        board: @board
+      )
+      ticket1.tags << tag1
+
+      ticket2 = Ticket.create!(
+        title: "Feature Ticket",
+        description: "A feature ticket",
+        user_id: 1,
+        board: @board
+      )
+      ticket2.tags << tag2
+
+      ticket3 = Ticket.create!(
+        title: "Bug and Feature Ticket",
+        description: "A ticket with both tags",
+        user_id: 1,
+        board: @board
+      )
+      ticket3.tags << tag1
+      ticket3.tags << tag2
+
+      bug_tickets = Ticket.tagged_with("bug")
+      feature_tickets = Ticket.tagged_with("feature")
+
+      assert_includes bug_tickets, ticket1
+      assert_includes bug_tickets, ticket3
+      assert_not_includes bug_tickets, ticket2
+
+      assert_includes feature_tickets, ticket2
+      assert_includes feature_tickets, ticket3
+      assert_not_includes feature_tickets, ticket1
+    end
+
+    test "should have tagged_with scope with multiple tags (AND)" do
+      tag1 = Tag.create!(name: "bug", board: @board)
+      tag2 = Tag.create!(name: "critical", board: @board)
+
+      ticket1 = Ticket.create!(
+        title: "Bug Ticket",
+        description: "A bug ticket",
+        user_id: 1,
+        board: @board
+      )
+      ticket1.tags << tag1
+
+      ticket2 = Ticket.create!(
+        title: "Critical Bug Ticket",
+        description: "A critical bug ticket",
+        user_id: 1,
+        board: @board
+      )
+      ticket2.tags << tag1
+      ticket2.tags << tag2
+
+      # Find tickets with BOTH tags
+      critical_bug_tickets = Ticket.tagged_with(["bug", "critical"])
+
+      assert_includes critical_bug_tickets, ticket2
+      assert_not_includes critical_bug_tickets, ticket1
+    end
+
+    test "should have tagged_with_any scope (OR)" do
+      tag1 = Tag.create!(name: "bug", board: @board)
+      tag2 = Tag.create!(name: "feature", board: @board)
+
+      ticket1 = Ticket.create!(
+        title: "Bug Ticket",
+        description: "A bug ticket",
+        user_id: 1,
+        board: @board
+      )
+      ticket1.tags << tag1
+
+      ticket2 = Ticket.create!(
+        title: "Feature Ticket",
+        description: "A feature ticket",
+        user_id: 1,
+        board: @board
+      )
+      ticket2.tags << tag2
+
+      ticket3 = Ticket.create!(
+        title: "Untagged Ticket",
+        description: "A ticket without tags",
+        user_id: 1,
+        board: @board
+      )
+
+      # Find tickets with ANY of these tags
+      tagged_tickets = Ticket.tagged_with_any(["bug", "feature"])
+
+      assert_includes tagged_tickets, ticket1
+      assert_includes tagged_tickets, ticket2
+      assert_not_includes tagged_tickets, ticket3
+    end
+
+    test "should have untagged scope" do
+      tag1 = Tag.create!(name: "bug", board: @board)
+
+      tagged_ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+      tagged_ticket.tags << tag1
+
+      untagged_ticket = Ticket.create!(
+        title: "Untagged Ticket",
+        description: "A ticket without tags",
+        user_id: 1,
+        board: @board
+      )
+
+      untagged_tickets = Ticket.untagged
+
+      assert_includes untagged_tickets, untagged_ticket
+      assert_not_includes untagged_tickets, tagged_ticket
+    end
+
+    test "should have tag_list method" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      tag1 = Tag.create!(name: "alpha", board: @board)
+      tag2 = Tag.create!(name: "beta", board: @board)
+      
+      ticket.tags << tag1
+      ticket.tags << tag2
+
+      # Should return alphabetically sorted tag names
+      assert_equal ["alpha", "beta"], ticket.tag_list
+    end
+
+    test "should have tag_list= method for assignment" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      # Create tags that should exist
+      Tag.create!(name: "existing1", board: @board)
+      Tag.create!(name: "existing2", board: @board)
+
+      ticket.tag_list = ["existing1", "existing2"]
+      ticket.save!
+
+      assert_equal 2, ticket.tags.count
+      assert_equal ["existing1", "existing2"], ticket.tag_list.sort
+    end
+
+    test "should ignore non-existent tags in tag_list= assignment" do
+      ticket = Ticket.create!(
+        title: "Tagged Ticket",
+        description: "A ticket with tags",
+        user_id: 1,
+        board: @board
+      )
+
+      # Only create one of the two tags
+      Tag.create!(name: "existing", board: @board)
+
+      ticket.tag_list = ["existing", "non-existent"]
+      ticket.save!
+
+      # Should only assign the existing tag
+      assert_equal 1, ticket.tags.count
+      assert_equal ["existing"], ticket.tag_list
+    end
   end
 end
