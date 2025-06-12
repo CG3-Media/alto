@@ -18,6 +18,7 @@ Alto is a mountable Rails engine for collecting user feedback with multiple boar
 
 - Multiple feedback boards (Bug Reports, Feature Requests, etc.)
 - Customizable item labels per board ("tickets", "posts", "bugs", "requests", etc.)
+- Custom fields per board (dropdowns, text inputs, multiselect, etc.)
 - Ticket creation with 3-level threaded comments and upvoting
 - Configurable status sets with custom statuses and colors
 - Admin dashboard with status management and analytics
