@@ -30,6 +30,10 @@ namespace :alto do
       boards = create_sample_boards(status_data[:status_sets])
       puts "✅ Created #{boards.length} boards"
 
+      # Create custom fields for boards
+      fields = create_custom_fields(boards)
+      puts "✅ Created #{fields.length} custom fields across boards"
+
       # Create tickets
       tickets = create_sample_tickets(boards, sample_users, status_data[:statuses])
       puts "✅ Created #{tickets.length} tickets across all boards"
@@ -47,7 +51,8 @@ namespace :alto do
       puts ""
       puts "📊 Summary:"
       puts "   • #{boards.length} boards with different themes"
-      puts "   • #{tickets.length} tickets with varied content"
+      puts "   • #{fields.length} custom fields across Bug Reports and Feature Requests"
+      puts "   • #{tickets.length} tickets with varied content and field values"
       puts "   • #{comments.length} comments with threading (up to 3 levels)"
       puts "   • #{upvotes.length} upvotes distributed across content"
       puts ""
@@ -263,6 +268,63 @@ private
     boards
   end
 
+  def create_custom_fields(boards)
+    fields = []
+
+    # Bug Reports Board Custom Fields
+    bugs_board = boards.find { |b| b.name == 'Bug Reports' }
+    if bugs_board && bugs_board.fields.empty?
+      bug_fields = bugs_board.fields.create!([
+        {
+          label: "Severity",
+          field_type: "select_field",
+          field_options: ["Low", "Medium", "High", "Critical"],
+          required: true,
+          position: 0
+        },
+        {
+          label: "Operating System",
+          field_type: "select_field",
+          field_options: ["Windows 11", "Windows 10", "macOS Sonoma", "macOS Ventura", "macOS Monterey", "Ubuntu 22.04", "Ubuntu 20.04", "iOS 17", "iOS 16", "Android 14", "Android 13", "Other"],
+          required: false,
+          position: 1
+        },
+        {
+          label: "Browser",
+          field_type: "select_field",
+          field_options: ["Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave", "Arc", "Mobile Safari", "Chrome Mobile", "Firefox Mobile", "Samsung Internet", "Other"],
+          required: false,
+          position: 2
+        },
+        {
+          label: "Steps to Reproduce",
+          field_type: "text_area",
+          placeholder: "Please list the steps to reproduce this issue...",
+          required: true,
+          position: 3
+        }
+      ])
+      fields.concat(bug_fields)
+    end
+
+    # Feature Requests Board Custom Fields
+    features_board = boards.find { |b| b.name == 'Feature Requests' }
+    if features_board && features_board.fields.empty?
+      feature_fields = features_board.fields.create!([
+        {
+          label: "Would Pay Extra for This Feature",
+          field_type: "select_field",
+          field_options: ["Yes", "No"],
+          required: false,
+          position: 0
+        }
+      ])
+      fields.concat(feature_fields)
+    end
+
+    fields
+  end
+
   def create_sample_tickets(boards, sample_users, statuses)
     tickets = []
 
@@ -297,14 +359,50 @@ private
       }
     ]
 
-    bug_tickets.each do |ticket_data|
+    bug_tickets.each_with_index do |ticket_data, index|
       user = sample_users.sample || nil
+
+      # Sample field values for bug reports
+      sample_field_values = [
+        {
+          "severity" => "High",
+          "operating_system" => "iOS 17",
+          "browser" => "Mobile Safari",
+          "steps_to_reproduce" => "1. Open app in Safari on iPhone\n2. Go to login page\n3. Tap login button\n4. Nothing happens"
+        },
+        {
+          "severity" => "Medium",
+          "operating_system" => "Windows 11",
+          "browser" => "Chrome",
+          "steps_to_reproduce" => "1. Navigate to dashboard\n2. Wait for page to load\n3. Notice 15-20 second delay"
+        },
+        {
+          "severity" => "High",
+          "operating_system" => "macOS Sonoma",
+          "browser" => "Safari",
+          "steps_to_reproduce" => "1. Enable email notifications in settings\n2. Follow a ticket\n3. No emails received when ticket is updated"
+        },
+        {
+          "severity" => "Medium",
+          "operating_system" => "Ubuntu 22.04",
+          "browser" => "Firefox",
+          "steps_to_reproduce" => "1. Search for any term\n2. Results include deleted items\n3. Click on deleted item shows 404"
+        },
+        {
+          "severity" => "Low",
+          "operating_system" => "Windows 10",
+          "browser" => "Edge",
+          "steps_to_reproduce" => "1. Try to upload image >2MB\n2. Upload fails with generic error\n3. No progress indicator shown"
+        }
+      ]
+
       ticket = Alto::Ticket.create!(
         title: ticket_data[:title],
         description: ticket_data[:description],
         board: bugs_board,
         user: user,
         status_slug: ticket_data[:status_slug],
+        field_values: sample_field_values[index] || sample_field_values[0],
         created_at: rand(30.days).seconds.ago
       )
       tickets << ticket
@@ -345,14 +443,26 @@ private
       }
     ]
 
-    feature_tickets.each do |ticket_data|
+    feature_tickets.each_with_index do |ticket_data, index|
       user = sample_users.sample
+
+      # Sample field values for feature requests
+      sample_field_values = [
+        { "would_pay_extra_for_this_feature" => "Yes" },
+        { "would_pay_extra_for_this_feature" => "No" },
+        { "would_pay_extra_for_this_feature" => "Yes" },
+        { "would_pay_extra_for_this_feature" => "Yes" },
+        { "would_pay_extra_for_this_feature" => "No" },
+        { "would_pay_extra_for_this_feature" => "No" }
+      ]
+
       ticket = Alto::Ticket.create!(
         title: ticket_data[:title],
         description: ticket_data[:description],
         board: features_board,
         user: user,
         status_slug: ticket_data[:status_slug],
+        field_values: sample_field_values[index] || sample_field_values[0],
         created_at: rand(45.days).seconds.ago
       )
       tickets << ticket
