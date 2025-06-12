@@ -300,7 +300,7 @@ This will guide you through removing the engine and optionally cleaning up datab
 ## License
 
 Alto Custom License v1.1
-Copyright (c) 2025 Corey Griffin
+Copyright (c) 2025 CG3 Media, LLC
 
 You are free to use, copy, modify, and deploy this software (“Alto”) in unlimited personal and commercial projects.
 
