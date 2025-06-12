@@ -10,6 +10,7 @@ module Alto
       # Default configuration: try common name fields, fallback to email
       @user_display_name_block = default_user_display_name_block
       @user_email_block = default_user_email_block
+      @user_profile_avatar_url_block = default_user_profile_avatar_url_block
       @user_model = "User"
 
       # App branding default (fallback if database not available)
@@ -58,6 +59,12 @@ module Alto
     def user_email(&block)
       @user_email_block = block if block_given?
       @user_email_block
+    end
+
+    # Set user profile avatar URL method with a block
+    def user_profile_avatar_url(&block)
+      @user_profile_avatar_url_block = block if block_given?
+      @user_profile_avatar_url_block
     end
 
     # Call a permission method block or proc
@@ -147,6 +154,13 @@ module Alto
         else
           nil
         end
+      end
+    end
+
+    def default_user_profile_avatar_url_block
+      proc do |user_id|
+        # Default: no avatar URL - host app must configure this
+        nil
       end
     end
   end

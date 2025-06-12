@@ -216,7 +216,10 @@
 
           <!-- Bottom row: Metadata -->
           <div class="flex items-center space-x-4 text-sm text-gray-500">
-            <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
+                        <div class="flex items-center space-x-2">
+              <%= render 'alto/shared/user_avatar', user_id: ticket.user_id, size: :sm %>
+              <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
+            </div>
             <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
             <span><%= link_to pluralize(ticket.comments.count, 'comment'),
                 alto.board_ticket_path(@board, ticket, anchor: 'comments'),

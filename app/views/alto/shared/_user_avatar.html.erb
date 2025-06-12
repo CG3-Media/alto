@@ -1,0 +1,23 @@
+<%
+  # User avatar partial
+  # Usage: render 'alto/shared/user_avatar', user_id: user.id, size: :sm
+  #
+  # Sizes:
+  # :sm = w-6 h-6 (default)
+  # :md = w-8 h-8
+  # :lg = w-10 h-10
+
+  size ||= :sm
+  size_classes = case size
+    when :sm then 'w-6 h-6'
+    when :md then 'w-8 h-8'
+    when :lg then 'w-10 h-10'
+    else 'w-6 h-6' # fallback to small
+  end
+%>
+
+<% if has_user_avatar?(user_id) %>
+  <img src="<%= user_profile_avatar_url(user_id) %>"
+       alt="<%= user_display_name(user_id) %>"
+       class="<%= size_classes %> rounded-full border border-gray-200 flex-shrink-0">
+<% end %>

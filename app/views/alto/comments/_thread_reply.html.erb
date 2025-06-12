@@ -1,9 +1,12 @@
 <div class="<%= 'ml-6' if comment.depth > 1 %>">
   <div class="flex items-start justify-between">
     <div class="flex-1">
-      <div class="text-sm text-gray-500 mb-2">
-        <span class="font-medium text-gray-700"><%= user_display_name(comment.user_id) %></span>
-        replied · <%= time_ago_in_words(comment.created_at) %> ago
+            <div class="text-sm text-gray-500 mb-2 flex items-center space-x-2">
+        <%= render 'alto/shared/user_avatar', user_id: comment.user_id, size: :sm %>
+        <div>
+          <span class="font-medium text-gray-700"><%= user_display_name(comment.user_id) %></span>
+          replied · <%= time_ago_in_words(comment.created_at) %> ago
+        </div>
       </div>
       <div class="prose max-w-none mb-3">
         <p class="text-gray-700 whitespace-pre-wrap"><%= comment.content %></p>

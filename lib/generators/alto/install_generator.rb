@@ -504,6 +504,12 @@ module Alto
             #   user&.name || user&.email || "User #\#{user_id}"
             # end
 
+            # User profile avatar URL (optional - for showing user avatars)
+            # config.user_profile_avatar_url do |user_id|
+            #   user = User.find_by(id: user_id)
+            #   user&.avatar&.url  # Adjust for your avatar method (e.g., Gravatar, Active Storage, etc.)
+            # end
+
             # Permission methods (customize for your authentication system)
 
             # Who can access Alto at all?
