@@ -145,8 +145,8 @@ if bugs_board.fields.empty?
   ])
 end
 
-puts "✅ Seed data created successfully!"
-puts "📊 Status Sets: #{Alto::StatusSet.count}"
-puts "📋 Boards: #{Alto::Board.count}"
-puts "🎫 Tickets: #{Alto::Ticket.count}"
-puts "📝 Custom Fields: #{Alto::Field.count}"
+# Seed data created successfully
+# Status Sets: #{Alto::StatusSet.count}
+# Boards: #{Alto::Board.count}
+# Tickets: #{Alto::Ticket.count}
+# Custom Fields: #{Alto::Field.count}

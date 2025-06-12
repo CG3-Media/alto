@@ -199,10 +199,17 @@ module Alto
       return unless board.present?
 
       board.fields.required_fields.each do |field|
-        value = field_value(field)
-        if value.blank?
-          # Use the parameterized label as the error key for better form integration
-          field_key = field.label.parameterize.underscore
+        field_key = field.label.parameterize.underscore
+
+        # During validation, check the submitted field_values directly
+        # rather than using field_value(field) which might read from database
+        submitted_value = if field_values.is_a?(Hash)
+          field_values[field_key]
+        else
+          nil
+        end
+
+        if submitted_value.blank?
           errors.add("field_values_#{field_key}".to_sym, "#{field.label} is required")
         end
       end

@@ -670,5 +670,73 @@ module Alto
       assert_equal "Chrome", ticket.field_value(browser_field)
       assert_equal "macOS 14", ticket.field_value(special_field)
     end
+
+    test "should properly validate required fields during form submission simulation" do
+      # This test simulates the exact scenario that was failing before our fix
+      bugs_board = alto_boards(:bugs)
+
+      # Create a ticket with form-submitted field_values (simulating form params)
+      ticket = Ticket.new(
+        title: "Form Submission Test",
+        description: "Testing required field validation during form submission",
+        user_id: 1,
+        board: bugs_board,
+        field_values: {
+          "severity" => "Medium",  # This should satisfy the required severity field
+          "steps_to_reproduce" => "1. Fill out form\n2. Submit form\n3. Should work!"  # This should satisfy the required steps field
+        }
+      )
+
+      # Before our fix, this would fail because the validation method was checking
+      # field_value(field) instead of the submitted field_values hash
+      assert ticket.valid?, "Ticket should be valid when required fields are provided via form submission. Errors: #{ticket.errors.full_messages}"
+
+      # Test that it can be saved successfully
+      assert ticket.save, "Ticket should save when required fields are provided"
+
+      # Verify the values are properly stored
+      assert_equal "Medium", ticket.field_values["severity"]
+      assert_equal "1. Fill out form\n2. Submit form\n3. Should work!", ticket.field_values["steps_to_reproduce"]
+    end
+
+    test "should fail validation when required fields are missing during form submission" do
+      bugs_board = alto_boards(:bugs)
+
+      # Create a ticket missing required fields
+      ticket = Ticket.new(
+        title: "Missing Required Fields Test",
+        description: "Testing validation failure",
+        user_id: 1,
+        board: bugs_board,
+        field_values: {
+          "severity" => "High",  # Has severity
+          # Missing "steps_to_reproduce" which is required
+        }
+      )
+
+      assert_not ticket.valid?, "Ticket should be invalid when required fields are missing"
+      assert_includes ticket.errors.attribute_names, :field_values_steps_to_reproduce
+      assert_includes ticket.errors[:field_values_steps_to_reproduce], "Steps to Reproduce is required"
+    end
+
+    test "should handle form submission with empty string values for required fields" do
+      bugs_board = alto_boards(:bugs)
+
+      # Test empty string values (which should be considered blank)
+      ticket = Ticket.new(
+        title: "Empty String Test",
+        description: "Testing empty string handling",
+        user_id: 1,
+        board: bugs_board,
+        field_values: {
+          "severity" => "",  # Empty string should be considered blank
+          "steps_to_reproduce" => "Valid steps"
+        }
+      )
+
+      assert_not ticket.valid?, "Ticket should be invalid when required field has empty string"
+      assert_includes ticket.errors.attribute_names, :field_values_severity
+      assert_includes ticket.errors[:field_values_severity], "Severity is required"
+    end
   end
 end

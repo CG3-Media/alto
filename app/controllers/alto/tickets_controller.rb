@@ -121,20 +121,8 @@ module Alto
       # Only admins can edit status and locked fields
       permitted_params += [:status_slug, :locked] if can_access_admin?
 
-      # Build field_values permission structure dynamically
-      field_values_structure = {}
-      @board.fields.each do |field|
-        field_key = field.label.parameterize.underscore
-        if field.multiselect_field?
-          # Allow arrays for multiselect fields
-          field_values_structure[field_key] = []
-        else
-          # Allow strings for other field types
-          field_values_structure[field_key] = nil
-        end
-      end
-
-      permitted_params << { field_values: field_values_structure }
+      # Allow all field_values as a hash - more flexible approach
+      permitted_params << { field_values: {} }
 
       params.require(:ticket).permit(*permitted_params)
     end
