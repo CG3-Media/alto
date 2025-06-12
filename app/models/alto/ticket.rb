@@ -13,6 +13,10 @@ module Alto
     validates :user_id, presence: true
     validates :board_id, presence: true
     validate :status_slug_valid_for_board
+    validate :required_custom_fields_present
+
+    # Serialize field values as JSON
+    serialize :field_values, coder: JSON
 
     # Host app callback hooks
     after_create :trigger_ticket_created_callback
@@ -121,6 +125,23 @@ module Alto
       board.has_status_tracking?
     end
 
+    # Custom field methods
+    def field_value(field)
+      return nil unless field_values.is_a?(Hash)
+      key = field.label.parameterize.underscore
+      field_values[key]
+    end
+
+    def set_field_value(field, value)
+      self.field_values = {} unless field_values.is_a?(Hash)
+      key = field.label.parameterize.underscore
+      self.field_values[key] = value
+    end
+
+    def custom_fields
+      board.fields.ordered
+    end
+
     # Subscribable concern implementation
     def subscribable_ticket
       self
@@ -172,6 +193,19 @@ module Alto
 
     def set_user_type
       self.user_type = ::Alto.configuration.user_model if user_id.present?
+    end
+
+    def required_custom_fields_present
+      return unless board.present?
+
+      board.fields.required_fields.each do |field|
+        value = field_value(field)
+        if value.blank?
+          # Use the parameterized label as the error key for better form integration
+          field_key = field.label.parameterize.underscore
+          errors.add("field_values_#{field_key}".to_sym, "#{field.label} is required")
+        end
+      end
     end
   end
 end

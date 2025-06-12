@@ -169,9 +169,44 @@ module Alto
       board&.item_name || 'ticket'
     end
 
+    # Custom fields helpers
+    def ticket_has_custom_field_values?(ticket, board)
+      board.fields.any? && visible_custom_fields(ticket, board).any?
+    end
 
+    def visible_custom_fields(ticket, board)
+      board.fields.ordered.select { |field| ticket.field_value(field).present? }
+    end
+
+    def format_custom_field_value(field, value)
+      return '' if value.blank?
+
+      case field.field_type
+      when 'multiselect'
+        format_multiselect_value(value)
+      when 'date'
+        format_date_value(value)
+      else
+        value.to_s
+      end
+    end
 
     private
+
+    def format_multiselect_value(value)
+      return '' unless value.is_a?(String)
+
+      value.split(',').map do |v|
+        content_tag :span, v.strip,
+                   class: "inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1"
+      end.join.html_safe
+    end
+
+    def format_date_value(value)
+      Date.parse(value.to_s).strftime("%B %d, %Y")
+    rescue
+      value.to_s
+    end
 
     def upvote_path_for(upvotable)
       case upvotable

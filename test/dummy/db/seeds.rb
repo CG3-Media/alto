@@ -116,7 +116,37 @@ if bugs_board.tickets.empty?
   )
 end
 
+# TODO: Add custom fields after fixing the model loading issue
+
+# Add some sample custom fields to the bugs board
+if bugs_board.fields.empty?
+  bugs_board.fields.create!([
+    {
+      label: "Severity",
+      field_type: "select_field",
+      field_options: ["Low", "Medium", "High", "Critical"],
+      required: true,
+      position: 0
+    },
+    {
+      label: "Browser/Platform",
+      field_type: "text_field",
+      placeholder: "e.g., Chrome 120, iOS 17.2",
+      required: false,
+      position: 1
+    },
+    {
+      label: "Steps to Reproduce",
+      field_type: "text_area",
+      placeholder: "Please list the steps to reproduce this issue...",
+      required: true,
+      position: 2
+    }
+  ])
+end
+
 puts "✅ Seed data created successfully!"
 puts "📊 Status Sets: #{Alto::StatusSet.count}"
 puts "📋 Boards: #{Alto::Board.count}"
 puts "🎫 Tickets: #{Alto::Ticket.count}"
+puts "📝 Custom Fields: #{Alto::Field.count}"

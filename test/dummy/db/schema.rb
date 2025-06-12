@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_10_170538) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_12_025738) do
   create_table "alto_boards", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -40,6 +40,22 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_170538) do
     t.index ["parent_id"], name: "index_alto_comments_on_parent_id"
     t.index ["ticket_id"], name: "index_alto_comments_on_ticket_id"
     t.index ["user_type", "user_id"], name: "index_alto_comments_on_user"
+  end
+
+  create_table "alto_fields", force: :cascade do |t|
+    t.integer "board_id", null: false
+    t.string "label", null: false
+    t.string "field_type", null: false
+    t.text "field_options"
+    t.integer "position", default: 0, null: false
+    t.boolean "required", default: false, null: false
+    t.string "placeholder"
+    t.text "help_text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["board_id", "position"], name: "index_alto_fields_on_board_id_and_position"
+    t.index ["board_id"], name: "index_alto_fields_on_board_id"
+    t.index ["field_type"], name: "index_alto_fields_on_field_type"
   end
 
   create_table "alto_settings", force: :cascade do |t|
@@ -96,9 +112,13 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_170538) do
     t.integer "board_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "field_values"
+    t.boolean "archived", default: false, null: false
+    t.index ["archived"], name: "index_alto_tickets_on_archived"
     t.index ["board_id"], name: "index_alto_tickets_on_board_id"
     t.index ["created_at"], name: "index_alto_tickets_on_created_at"
     t.index ["description"], name: "index_alto_tickets_on_description"
+    t.index ["field_values"], name: "index_alto_tickets_on_field_values"
     t.index ["locked"], name: "index_alto_tickets_on_locked"
     t.index ["status_slug", "created_at"], name: "index_alto_tickets_on_status_slug_and_created_at"
     t.index ["status_slug"], name: "index_alto_tickets_on_status_slug"
@@ -127,6 +147,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_10_170538) do
   add_foreign_key "alto_boards", "alto_status_sets", column: "status_set_id"
   add_foreign_key "alto_comments", "alto_comments", column: "parent_id"
   add_foreign_key "alto_comments", "alto_tickets", column: "ticket_id"
+  add_foreign_key "alto_fields", "alto_boards", column: "board_id"
   add_foreign_key "alto_statuses", "alto_status_sets", column: "status_set_id"
   add_foreign_key "alto_subscriptions", "alto_tickets", column: "ticket_id"
   add_foreign_key "alto_tickets", "alto_boards", column: "board_id"

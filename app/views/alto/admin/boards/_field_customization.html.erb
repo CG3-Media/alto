@@ -1,0 +1,172 @@
+<div class="space-y-4" data-rrf id="field-customization-form">
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-medium text-gray-900">Custom Fields</h3>
+      <p class="text-sm text-gray-500">Add custom fields to collect additional information when users submit items to this board.</p>
+    </div>
+    <button type="button" id="add-field-btn" data-add-field="custom-fields" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+      <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>
+      Add Field
+    </button>
+  </div>
+
+  <!-- Fields Container -->
+  <div id="fields-container" data-field-array="custom-fields" class="space-y-4">
+    <!-- Existing fields will be rendered here -->
+    <% @board.fields.ordered.each_with_index do |field, index| %>
+      <div class="field-item bg-gray-50 border border-gray-200 rounded-lg p-4" data-field-id="<%= field.id %>" data-field-template>
+        <div class="flex items-start justify-between">
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
+              <input type="text" value="<%= field.label %>" class="field-label w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <select class="field-type w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-reactive="field-type-<%= index %>">
+                <option value="text_field" <%= 'selected' if field.text_field? %>>Text Input</option>
+                <option value="text_area" <%= 'selected' if field.text_area? %>>Text Area</option>
+                <option value="number_field" <%= 'selected' if field.number_field? %>>Number</option>
+                <option value="date_field" <%= 'selected' if field.date_field? %>>Date</option>
+                <option value="select_field" <%= 'selected' if field.select_field? %>>Select Field</option>
+                <option value="multiselect_field" <%= 'selected' if field.multiselect_field? %>>Checkboxes</option>
+              </select>
+            </div>
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center">
+                <input type="checkbox" class="field-required h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" <%= 'checked' if field.required %>>
+                <span class="ml-2 text-sm text-gray-700">Required</span>
+              </label>
+            </div>
+          </div>
+          <div class="ml-4 flex items-center space-x-2">
+            <button type="button" class="field-drag-handle text-gray-400 hover:text-gray-600 cursor-move">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+              </svg>
+            </button>
+            <button type="button" class="field-delete text-red-400 hover:text-red-600" data-remove-field>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Options for select fields -->
+        <div class="field-options mt-4" data-show-when="field-type-<%= index %>=select_field,field-type-<%= index %>=multiselect_field" style="<%= field.needs_options? ? '' : 'display: none;' %>">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Options (one per line)</label>
+          <textarea class="field-options-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="Option 1&#10;Option 2&#10;Option 3"><%= field.options_array.join("\n") if field.needs_options? %></textarea>
+        </div>
+
+        <!-- Placeholder field -->
+        <div class="field-placeholder mt-4" data-show-when="field-type-<%= index %>=text_field,field-type-<%= index %>=text_area" style="<%= field.text_field? || field.text_area? ? '' : 'display: none;' %>">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Placeholder Text</label>
+          <input type="text" value="<%= field.placeholder %>" class="field-placeholder-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Optional placeholder text...">
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Template for new fields (hidden) -->
+  <template id="field-template">
+    <div class="field-item bg-gray-50 border border-gray-200 rounded-lg p-4" data-field-id="" data-field-template>
+      <div class="flex items-start justify-between">
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
+            <input type="text" class="field-label w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Field name...">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select class="field-type w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-reactive="field-type-new">
+              <option value="text_field">Text Input</option>
+              <option value="text_area">Text Area</option>
+              <option value="number_field">Number</option>
+              <option value="date_field">Date</option>
+              <option value="select_field">Select Field</option>
+              <option value="multiselect_field">Checkboxes</option>
+            </select>
+          </div>
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center">
+              <input type="checkbox" class="field-required h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+              <span class="ml-2 text-sm text-gray-700">Required</span>
+            </label>
+          </div>
+        </div>
+        <div class="ml-4 flex items-center space-x-2">
+          <button type="button" class="field-drag-handle text-gray-400 hover:text-gray-600 cursor-move">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+            </svg>
+          </button>
+          <button type="button" class="field-delete text-red-400 hover:text-red-600" data-remove-field>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Options for select fields -->
+      <div class="field-options mt-4" data-show-when="field-type-new=select_field,field-type-new=multiselect_field" style="display: none;">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Options (one per line)</label>
+        <textarea class="field-options-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+      </div>
+
+      <!-- Placeholder field -->
+      <div class="field-placeholder mt-4" data-show-when="field-type-new=text_field,field-type-new=text_area">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Placeholder Text</label>
+        <input type="text" class="field-placeholder-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Optional placeholder text...">
+      </div>
+    </div>
+  </template>
+
+  <!-- Hidden input to store field data for form submission -->
+  <input type="hidden" name="board[fields_data]" id="fields-data-input">
+</div>
+
+<script src="<%= asset_path('alto/reactive_rails_form.js') %>"></script>
+
+<script>
+// Custom field serialization for form submission
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('#field-customization-form').closest('form')
+  const fieldsDataInput = document.getElementById('fields-data-input')
+
+  if (form && fieldsDataInput) {
+    form.addEventListener('submit', function() {
+      // Collect all field data from the form
+      const fieldsData = []
+      const fieldItems = document.querySelectorAll('#field-customization-form .field-item')
+
+      fieldItems.forEach((fieldItem, index) => {
+        const fieldId = fieldItem.dataset.fieldId || null
+        const label = fieldItem.querySelector('.field-label')?.value || ''
+        const fieldType = fieldItem.querySelector('.field-type')?.value || 'text_field'
+        const required = fieldItem.querySelector('.field-required')?.checked || false
+        const placeholder = fieldItem.querySelector('.field-placeholder-input')?.value || ''
+        const options = fieldItem.querySelector('.field-options-input')?.value || ''
+
+        if (label.trim()) { // Only include fields with labels
+          fieldsData.push({
+            id: fieldId,
+            label: label,
+            field_type: fieldType,
+            required: required,
+            placeholder: placeholder,
+            options: options,
+            position: index
+          })
+        }
+      })
+
+      // Serialize to JSON and set in hidden field
+      fieldsDataInput.value = JSON.stringify(fieldsData)
+    })
+  }
+})
+</script>

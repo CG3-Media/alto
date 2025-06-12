@@ -197,6 +197,33 @@ module Alto
       assert board.valid?
     end
 
+    # Field relationship tests
+    test "Board has many fields" do
+      board = alto_boards(:bugs)
+      assert_respond_to board, :fields
+      assert_kind_of ActiveRecord::Associations::CollectionProxy, board.fields
+    end
+
+    test "Board destroys fields when destroyed" do
+      board = alto_boards(:bugs)
+      field = board.fields.create!(label: "Test Field", field_type: "text_input")
+      field_id = field.id
+
+      board.destroy
+      assert_not Alto::Field.exists?(field_id)
+    end
+
+    test "Board can have multiple fields" do
+      board = alto_boards(:bugs)
+
+      field1 = board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
+      field2 = board.fields.create!(label: "Description", field_type: "textarea")
+
+      assert_equal 2, board.fields.count
+      assert_includes board.fields, field1
+      assert_includes board.fields, field2
+    end
+
     test "Board requires item_label_singular when set" do
       status_set = alto_status_sets(:default)
       board = Board.new(name: "Test Board", status_set: status_set, item_label_singular: "")

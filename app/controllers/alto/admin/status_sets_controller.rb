@@ -14,10 +14,8 @@ module Alto
 
       def new
         @status_set = ::Alto::StatusSet.new
-        # Build initial statuses with positions
+        # Build one initial status
         @status_set.statuses.build(position: 0)
-        @status_set.statuses.build(position: 1)
-        @status_set.statuses.build(position: 2)
       end
 
       def create

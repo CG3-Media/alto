@@ -1,3 +1,4 @@
+# This migration comes from alto (originally 20250101000000)
 class CreateAltoV1 < ActiveRecord::Migration[7.0]
   def change
     # Status Sets - templates for status workflows

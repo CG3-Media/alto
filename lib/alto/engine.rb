@@ -42,6 +42,9 @@ module Alto
         alto/application.js
         alto/application.css
       ]
+
+      # Add reactive_rails_form.js to the precompile list
+      app.config.assets.precompile += %w( alto/reactive_rails_form.js )
     end
 
     # Load persistent settings from database after Rails initialization

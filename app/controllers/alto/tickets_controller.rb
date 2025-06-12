@@ -58,6 +58,9 @@ module Alto
       @ticket = @board.tickets.build(ticket_params)
       @ticket.user_id = current_user.id
 
+      # Process multiselect fields (convert arrays to comma-separated strings)
+      process_multiselect_fields(@ticket)
+
       if @ticket.save
         redirect_to [@board, @ticket], notice: 'Ticket was successfully created.'
       else
@@ -74,7 +77,12 @@ module Alto
       # Users can edit their own tickets, admins can edit any ticket
       redirect_to [@board, @ticket] unless can_user_edit_ticket?(@ticket)
 
-      if @ticket.update(ticket_params)
+      @ticket.assign_attributes(ticket_params)
+
+      # Process multiselect fields (convert arrays to comma-separated strings)
+      process_multiselect_fields(@ticket)
+
+      if @ticket.save
         redirect_to [@board, @ticket], notice: 'Ticket was successfully updated.'
       else
         render :edit
@@ -112,6 +120,22 @@ module Alto
       permitted_params = [:title, :description]
       # Only admins can edit status and locked fields
       permitted_params += [:status_slug, :locked] if can_edit_tickets?
+
+      # Build field_values permission structure dynamically
+      field_values_structure = {}
+      @board.fields.each do |field|
+        field_key = field.label.parameterize.underscore
+        if field.multiselect_field?
+          # Allow arrays for multiselect fields
+          field_values_structure[field_key] = []
+        else
+          # Allow strings for other field types
+          field_values_structure[field_key] = nil
+        end
+      end
+
+      permitted_params << { field_values: field_values_structure }
+
       params.require(:ticket).permit(*permitted_params)
     end
 
@@ -173,6 +197,19 @@ module Alto
     def determine_view_type
       @view_type = @board.single_view.presence || (params[:view] == 'list' ? 'list' : 'card')
       @show_toggle = @board.single_view.blank?
+    end
+
+    def process_multiselect_fields(ticket)
+      return unless ticket.field_values.is_a?(Hash)
+
+      @board.fields.where(field_type: 'multiselect').each do |field|
+        field_key = field.label.parameterize.underscore
+
+        if ticket.field_values[field_key].is_a?(Array)
+          # Convert array to comma-separated string
+          ticket.field_values[field_key] = ticket.field_values[field_key].reject(&:blank?).join(',')
+        end
+      end
     end
 
   end

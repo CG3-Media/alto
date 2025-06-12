@@ -49,6 +49,9 @@
         <div class="prose max-w-none">
           <p class="text-gray-700 whitespace-pre-wrap"><%= @ticket.description %></p>
         </div>
+
+        <!-- Custom Fields Display -->
+        <%= render 'custom_fields_display', ticket: @ticket, board: @board %>
       </div>
 
       <!-- Upvote Button -->

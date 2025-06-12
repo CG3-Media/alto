@@ -191,6 +191,118 @@ module Alto
       assert ticket.archived?
     end
 
+    # Custom fields tests
+    test "should have field_values as JSON" do
+      ticket = Ticket.create!(
+        title: "Field Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        field_values: { "priority" => "High", "browser" => "Chrome" }
+      )
+
+      assert_equal({ "priority" => "High", "browser" => "Chrome" }, ticket.field_values)
+    end
+
+    test "should get field value by field object" do
+      # Create test fields
+      priority_field = @board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
+      browser_field = @board.fields.create!(label: "Browser", field_type: "select", field_options: ["Chrome", "Safari"])
+
+      ticket = Ticket.create!(
+        title: "Field Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board,
+        field_values: { "priority" => "High", "browser" => "Safari" }
+      )
+
+      assert_equal "High", ticket.field_value(priority_field)
+      assert_equal "Safari", ticket.field_value(browser_field)
+    end
+
+    test "should set field value by field object" do
+      # Create test fields
+      priority_field = @board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
+      browser_field = @board.fields.create!(label: "Browser", field_type: "select", field_options: ["Chrome", "Firefox"])
+
+      ticket = Ticket.create!(
+        title: "Field Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board
+      )
+
+      ticket.set_field_value(priority_field, "High")
+      ticket.set_field_value(browser_field, "Firefox")
+
+      assert_equal "High", ticket.field_value(priority_field)
+      assert_equal "Firefox", ticket.field_value(browser_field)
+      assert_equal({ "priority" => "High", "browser" => "Firefox" }, ticket.field_values)
+    end
+
+    test "should get custom_fields from board" do
+      bugs_board = alto_boards(:bugs)
+
+      # Provide values for the required fields on the bugs board
+      ticket = Ticket.create!(
+        title: "Field Ticket",
+        description: "Description",
+        user_id: 1,
+        board: bugs_board,
+        field_values: {
+          "severity" => "High",           # Required field from fixtures
+          "steps_to_reproduce" => "Step 1, Step 2"  # Required field from fixtures
+        }
+      )
+
+      assert_respond_to ticket, :custom_fields
+      assert_equal ticket.board.fields.ordered, ticket.custom_fields
+    end
+
+    test "should validate required custom fields" do
+      bugs_board = alto_boards(:bugs)
+      required_field = bugs_board.fields.create!(
+        label: "Required Field",
+        field_type: "text_input",
+        required: true
+      )
+
+      ticket = Ticket.new(
+        title: "Missing Required Fields",
+        description: "Description",
+        user_id: 1,
+        board: bugs_board
+      )
+
+      assert_not ticket.valid?
+      assert_includes ticket.errors.attribute_names, :field_values_required_field
+      assert_includes ticket.errors[:field_values_required_field], "Required Field is required"
+    end
+
+    test "should be valid when required fields are provided" do
+      bugs_board = alto_boards(:bugs)
+      required_field = bugs_board.fields.create!(
+        label: "Required Field",
+        field_type: "text_input",
+        required: true
+      )
+
+      ticket = Ticket.new(
+        title: "With Required Fields",
+        description: "Description",
+        user_id: 1,
+        board: bugs_board,
+        field_values: {
+          "severity" => "High",                    # Existing required field from fixtures
+          "steps_to_reproduce" => "Test steps",   # Existing required field from fixtures
+          "required_field" => "Provided value"    # New required field we created
+        }
+      )
+
+      assert ticket.valid?, "Ticket should be valid when all required fields are provided. Errors: #{ticket.errors.full_messages}"
+    end
+
     test "archived tickets should be locked" do
       ticket = Ticket.create!(
         title: "Archived Ticket",
@@ -406,7 +518,7 @@ module Alto
       end
     end
 
-        test "should not create subscription if user email lookup fails" do
+    test "should not create subscription if user email lookup fails" do
       # Create a user but stub the email lookup to return nil
       user = User.create!(id: 999, email: nil) # User with no email
 
@@ -527,6 +639,36 @@ module Alto
       # Even if it fails gracefully (due to no user email in test environment),
       # the comment creation should still succeed and the callback should run
       assert comment.persisted?, "Comment creation should succeed even if subscription fails"
+    end
+
+    test "should parameterize field labels as keys" do
+      # Create fields with various label formats
+      priority_field = @board.fields.create!(label: "Priority Level", field_type: "select", field_options: ["Low", "High"])
+      browser_field = @board.fields.create!(label: "Browser Type", field_type: "select", field_options: ["Chrome", "Firefox"])
+      special_field = @board.fields.create!(label: "OS & Version", field_type: "text_input")
+
+      ticket = Ticket.create!(
+        title: "Field Ticket",
+        description: "Description",
+        user_id: 1,
+        board: @board
+      )
+
+      ticket.set_field_value(priority_field, "High")
+      ticket.set_field_value(browser_field, "Chrome")
+      ticket.set_field_value(special_field, "macOS 14")
+
+      # Verify the keys are properly parameterized (& gets removed by Rails)
+      expected_field_values = {
+        "priority_level" => "High",
+        "browser_type" => "Chrome",
+        "os_version" => "macOS 14"  # & gets removed by parameterize
+      }
+
+      assert_equal expected_field_values, ticket.field_values
+      assert_equal "High", ticket.field_value(priority_field)
+      assert_equal "Chrome", ticket.field_value(browser_field)
+      assert_equal "macOS 14", ticket.field_value(special_field)
     end
   end
 end

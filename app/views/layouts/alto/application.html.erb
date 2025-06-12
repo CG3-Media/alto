@@ -23,12 +23,11 @@
         import "alto"
       </script>
     <% else %>
+
       <%= javascript_include_tag 'alto/application', 'data-turbo-track': 'reload' %>
+      <%= javascript_include_tag 'alto/reactive_rails_form', 'data-turbo-track': 'reload' %>
     <% end %>
 
-    <!-- Host app assets -->
-    <%= vite_client_tag if defined?(vite_client_tag) %>
-    <%= vite_javascript_tag 'application' if defined?(vite_javascript_tag) %>
   </head>
 
     <body class="bg-gray-50 min-h-screen">

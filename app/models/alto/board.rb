@@ -3,7 +3,92 @@ module Alto
     include Sluggable
 
     has_many :tickets, dependent: :restrict_with_error
+    has_many :fields, dependent: :destroy, class_name: 'Alto::Field'
     belongs_to :status_set
+
+    # Enable nested attributes for fields - this is our Rails Way foundation!
+    accepts_nested_attributes_for :fields,
+                                  allow_destroy: true,
+                                  reject_if: ->(attributes) {
+                                    # Reject if marked for destruction
+                                    return true if attributes['_destroy'] == '1' || attributes['_destroy'] == true
+
+                                    # Reject if label is blank (required field)
+                                    attributes['label'].blank?
+                                  }
+
+            # Handle custom fields data from the ReactiveRailsForm
+    def fields_data=(data)
+      return if data.blank?
+
+      begin
+        fields_array = data.is_a?(String) ? JSON.parse(data) : data
+
+        # Build fields_attributes hash for Rails nested attributes
+        fields_attrs = {}
+
+        # Mark existing fields for destruction
+        self.fields.each_with_index do |field, idx|
+          fields_attrs[idx.to_s] = {
+            id: field.id,
+            _destroy: '1'
+          }
+        end
+
+        # Add new/updated fields
+        fields_array.each_with_index do |field_data, index|
+          attr_key = (self.fields.size + index).to_s
+
+          field_attrs = {
+            label: field_data['label'],
+            field_type: field_data['field_type'] || 'text_field',
+            required: field_data['required'] || false,
+            placeholder: field_data['placeholder'],
+            position: field_data['position'] || index
+          }
+
+          # Handle options for select fields
+          if field_data['options'].present?
+            field_attrs[:field_options] = field_data['options'].split("\n").map(&:strip).reject(&:blank?)
+          end
+
+          # Include ID if updating existing field
+          if field_data['id'].present? && !field_data['id'].to_s.empty?
+            field_attrs[:id] = field_data['id']
+            # Find the existing field in our destruction list and remove the _destroy flag
+            existing_key = fields_attrs.keys.find { |k| fields_attrs[k][:id].to_s == field_data['id'].to_s }
+            if existing_key
+              fields_attrs[existing_key] = field_attrs
+            else
+              fields_attrs[attr_key] = field_attrs
+            end
+          else
+            fields_attrs[attr_key] = field_attrs
+          end
+        end
+
+        # Use Rails nested attributes assignment
+        self.fields_attributes = fields_attrs
+
+      rescue JSON::ParserError => e
+        Rails.logger.error "Failed to parse fields_data JSON: #{e.message}"
+      end
+    end
+
+    # Getter for fields_data (for form repopulation if needed)
+    def fields_data
+      fields.map do |field|
+        {
+          id: field.id,
+          label: field.label,
+          field_type: field.field_type,
+          required: field.required,
+          placeholder: field.placeholder,
+          options: field.field_options&.join("\n"),
+          position: field.position
+        }
+      end.to_json
+    end
 
     validates :name, presence: true, length: { maximum: 100 }
     validates :slug, uniqueness: true
