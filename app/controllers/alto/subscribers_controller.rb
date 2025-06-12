@@ -2,6 +2,7 @@ module Alto
   class SubscribersController < ::Alto::ApplicationController
     before_action :set_board
     before_action :set_ticket
+    before_action :ensure_admin_access, except: [:unsubscribe_me]
     before_action :set_subscription, only: [:destroy]
 
     def index
@@ -79,6 +80,12 @@ module Alto
 
     def set_subscription
       @subscription = @ticket.subscriptions.find(params[:id])
+    end
+
+    def ensure_admin_access
+      unless can_access_admin?
+        redirect_to alto.board_ticket_path(@board, @ticket), alert: 'You do not have permission to manage subscribers.'
+      end
     end
 
     def subscription_params

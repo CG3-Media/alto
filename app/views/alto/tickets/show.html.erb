@@ -143,11 +143,14 @@
     <% end %>
 
     <div class="flex items-center space-x-2">
-      <% if can_user_edit_ticket?(@ticket) && !@ticket.archived? %>
+      <% if can_access_admin? && !@ticket.archived? %>
         <%= render 'shared/button',
             text: "Manage Subscribers",
             url: alto.board_ticket_subscribers_path(@board, @ticket),
             button_type: :primary %>
+      <% end %>
+
+      <% if can_user_edit_ticket?(@ticket) && !@ticket.archived? %>
         <%= render 'shared/button',
             text: "Edit Ticket",
             url: alto.edit_board_ticket_path(@board, @ticket),
