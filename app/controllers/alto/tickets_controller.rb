@@ -119,7 +119,7 @@ module Alto
     def ticket_params
       permitted_params = [:title, :description]
       # Only admins can edit status and locked fields
-      permitted_params += [:status_slug, :locked] if can_edit_tickets?
+      permitted_params += [:status_slug, :locked] if can_access_admin?
 
       # Build field_values permission structure dynamically
       field_values_structure = {}
@@ -154,7 +154,7 @@ module Alto
     def can_user_edit_ticket?(ticket)
       return false unless current_user
       # Users can edit their own tickets, or admins can edit any ticket
-      ticket.user_id == current_user.id || can_edit_tickets?
+      ticket.user_id == current_user.id || can_access_admin?
     end
 
     def current_user_subscribed?(ticket = @ticket)
