@@ -82,6 +82,24 @@ module Alto
       assert_select "form"
     end
 
+    test "new ticket form renders all custom fields for the board" do
+      board = Alto::Board.create!(name: "Custom Field Board", item_label_singular: "ticket", status_set: @general_board.status_set)
+      board.fields.create!(label: "Priority", field_type: "text_field", position: 0)
+      board.fields.create!(label: "Category", field_type: "text_field", position: 1)
+      get "/feedback/boards/#{board.slug}/tickets/new"
+      assert_response :success
+      assert_select 'input[name="ticket[field_values][priority]"]', 1
+      assert_select 'input[name="ticket[field_values][category]"]', 1
+    end
+
+    test "new ticket form does not error if board has no fields" do
+      board = Alto::Board.create!(name: "No Field Board", item_label_singular: "ticket", status_set: @general_board.status_set)
+      get "/feedback/boards/#{board.slug}/tickets/new"
+      assert_response :success
+      # Should not render any custom field inputs
+      assert_select 'input[name^="ticket[field_values]"]', 0
+    end
+
     # CREATE TESTS
     test "should create ticket with valid params" do
       assert_difference("Alto::Ticket.count") do
