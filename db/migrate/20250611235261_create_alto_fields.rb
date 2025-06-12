@@ -1,4 +1,3 @@
-# This migration comes from alto (originally 20250114000002)
 class CreateAltoFields < ActiveRecord::Migration[7.0]
   def change
     # Fields - custom field definitions for boards
