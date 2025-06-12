@@ -4,7 +4,7 @@ source "https://rubygems.org"
 gem "rails", "~> 8.0.1"
 
 # Add Alto gem for testing
-gem 'alto', path: '../..'
+gem "alto", path: "../.."
 
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"

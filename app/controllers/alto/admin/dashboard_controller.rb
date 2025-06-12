@@ -6,7 +6,7 @@ module Alto
       def index
         @total_boards = Board.count
         @total_tickets = Ticket.count
-        @open_tickets = Ticket.by_status('open').count
+        @open_tickets = Ticket.by_status("open").count
         @recent_tickets = Ticket.includes(:upvotes, :comments, :board).recent.limit(5)
         @recent_comments = Comment.includes(:ticket, :upvotes).recent.limit(5)
 
@@ -19,7 +19,7 @@ module Alto
           {
             board: board,
             tickets_count: board.tickets_count,
-            open_tickets_count: board.tickets.by_status('open').count,
+            open_tickets_count: board.tickets.by_status("open").count,
             recent_activity: board.recent_tickets(3)
           }
         end

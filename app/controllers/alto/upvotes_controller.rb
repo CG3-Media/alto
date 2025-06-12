@@ -14,8 +14,8 @@ module Alto
         end
       else
         respond_to do |format|
-          format.html { redirect_back(fallback_location: fallback_path, alert: 'Unable to upvote') }
-          format.json { render json: { error: 'Unable to upvote' }, status: :unprocessable_entity }
+          format.html { redirect_back(fallback_location: fallback_path, alert: "Unable to upvote") }
+          format.json { render json: { error: "Unable to upvote" }, status: :unprocessable_entity }
         end
       end
     end
@@ -30,8 +30,8 @@ module Alto
         end
       else
         respond_to do |format|
-          format.html { redirect_back(fallback_location: fallback_path, alert: 'Unable to remove upvote') }
-          format.json { render json: { error: 'Unable to remove upvote' }, status: :unprocessable_entity }
+          format.html { redirect_back(fallback_location: fallback_path, alert: "Unable to remove upvote") }
+          format.json { render json: { error: "Unable to remove upvote" }, status: :unprocessable_entity }
         end
       end
     end
@@ -55,7 +55,7 @@ module Alto
       end
     rescue ActiveRecord::RecordInvalid => e
       respond_to do |format|
-        format.html { redirect_back(fallback_location: fallback_path, alert: 'Unable to toggle upvote') }
+        format.html { redirect_back(fallback_location: fallback_path, alert: "Unable to toggle upvote") }
         format.json { render json: { error: e.message }, status: :unprocessable_entity }
       end
     end
@@ -70,7 +70,7 @@ module Alto
         @upvotable = Comment.find(params[:comment_id])
         @board = @upvotable.ticket.board
       else
-        redirect_to alto.root_path, alert: 'Invalid upvote target'
+        redirect_to alto.root_path, alert: "Invalid upvote target"
       end
     end
 
@@ -87,8 +87,8 @@ module Alto
     def check_vote_permission
       unless can_vote?
         respond_to do |format|
-          format.html { redirect_back(fallback_location: fallback_path, alert: 'You do not have permission to vote') }
-          format.json { render json: { error: 'Permission denied' }, status: :forbidden }
+          format.html { redirect_back(fallback_location: fallback_path, alert: "You do not have permission to vote") }
+          format.json { render json: { error: "Permission denied" }, status: :forbidden }
         end
       end
     end
@@ -97,16 +97,16 @@ module Alto
       # Check if upvotable is a ticket and archived, or if it's a comment on an archived ticket
       archived = if @upvotable.is_a?(Ticket)
                    @upvotable.archived?
-                 elsif @upvotable.is_a?(Comment)
+      elsif @upvotable.is_a?(Comment)
                    @upvotable.ticket.archived?
-                 else
+      else
                    false
-                 end
+      end
 
       if archived
         respond_to do |format|
-          format.html { redirect_back(fallback_location: fallback_path, alert: 'Archived content cannot be upvoted') }
-          format.json { render json: { error: 'Archived content cannot be upvoted' }, status: :unprocessable_entity }
+          format.html { redirect_back(fallback_location: fallback_path, alert: "Archived content cannot be upvoted") }
+          format.json { render json: { error: "Archived content cannot be upvoted" }, status: :unprocessable_entity }
         end
       end
     end

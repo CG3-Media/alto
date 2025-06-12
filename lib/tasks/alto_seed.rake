@@ -15,7 +15,7 @@ namespace :alto do
         puts "   Creating data without user associations..."
       end
 
-            # Create sample users if user model exists
+      # Create sample users if user model exists
       sample_users = []
       if user_model_class
         sample_users = create_sample_users(user_model_class)
@@ -99,14 +99,14 @@ private
 
     users = []
     sample_user_data = [
-      { email: 'admin@example.com', name: 'Admin User' },
-      { email: 'developer@example.com', name: 'Jane Developer' },
-      { email: 'product@example.com', name: 'Product Manager' },
-      { email: 'user1@example.com', name: 'Alice Johnson' },
-      { email: 'user2@example.com', name: 'Bob Smith' },
-      { email: 'user3@example.com', name: 'Charlie Brown' },
-      { email: 'tester@example.com', name: 'QA Tester' },
-      { email: 'designer@example.com', name: 'UI Designer' }
+      { email: "admin@example.com", name: "Admin User" },
+      { email: "developer@example.com", name: "Jane Developer" },
+      { email: "product@example.com", name: "Product Manager" },
+      { email: "user1@example.com", name: "Alice Johnson" },
+      { email: "user2@example.com", name: "Bob Smith" },
+      { email: "user3@example.com", name: "Charlie Brown" },
+      { email: "tester@example.com", name: "QA Tester" },
+      { email: "designer@example.com", name: "UI Designer" }
     ]
 
     sample_user_data.each do |user_data|
@@ -118,14 +118,14 @@ private
       else
         # Create user with attributes that most user models support
         user_attrs = { email: user_data[:email] }
-        user_attrs[:name] = user_data[:name] if user_model_class.column_names.include?('name')
+        user_attrs[:name] = user_data[:name] if user_model_class.column_names.include?("name")
 
-                # Add password fields if user model supports them (Devise, etc.)
-        if user_model_class.column_names.include?('encrypted_password') || user_model_class.column_names.include?('password_digest')
+        # Add password fields if user model supports them (Devise, etc.)
+        if user_model_class.column_names.include?("encrypted_password") || user_model_class.column_names.include?("password_digest")
           # Generate secure random password to avoid "password has been breached" errors
           secure_password = SecureRandom.alphanumeric(12)
           user_attrs[:password] = secure_password
-          user_attrs[:password_confirmation] = secure_password if user_model_class.column_names.include?('password_confirmation')
+          user_attrs[:password_confirmation] = secure_password if user_model_class.column_names.include?("password_confirmation")
         end
 
         begin
@@ -146,18 +146,18 @@ private
     statuses = {}
 
     # Bug Tracking Status Set
-    bug_status_set = Alto::StatusSet.find_or_create_by!(name: 'Bug Workflow') do |ss|
-      ss.description = 'Status workflow for bug reports and issues'
+    bug_status_set = Alto::StatusSet.find_or_create_by!(name: "Bug Workflow") do |ss|
+      ss.description = "Status workflow for bug reports and issues"
       ss.is_default = false
     end
 
     bug_status_data = [
-      { name: 'New', slug: 'new', color: 'blue', position: 1 },
-      { name: 'Triaged', slug: 'triaged', color: 'yellow', position: 2 },
-      { name: 'In Progress', slug: 'in_progress', color: 'purple', position: 3 },
-      { name: 'Testing', slug: 'testing', color: 'orange', position: 4 },
-      { name: 'Fixed', slug: 'fixed', color: 'green', position: 5 },
-      { name: 'Won\'t Fix', slug: 'wont_fix', color: 'gray', position: 6 }
+      { name: "New", slug: "new", color: "blue", position: 1 },
+      { name: "Triaged", slug: "triaged", color: "yellow", position: 2 },
+      { name: "In Progress", slug: "in_progress", color: "purple", position: 3 },
+      { name: "Testing", slug: "testing", color: "orange", position: 4 },
+      { name: "Fixed", slug: "fixed", color: "green", position: 5 },
+      { name: "Won't Fix", slug: "wont_fix", color: "gray", position: 6 }
     ]
 
     statuses[:bug] = {}
@@ -174,18 +174,18 @@ private
     status_sets << bug_status_set
 
     # Feature Request Status Set
-    feature_status_set = Alto::StatusSet.find_or_create_by!(name: 'Feature Workflow') do |ss|
-      ss.description = 'Status workflow for feature requests and enhancements'
+    feature_status_set = Alto::StatusSet.find_or_create_by!(name: "Feature Workflow") do |ss|
+      ss.description = "Status workflow for feature requests and enhancements"
       ss.is_default = true
     end
 
     feature_status_data = [
-      { name: 'Proposed', slug: 'proposed', color: 'blue', position: 1 },
-      { name: 'Under Review', slug: 'under_review', color: 'yellow', position: 2 },
-      { name: 'Approved', slug: 'approved', color: 'purple', position: 3 },
-      { name: 'In Development', slug: 'in_development', color: 'orange', position: 4 },
-      { name: 'Released', slug: 'released', color: 'green', position: 5 },
-      { name: 'Rejected', slug: 'rejected', color: 'red', position: 6 }
+      { name: "Proposed", slug: "proposed", color: "blue", position: 1 },
+      { name: "Under Review", slug: "under_review", color: "yellow", position: 2 },
+      { name: "Approved", slug: "approved", color: "purple", position: 3 },
+      { name: "In Development", slug: "in_development", color: "orange", position: 4 },
+      { name: "Released", slug: "released", color: "green", position: 5 },
+      { name: "Rejected", slug: "rejected", color: "red", position: 6 }
     ]
 
     statuses[:feature] = {}
@@ -213,36 +213,36 @@ private
 
     board_data = [
       {
-        name: 'Bug Reports',
-        slug: 'bugs',
-        description: 'Report bugs and technical issues here. Help us improve the application by describing problems you encounter.',
-        item_label_singular: 'bug report',
-        status_set: status_sets.find { |s| s.name == 'Bug Workflow' },
+        name: "Bug Reports",
+        slug: "bugs",
+        description: "Report bugs and technical issues here. Help us improve the application by describing problems you encounter.",
+        item_label_singular: "bug report",
+        status_set: status_sets.find { |s| s.name == "Bug Workflow" },
         is_admin_only: false
       },
       {
-        name: 'Feature Requests',
-        slug: 'features',
-        description: 'Suggest new features and enhancements. Share your ideas to make our product better!',
-        item_label_singular: 'feature request',
-        status_set: status_sets.find { |s| s.name == 'Feature Workflow' },
+        name: "Feature Requests",
+        slug: "features",
+        description: "Suggest new features and enhancements. Share your ideas to make our product better!",
+        item_label_singular: "feature request",
+        status_set: status_sets.find { |s| s.name == "Feature Workflow" },
         is_admin_only: false
       },
       {
-        name: 'General Feedback',
-        slug: 'feedback',
-        description: 'Share general thoughts, suggestions, and feedback about your experience.',
-        item_label_singular: 'feedback',
-        status_set: status_sets.find { |s| s.name == 'Feature Workflow' },
+        name: "General Feedback",
+        slug: "feedback",
+        description: "Share general thoughts, suggestions, and feedback about your experience.",
+        item_label_singular: "feedback",
+        status_set: status_sets.find { |s| s.name == "Feature Workflow" },
         is_admin_only: false,
-        single_view: 'list'
+        single_view: "list"
       },
       {
-        name: 'Internal Issues',
-        slug: 'internal',
-        description: 'Internal team discussions and administrative items.',
-        item_label_singular: 'issue',
-        status_set: status_sets.find { |s| s.name == 'Bug Workflow' },
+        name: "Internal Issues",
+        slug: "internal",
+        description: "Internal team discussions and administrative items.",
+        item_label_singular: "issue",
+        status_set: status_sets.find { |s| s.name == "Bug Workflow" },
         is_admin_only: true
       }
     ]
@@ -272,27 +272,27 @@ private
     fields = []
 
     # Bug Reports Board Custom Fields
-    bugs_board = boards.find { |b| b.name == 'Bug Reports' }
+    bugs_board = boards.find { |b| b.name == "Bug Reports" }
     if bugs_board && bugs_board.fields.empty?
       bug_fields = bugs_board.fields.create!([
         {
           label: "Severity",
           field_type: "select_field",
-          field_options: ["Low", "Medium", "High", "Critical"],
+          field_options: [ "Low", "Medium", "High", "Critical" ],
           required: true,
           position: 0
         },
         {
           label: "Operating System",
           field_type: "select_field",
-          field_options: ["Windows 11", "Windows 10", "macOS Sonoma", "macOS Ventura", "macOS Monterey", "Ubuntu 22.04", "Ubuntu 20.04", "iOS 17", "iOS 16", "Android 14", "Android 13", "Other"],
+          field_options: [ "Windows 11", "Windows 10", "macOS Sonoma", "macOS Ventura", "macOS Monterey", "Ubuntu 22.04", "Ubuntu 20.04", "iOS 17", "iOS 16", "Android 14", "Android 13", "Other" ],
           required: false,
           position: 1
         },
         {
           label: "Browser",
           field_type: "select_field",
-          field_options: ["Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave", "Arc", "Mobile Safari", "Chrome Mobile", "Firefox Mobile", "Samsung Internet", "Other"],
+          field_options: [ "Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave", "Arc", "Mobile Safari", "Chrome Mobile", "Firefox Mobile", "Samsung Internet", "Other" ],
           required: false,
           position: 2
         },
@@ -308,13 +308,13 @@ private
     end
 
     # Feature Requests Board Custom Fields
-    features_board = boards.find { |b| b.name == 'Feature Requests' }
+    features_board = boards.find { |b| b.name == "Feature Requests" }
     if features_board && features_board.fields.empty?
       feature_fields = features_board.fields.create!([
         {
           label: "Would Pay Extra for This Feature",
           field_type: "select_field",
-          field_options: ["Yes", "No"],
+          field_options: [ "Yes", "No" ],
           required: false,
           position: 0
         }
@@ -329,31 +329,31 @@ private
     tickets = []
 
     # Bug Reports
-    bugs_board = boards.find { |b| b.name == 'Bug Reports' }
+    bugs_board = boards.find { |b| b.name == "Bug Reports" }
 
     bug_tickets = [
       {
-        title: 'Login button not working on mobile Safari',
+        title: "Login button not working on mobile Safari",
         description: "When I try to log in using Safari on iPhone, the login button doesn't respond to taps. Works fine on Chrome and other browsers.\n\nSteps to reproduce:\n1. Open app in Safari on iPhone\n2. Go to login page\n3. Tap login button\n4. Nothing happens\n\nExpected: Should log me in\nActual: Button doesn't respond",
         status_slug: statuses[:bug][:new].slug
       },
       {
-        title: 'Dashboard loading very slowly',
+        title: "Dashboard loading very slowly",
         description: "The main dashboard takes 15-20 seconds to load, which feels way too slow. Other pages load quickly, but the dashboard specifically has performance issues.\n\nI'm on a decent internet connection (100mbps) so it's not a network issue on my end.",
         status_slug: statuses[:bug][:triaged].slug
       },
       {
-        title: 'Email notifications not being sent',
+        title: "Email notifications not being sent",
         description: "I've enabled email notifications in my settings, but I'm not receiving any emails when there are updates to tickets I'm following.\n\nChecked spam folder - nothing there either.",
         status_slug: statuses[:bug][:in_progress].slug
       },
       {
-        title: 'Search results showing deleted items',
+        title: "Search results showing deleted items",
         description: "When I search for tickets, the results include items that have been deleted. Clicking on them shows a 404 error.\n\nThe search index probably isn't being updated when items are deleted.",
         status_slug: statuses[:bug][:testing].slug
       },
       {
-        title: 'File upload breaks with large images',
+        title: "File upload breaks with large images",
         description: "Trying to upload images larger than 2MB causes the upload to fail with a generic error message. Would be nice to have:\n\n1. Better error message\n2. Image compression\n3. Progress indicator",
         status_slug: statuses[:bug][:fixed].slug
       }
@@ -408,36 +408,36 @@ private
       tickets << ticket
     end
 
-        # Feature Requests
-    features_board = boards.find { |b| b.name == 'Feature Requests' }
+    # Feature Requests
+    features_board = boards.find { |b| b.name == "Feature Requests" }
     feature_tickets = [
       {
-        title: 'Dark mode support',
+        title: "Dark mode support",
         description: "It would be great to have a dark mode option in the user preferences. Many modern applications offer this and it's easier on the eyes, especially during evening work sessions.\n\nCould include:\n- Toggle in user settings\n- System preference detection\n- Smooth transition between modes",
         status_slug: statuses[:feature][:proposed].slug
       },
       {
-        title: 'Bulk actions for ticket management',
+        title: "Bulk actions for ticket management",
         description: "As an admin, I often need to update multiple tickets at once. It would be helpful to have bulk actions like:\n\n- Change status of multiple tickets\n- Assign multiple tickets to a user\n- Add tags to multiple tickets\n- Delete multiple tickets\n\nCheckboxes next to each ticket with an actions dropdown would work well.",
         status_slug: statuses[:feature][:under_review].slug
       },
       {
-        title: 'Advanced search and filtering',
+        title: "Advanced search and filtering",
         description: "The current search is pretty basic. Would love to see:\n\n- Filter by date range\n- Filter by user/author\n- Filter by tags\n- Filter by status\n- Saved search queries\n- Search within comments too\n\nBasically make it easier to find specific tickets in large boards.",
         status_slug: statuses[:feature][:approved].slug
       },
       {
-        title: 'Mobile app',
+        title: "Mobile app",
         description: "A native mobile app would be amazing! The web version works on mobile but a dedicated app would provide:\n\n- Push notifications\n- Better offline support\n- Native sharing\n- Camera integration for screenshots\n- Faster navigation",
         status_slug: statuses[:feature][:in_development].slug
       },
       {
-        title: 'Integration with Slack',
+        title: "Integration with Slack",
         description: "Slack integration would be super useful for teams. Features could include:\n\n- Notifications in Slack channels when tickets are created/updated\n- Ability to create tickets from Slack\n- Link previews for ticket URLs\n- Commands like /ticket-status\n\nThis was requested by our whole team!",
         status_slug: statuses[:feature][:released].slug
       },
       {
-        title: 'AI-powered ticket categorization',
+        title: "AI-powered ticket categorization",
         description: "Using machine learning to automatically categorize and tag tickets based on their content. This could help with:\n\n- Auto-assigning to the right team\n- Detecting duplicate tickets\n- Suggesting similar existing tickets\n- Priority scoring\n\nProbably too ambitious for now but would be cool in the future.",
         status_slug: statuses[:feature][:rejected].slug
       }
@@ -469,22 +469,22 @@ private
     end
 
     # General Feedback
-    feedback_board = boards.find { |b| b.name == 'General Feedback' }
+    feedback_board = boards.find { |b| b.name == "General Feedback" }
     feedback_tickets = [
       {
-        title: 'Love the new interface design!',
+        title: "Love the new interface design!",
         description: "Just wanted to say the recent UI update looks fantastic. Much cleaner and more intuitive than before. Great job on the visual refresh!"
       },
       {
-        title: 'Suggestion: keyboard shortcuts',
+        title: "Suggestion: keyboard shortcuts",
         description: "It would be nice to have keyboard shortcuts for common actions like creating a new ticket (maybe Ctrl+N), searching (Ctrl+K), etc. Would speed up workflow for power users."
       },
       {
-        title: 'Documentation could be better',
+        title: "Documentation could be better",
         description: "The help docs are a bit sparse. More examples and screenshots would be helpful, especially for the admin features."
       },
       {
-        title: 'Great customer support experience',
+        title: "Great customer support experience",
         description: "Had an issue last week and the support team was super responsive and helpful. Really appreciate the quick turnaround!"
       }
     ]
@@ -502,15 +502,15 @@ private
     end
 
     # Internal Issues (admin only)
-    internal_board = boards.find { |b| b.name == 'Internal Issues' }
+    internal_board = boards.find { |b| b.name == "Internal Issues" }
     internal_tickets = [
       {
-        title: 'Server migration planning',
+        title: "Server migration planning",
         description: "Need to plan the migration to the new server infrastructure. Key considerations:\n\n- Downtime minimization\n- Data backup strategy\n- Performance testing\n- Rollback plan",
         status_slug: statuses[:bug][:new].slug
       },
       {
-        title: 'Update security dependencies',
+        title: "Update security dependencies",
         description: "Several security vulnerabilities reported in our dependencies. Need to update:\n\n- Rails to latest patch version\n- jQuery to address XSS issues\n- Update SSL certificates\n\nSchedule for maintenance window.",
         status_slug: statuses[:bug][:in_progress].slug
       }
@@ -651,20 +651,20 @@ private
     tickets.each_with_index do |ticket, index|
       # Determine popularity based on ticket type and age
       popularity_factor = case ticket.board.name
-      when 'Bug Reports'
+      when "Bug Reports"
         # Bug reports get moderate upvotes
         rand(1..8)
-      when 'Feature Requests'
+      when "Feature Requests"
         # Feature requests can be very popular
         case ticket.status_slug
-        when 'approved', 'in_development', 'released'
+        when "approved", "in_development", "released"
           rand(5..15)
-        when 'proposed', 'under_review'
+        when "proposed", "under_review"
           rand(2..10)
         else
           rand(1..5)
         end
-      when 'General Feedback'
+      when "General Feedback"
         # General feedback gets fewer upvotes
         rand(1..6)
       else
@@ -672,7 +672,7 @@ private
       end
 
       # Create upvotes from random users
-      upvote_count = [popularity_factor, sample_users.length].min
+      upvote_count = [ popularity_factor, sample_users.length ].min
       upvoting_users = sample_users.sample(upvote_count)
 
       upvoting_users.each do |user|

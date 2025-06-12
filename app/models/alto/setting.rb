@@ -9,9 +9,9 @@ module Alto
       return default unless setting
 
       case setting.value_type
-      when 'boolean'
-        setting.value == 'true'
-      when 'array'
+      when "boolean"
+        setting.value == "true"
+      when "array"
         setting.value.present? ? JSON.parse(setting.value) : []
       else
         setting.value
@@ -25,13 +25,13 @@ module Alto
       case value
       when true, false
         setting.value = value.to_s
-        setting.value_type = 'boolean'
+        setting.value_type = "boolean"
       when Array
         setting.value = value.to_json
-        setting.value_type = 'array'
+        setting.value_type = "array"
       else
         setting.value = value.to_s
-        setting.value_type = 'string'
+        setting.value_type = "string"
       end
 
       setting.save!

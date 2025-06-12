@@ -4,7 +4,7 @@ module Alto
   class SubscribableTest < ActiveSupport::TestCase
     # Create a test class that includes the Subscribable concern
     class TestSubscribableModel < ActiveRecord::Base
-      self.table_name = 'alto_tickets'
+      self.table_name = "alto_tickets"
       include ::Alto::Subscribable
 
       attr_accessor :test_user_email, :test_ticket, :should_create_sub
@@ -24,15 +24,15 @@ module Alto
 
     def setup
       # Create test users to ensure they exist for validation
-      @user1 = User.find_or_create_by!(id: 1, email: 'test1@example.com')
-      @user2 = User.find_or_create_by!(id: 2, email: 'test2@example.com')
+      @user1 = User.find_or_create_by!(id: 1, email: "test1@example.com")
+      @user2 = User.find_or_create_by!(id: 2, email: "test2@example.com")
 
       # Create test board with status set
       @status_set = ::Alto::StatusSet.create!(
-        name: 'Test Status Set',
+        name: "Test Status Set",
         is_default: true
       )
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
       @board = Board.create!(
         name: "Test Board",
@@ -62,7 +62,7 @@ module Alto
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
 
-      assert_difference '@ticket.subscriptions.count', 1 do
+      assert_difference "@ticket.subscriptions.count", 1 do
         model.save!
       end
 
@@ -81,7 +81,7 @@ module Alto
       model.test_user_email = nil # Make sure no email is set
       model.test_ticket = @ticket
 
-      assert_no_difference '@ticket.subscriptions.count' do
+      assert_no_difference "@ticket.subscriptions.count" do
         model.save!
       end
     end
@@ -97,7 +97,7 @@ module Alto
       model.test_user_email = nil
       model.test_ticket = @ticket
 
-      assert_no_difference '@ticket.subscriptions.count' do
+      assert_no_difference "@ticket.subscriptions.count" do
         model.save!
       end
     end
@@ -113,7 +113,7 @@ module Alto
       model.test_user_email = "test@example.com"
       model.test_ticket = nil
 
-      assert_no_difference '@ticket.subscriptions.count' do
+      assert_no_difference "@ticket.subscriptions.count" do
         model.save!
       end
     end
@@ -130,7 +130,7 @@ module Alto
       model.test_ticket = @ticket
       model.should_create_sub = false
 
-      assert_no_difference '@ticket.subscriptions.count' do
+      assert_no_difference "@ticket.subscriptions.count" do
         model.save!
       end
     end
@@ -147,7 +147,7 @@ module Alto
       model.test_ticket = @ticket
 
       # Mock the subscription creation to raise an error
-      @ticket.subscriptions.stub(:find_or_create_by, -> (*args) { raise StandardError.new("Database error") }) do
+      @ticket.subscriptions.stub(:find_or_create_by, ->(*args) { raise StandardError.new("Database error") }) do
         # Should not raise the error, just log it
         assert_nothing_raised do
           model.save!
@@ -169,7 +169,7 @@ module Alto
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
 
-      assert_no_difference '@ticket.subscriptions.count' do
+      assert_no_difference "@ticket.subscriptions.count" do
         model.save!
       end
 
@@ -180,7 +180,7 @@ module Alto
     test "should raise NotImplementedError for subscribable_ticket if not implemented" do
       # Create a minimal test class without implementing the method
       minimal_class = Class.new(ActiveRecord::Base) do
-        self.table_name = 'alto_tickets'
+        self.table_name = "alto_tickets"
         include ::Alto::Subscribable
 
         def user_email
@@ -204,7 +204,7 @@ module Alto
     test "should raise NotImplementedError for user_email if not implemented" do
       # Create a minimal test class without implementing the method
       minimal_class = Class.new(ActiveRecord::Base) do
-        self.table_name = 'alto_tickets'
+        self.table_name = "alto_tickets"
         include ::Alto::Subscribable
 
         def subscribable_ticket

@@ -8,7 +8,7 @@ module Alto
         board: @board,
         label: "Severity",
         field_type: "select",
-        field_options: ["Low", "Medium", "High", "Critical"],
+        field_options: [ "Low", "Medium", "High", "Critical" ],
         required: true
       }
     end
@@ -85,7 +85,7 @@ module Alto
 
     test "options_array should return array for select fields" do
       field = Field.new(@field_attributes)
-      assert_equal ["Low", "Medium", "High", "Critical"], field.options_array
+      assert_equal [ "Low", "Medium", "High", "Critical" ], field.options_array
     end
 
     test "options_array should return empty array for non-select fields" do
@@ -112,7 +112,7 @@ module Alto
       field3 = Field.create!(@field_attributes.merge(board: clean_board, position: 1, label: "Middle"))
 
       ordered_fields = clean_board.fields.ordered
-      assert_equal ["First", "Middle", "Second"], ordered_fields.map(&:label)
+      assert_equal [ "First", "Middle", "Second" ], ordered_fields.map(&:label)
     end
 
     test "required_fields scope should return only required fields" do

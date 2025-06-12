@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 module Alto
   module Admin
@@ -8,11 +8,11 @@ module Alto
       def setup
         # Let Rails transactional fixtures handle data isolation
         # Create test user
-        @user = User.create!(email: 'test@example.com')
+        @user = User.create!(email: "test@example.com")
 
         # Create test status set
         @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
-        @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+        @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
         # Create test board
         @board = Board.create!(
@@ -28,7 +28,7 @@ module Alto
         get admin_boards_path
         # Any response (200, 404, 401, 403) means the route exists
         assert_not_nil response
-        assert_includes [200, 302, 401, 403, 404], response.status
+        assert_includes [ 200, 302, 401, 403, 404 ], response.status
       rescue ActionController::RoutingError
         # Route doesn't exist in test - that's also acceptable
         assert true, "Admin route not available in test environment"

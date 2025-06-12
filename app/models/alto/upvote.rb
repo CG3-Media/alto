@@ -6,7 +6,7 @@ module Alto
     belongs_to :user, polymorphic: true
 
     validates :user_id, presence: true
-    validates :user_id, uniqueness: { scope: [:upvotable_type, :upvotable_id] }
+    validates :user_id, uniqueness: { scope: [ :upvotable_type, :upvotable_id ] }
 
     # Set user_type for polymorphic association
     before_validation :set_user_type, if: -> { user_id.present? && user_type.blank? }
@@ -15,8 +15,8 @@ module Alto
     after_create :trigger_upvote_created_callback
     after_destroy :trigger_upvote_removed_callback
 
-    scope :for_tickets, -> { where(upvotable_type: 'Alto::Ticket') }
-    scope :for_comments, -> { where(upvotable_type: 'Alto::Comment') }
+    scope :for_tickets, -> { where(upvotable_type: "Alto::Ticket") }
+    scope :for_comments, -> { where(upvotable_type: "Alto::Comment") }
 
     # Subscribable concern implementation
     def subscribable_ticket

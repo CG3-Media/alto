@@ -5,8 +5,8 @@ module Alto
     include Engine.routes.url_helpers
 
     def setup
-      @user = User.find_or_create_by!(id: 1, email: 'test1@example.com')
-      @user2 = User.find_or_create_by!(id: 2, email: 'test2@example.com')
+      @user = User.find_or_create_by!(id: 1, email: "test1@example.com")
+      @user2 = User.find_or_create_by!(id: 2, email: "test2@example.com")
       @general_board = alto_boards(:general)
       @bugs_board = alto_boards(:bugs)
 
@@ -42,9 +42,9 @@ module Alto
     end
 
     test "should filter tickets by status" do
-      @ticket.update!(status_slug: 'closed')
+      @ticket.update!(status_slug: "closed")
 
-      get "/feedback/boards/#{@general_board.slug}/tickets", params: { status: 'closed' }
+      get "/feedback/boards/#{@general_board.slug}/tickets", params: { status: "closed" }
       assert_response :success
       assert_includes response.body, @ticket.title
     end
@@ -53,7 +53,7 @@ module Alto
       # Create an upvote to make ticket popular
       @ticket.upvotes.create!(user_id: @user.id)
 
-      get "/feedback/boards/#{@general_board.slug}/tickets", params: { sort: 'popular' }
+      get "/feedback/boards/#{@general_board.slug}/tickets", params: { sort: "popular" }
       assert_response :success
       assert_includes response.body, @ticket.title
     end
@@ -84,7 +84,7 @@ module Alto
 
     # CREATE TESTS
     test "should create ticket with valid params" do
-      assert_difference('Alto::Ticket.count') do
+      assert_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "New Test Ticket",
@@ -102,7 +102,7 @@ module Alto
     end
 
     test "should not create ticket with invalid params" do
-      assert_no_difference('Alto::Ticket.count') do
+      assert_no_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "", # blank title should fail validation
@@ -116,7 +116,7 @@ module Alto
     end
 
     test "should create ticket with field_values" do
-      assert_difference('Alto::Ticket.count') do
+      assert_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "Ticket with Custom Fields",
@@ -148,7 +148,7 @@ module Alto
       get "/feedback/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}/edit"
       # Response depends on permission system - could be success or redirect
       # We'll test that it doesn't crash and handles gracefully
-      assert_includes [200, 302], response.status
+      assert_includes [ 200, 302 ], response.status
     end
 
     # UPDATE TESTS
@@ -195,7 +195,7 @@ module Alto
 
       @other_users_ticket.reload
       # Response depends on permission system implementation
-      assert_includes [200, 302], response.status
+      assert_includes [ 200, 302 ], response.status
       # If no permission system is in place, the update might succeed
       # If permission system is active, it should be blocked
     end
@@ -219,7 +219,7 @@ module Alto
 
     # DESTROY TESTS
     test "should destroy own ticket" do
-      assert_difference('Alto::Ticket.count', -1) do
+      assert_difference("Alto::Ticket.count", -1) do
         delete "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
       end
 
@@ -232,7 +232,7 @@ module Alto
       delete "/feedback/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}"
 
       # Response should be either success redirect or permission redirect
-      assert_includes [200, 302], response.status
+      assert_includes [ 200, 302 ], response.status
 
       # Check if ticket still exists - depends on permission implementation
       begin
@@ -243,7 +243,7 @@ module Alto
       end
     end
 
-    # BOARD SCOPING TESTS
+        # BOARD SCOPING TESTS
         test "should properly scope tickets to their boards" do
       # Create a ticket in the general board
       general_ticket = @general_board.tickets.create!(
@@ -302,7 +302,7 @@ module Alto
     test "should not allow destroying archived ticket" do
       @ticket.update!(archived: true)
 
-      assert_no_difference('Alto::Ticket.count') do
+      assert_no_difference("Alto::Ticket.count") do
         delete "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
       end
 
@@ -316,18 +316,18 @@ module Alto
       multiselect_field = @general_board.fields.create!(
         label: "Tags",
         field_type: "multiselect",
-        field_options: ["Bug", "Feature", "Enhancement"],
+        field_options: [ "Bug", "Feature", "Enhancement" ],
         required: false,
         position: 1
       )
 
-      assert_difference('Alto::Ticket.count') do
+      assert_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "Multiselect Test",
             description: "Testing multiselect processing",
             field_values: {
-              "tags" => ["Bug", "Feature"] # array should be converted to string
+              "tags" => [ "Bug", "Feature" ] # array should be converted to string
             }
           }
         }

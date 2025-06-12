@@ -106,10 +106,10 @@ module Alto
 
       # Generate URL-friendly slug from source attribute
       base_slug = source_text.downcase
-                            .gsub(/[^a-z0-9\s\-_]/, '') # Remove special characters except spaces, hyphens, underscores
-                            .gsub(/\s+/, '-')           # Replace spaces with hyphens
-                            .gsub(/-+/, '-')            # Replace multiple hyphens with single hyphen
-                            .gsub(/\A-+|-+\z/, '')     # Remove leading/trailing hyphens
+                            .gsub(/[^a-z0-9\s\-_]/, "") # Remove special characters except spaces, hyphens, underscores
+                            .gsub(/\s+/, "-")           # Replace spaces with hyphens
+                            .gsub(/-+/, "-")            # Replace multiple hyphens with single hyphen
+                            .gsub(/\A-+|-+\z/, "")     # Remove leading/trailing hyphens
 
       # Handle edge case where slug becomes empty after cleaning
       if base_slug.blank?

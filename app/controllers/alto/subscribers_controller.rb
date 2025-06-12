@@ -2,8 +2,8 @@ module Alto
   class SubscribersController < ::Alto::ApplicationController
     before_action :set_board
     before_action :set_ticket
-    before_action :ensure_admin_access, except: [:unsubscribe_me]
-    before_action :set_subscription, only: [:destroy]
+    before_action :ensure_admin_access, except: [ :unsubscribe_me ]
+    before_action :set_subscription, only: [ :destroy ]
 
     def index
       @subscriptions = @ticket.subscriptions.includes(:ticket).order(:email)
@@ -57,7 +57,7 @@ module Alto
           subscription.destroy
                       redirect_to alto.board_ticket_path(@board, @ticket),
                         notice: "You have been unsubscribed from this ticket."
-          else
+        else
             redirect_to alto.board_ticket_path(@board, @ticket),
                         notice: "You are not currently subscribed to this ticket."
         end
@@ -84,7 +84,7 @@ module Alto
 
     def ensure_admin_access
       unless can_access_admin?
-        redirect_to alto.board_ticket_path(@board, @ticket), alert: 'You do not have permission to manage subscribers.'
+        redirect_to alto.board_ticket_path(@board, @ticket), alert: "You do not have permission to manage subscribers."
       end
     end
 

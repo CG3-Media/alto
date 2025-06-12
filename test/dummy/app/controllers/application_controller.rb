@@ -9,8 +9,8 @@ class ApplicationController < ActionController::Base
     return nil unless Rails.env.test?
     # Create user if it doesn't exist, but avoid id conflicts
     @current_user ||= begin
-      User.find_by(email: 'test@example.com') ||
-      User.create!(email: 'test@example.com')
+      User.find_by(email: "test@example.com") ||
+      User.create!(email: "test@example.com")
     end
   end
 

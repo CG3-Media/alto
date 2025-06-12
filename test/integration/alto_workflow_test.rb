@@ -6,23 +6,23 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     ::Alto::DatabaseSetup.force_setup!
 
     # Create test users since fixtures aren't loaded after force_setup
-    @user1 = User.find_or_create_by!(id: 1) { |u| u.email = 'test1@example.com' }
-    @user2 = User.find_or_create_by!(id: 2) { |u| u.email = 'test2@example.com' }
-    @user3 = User.find_or_create_by!(id: 3) { |u| u.email = 'test3@example.com' }
-    @user4 = User.find_or_create_by!(id: 4) { |u| u.email = 'test4@example.com' }
-    @user5 = User.find_or_create_by!(id: 5) { |u| u.email = 'test5@example.com' }
+    @user1 = User.find_or_create_by!(id: 1) { |u| u.email = "test1@example.com" }
+    @user2 = User.find_or_create_by!(id: 2) { |u| u.email = "test2@example.com" }
+    @user3 = User.find_or_create_by!(id: 3) { |u| u.email = "test3@example.com" }
+    @user4 = User.find_or_create_by!(id: 4) { |u| u.email = "test4@example.com" }
+    @user5 = User.find_or_create_by!(id: 5) { |u| u.email = "test5@example.com" }
 
     # Create a status set with statuses
     @status_set = ::Alto::StatusSet.create!(
-      name: 'Test Workflow Status Set',
-      description: 'For integration testing',
+      name: "Test Workflow Status Set",
+      description: "For integration testing",
       is_default: true
     )
 
     @status_set.statuses.create!([
-      { name: 'Open', color: 'green', position: 0, slug: 'open' },
-      { name: 'In Progress', color: 'yellow', position: 1, slug: 'in_progress' },
-      { name: 'Closed', color: 'gray', position: 2, slug: 'closed' }
+      { name: "Open", color: "green", position: 0, slug: "open" },
+      { name: "In Progress", color: "yellow", position: 1, slug: "in_progress" },
+      { name: "Closed", color: "gray", position: 2, slug: "closed" }
     ])
   end
 
@@ -47,7 +47,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     )
 
     assert ticket.persisted?
-    assert_equal 'open', ticket.status_slug
+    assert_equal "open", ticket.status_slug
     assert_equal board, ticket.board
     assert_not ticket.locked?
 
@@ -116,10 +116,10 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal nested_reply, reply_thread[:replies].first[:comment]
 
     # 9. Update ticket status
-    ticket.update!(status_slug: 'in-progress')
+    ticket.update!(status_slug: "in-progress")
 
-    assert_equal 'in-progress', ticket.status_slug
-    assert_equal 'In Progress', ticket.status_name
+    assert_equal "in-progress", ticket.status_slug
+    assert_equal "In Progress", ticket.status_name
 
     # 10. Lock the ticket
     ticket.update!(locked: true)
@@ -141,10 +141,10 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_includes tickets_for_board, ticket
 
     # 13. Test status filtering
-    in_progress_tickets = Alto::Ticket.by_status('in-progress')
+    in_progress_tickets = Alto::Ticket.by_status("in-progress")
     assert_includes in_progress_tickets, ticket
 
-    open_tickets = Alto::Ticket.by_status('open')
+    open_tickets = Alto::Ticket.by_status("open")
     assert_not_includes open_tickets, ticket
   end
 
@@ -175,7 +175,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
 
     assert ticket.persisted?
     assert_nil ticket.status_slug
-    assert_equal 'Unknown', ticket.status_name
+    assert_equal "Unknown", ticket.status_name
     assert_not ticket.can_change_status?
 
     # Comments and upvotes should still work

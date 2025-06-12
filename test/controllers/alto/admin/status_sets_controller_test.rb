@@ -10,7 +10,7 @@ module Alto
       # In a real app, you'd set up proper authentication here
 
       # Create a mock admin user
-      admin_user = OpenStruct.new(id: 1, admin?: true, email: 'admin@test.com')
+      admin_user = OpenStruct.new(id: 1, admin?: true, email: "admin@test.com")
 
       # Mock the current_user method in the controller
       Alto::Admin::StatusSetsController.any_instance.stubs(:current_user).returns(admin_user)

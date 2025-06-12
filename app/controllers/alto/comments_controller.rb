@@ -2,10 +2,10 @@ module Alto
   class CommentsController < ::Alto::ApplicationController
     before_action :set_board
     before_action :set_ticket
-    before_action :check_comment_permission, only: [:create]
-    before_action :set_comment, only: [:show, :destroy]
-    before_action :set_parent_comment, only: [:create], if: -> { params[:comment] && params[:comment][:parent_id].present? }
-    before_action :ensure_not_archived, only: [:create, :destroy]
+    before_action :check_comment_permission, only: [ :create ]
+    before_action :set_comment, only: [ :show, :destroy ]
+    before_action :set_parent_comment, only: [ :create ], if: -> { params[:comment] && params[:comment][:parent_id].present? }
+    before_action :ensure_not_archived, only: [ :create, :destroy ]
 
     def create
       @comment = @ticket.comments.build(comment_params)
@@ -16,12 +16,12 @@ module Alto
           # Redirect to the thread view of the root comment
           root_comment = @comment.thread_root
           redirect_to alto.board_ticket_comment_path(@board, @ticket, root_comment),
-                      notice: 'Reply was successfully added.'
+                      notice: "Reply was successfully added."
         else
           redirect_to alto.board_ticket_path(@board, @ticket, anchor: "comment-#{@comment.id}"),
-                      notice: 'Comment was successfully added.'
+                      notice: "Comment was successfully added."
         end
-            else
+      else
         # Handle validation errors
         if @comment.parent_id.present?
           # This is a reply that failed validation - redirect back to thread
@@ -32,7 +32,7 @@ module Alto
         else
           # This is a top-level comment that failed validation
           @threaded_comments = ::Alto::Comment.threaded_for_ticket(@ticket)
-          render 'alto/tickets/show'
+          render "alto/tickets/show"
         end
       end
     end
@@ -58,18 +58,18 @@ module Alto
           # If deleting the root comment, redirect to ticket
           if @comment.id == root_comment.id
             @comment.destroy
-            redirect_to [@board, @ticket], notice: 'Comment thread was successfully deleted.'
+            redirect_to [ @board, @ticket ], notice: "Comment thread was successfully deleted."
           else
             @comment.destroy
             redirect_to alto.board_ticket_comment_path(@board, @ticket, root_comment),
-                        notice: 'Reply was successfully deleted.'
+                        notice: "Reply was successfully deleted."
           end
         else
           @comment.destroy
-          redirect_to [@board, @ticket], notice: 'Comment was successfully deleted.'
+          redirect_to [ @board, @ticket ], notice: "Comment was successfully deleted."
         end
       else
-        redirect_to [@board, @ticket], alert: 'You do not have permission to delete this comment.'
+        redirect_to [ @board, @ticket ], alert: "You do not have permission to delete this comment."
       end
     end
 
@@ -93,8 +93,8 @@ module Alto
       @parent_comment = @ticket.comments.find(params[:comment][:parent_id])
 
       unless @parent_comment.can_be_replied_to?
-        redirect_to [@board, @ticket], alert: 'Cannot reply to this comment.'
-        return
+        redirect_to [ @board, @ticket ], alert: "Cannot reply to this comment."
+        nil
       end
     end
 
@@ -115,7 +115,7 @@ module Alto
 
     def check_comment_permission
       unless can_comment? && @ticket.can_be_commented_on?
-        redirect_to [@board, @ticket], alert: 'You cannot comment on this ticket.'
+        redirect_to [ @board, @ticket ], alert: "You cannot comment on this ticket."
       end
     end
 
@@ -132,7 +132,7 @@ module Alto
 
     def ensure_not_archived
       if @ticket.archived?
-        redirect_to [@board, @ticket], alert: 'Archived tickets cannot be modified.'
+        redirect_to [ @board, @ticket ], alert: "Archived tickets cannot be modified."
       end
     end
   end

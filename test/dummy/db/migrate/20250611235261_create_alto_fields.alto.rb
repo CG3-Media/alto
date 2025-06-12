@@ -14,7 +14,7 @@ class CreateAltoFields < ActiveRecord::Migration[7.0]
       t.timestamps null: false
     end
 
-    add_index :alto_fields, [:board_id, :position], if_not_exists: true
+    add_index :alto_fields, [ :board_id, :position ], if_not_exists: true
     add_index :alto_fields, :field_type, if_not_exists: true
 
     # Add custom field values to tickets

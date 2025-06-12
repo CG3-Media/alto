@@ -4,17 +4,17 @@ module Alto
   class CommentTest < ActiveSupport::TestCase
     def setup
       # Create test users to ensure they exist for validation
-      @user1 = User.find_or_create_by!(id: 1) { |u| u.email = 'test1@example.com' }
-      @user2 = User.find_or_create_by!(id: 2) { |u| u.email = 'test2@example.com' }
-      @user3 = User.find_or_create_by!(id: 3) { |u| u.email = 'test3@example.com' }
-      @user4 = User.find_or_create_by!(id: 4) { |u| u.email = 'test4@example.com' }
+      @user1 = User.find_or_create_by!(id: 1) { |u| u.email = "test1@example.com" }
+      @user2 = User.find_or_create_by!(id: 2) { |u| u.email = "test2@example.com" }
+      @user3 = User.find_or_create_by!(id: 3) { |u| u.email = "test3@example.com" }
+      @user4 = User.find_or_create_by!(id: 4) { |u| u.email = "test4@example.com" }
 
       # Create test board and ticket
       @status_set = ::Alto::StatusSet.create!(
-        name: 'Test Status Set',
+        name: "Test Status Set",
         is_default: true
       )
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
       @board = Board.create!(name: "Test Board", status_set: @status_set)
       @ticket = @board.tickets.create!(

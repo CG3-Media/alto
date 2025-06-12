@@ -9,10 +9,10 @@ module Alto
 
       # Create a status set with statuses
       @status_set = ::Alto::StatusSet.create!(
-        name: 'Test Status Set',
+        name: "Test Status Set",
         is_default: true
       )
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
       @board = ::Alto::Board.create!(
         name: "Test Board",
@@ -66,7 +66,7 @@ module Alto
       # Remove the upvote using DELETE request (like the UI would)
       delete "/feedback/comments/#{@comment.id}/upvotes/#{upvote.id}"
 
-            # CRITICAL ASSERTIONS: Verify ticket and comment still exist!
+      # CRITICAL ASSERTIONS: Verify ticket and comment still exist!
       assert ::Alto::Ticket.exists?(@ticket.id), "🚨 BUG: Ticket was deleted when removing comment upvote!"
       assert ::Alto::Comment.exists?(@comment.id), "🚨 BUG: Comment was deleted when removing upvote!"
 
@@ -100,7 +100,7 @@ module Alto
       # Toggle the upvote off using DELETE request to toggle endpoint
       delete "/feedback/comments/#{@comment.id}/upvotes/toggle"
 
-            # CRITICAL ASSERTIONS: Verify ticket and comment still exist!
+      # CRITICAL ASSERTIONS: Verify ticket and comment still exist!
       assert ::Alto::Ticket.exists?(@ticket.id), "🚨 BUG: Ticket was deleted when toggling comment upvote off!"
       assert ::Alto::Comment.exists?(@comment.id), "🚨 BUG: Comment was deleted when toggling upvote off!"
 
@@ -125,15 +125,15 @@ module Alto
 
       # Make AJAX request to toggle endpoint
       delete "/feedback/comments/#{@comment.id}/upvotes/toggle",
-             headers: { 'Accept' => 'application/json' }
+             headers: { "Accept" => "application/json" }
 
       # Should return JSON response
       assert_response :success
       json_response = JSON.parse(response.body)
-      assert json_response.key?('upvoted'), "Should return upvoted status"
-      assert json_response.key?('upvotes_count'), "Should return vote count"
-      assert_equal false, json_response['upvoted'], "Should show not upvoted"
-      assert_equal 0, json_response['upvotes_count'], "Should show 0 votes"
+      assert json_response.key?("upvoted"), "Should return upvoted status"
+      assert json_response.key?("upvotes_count"), "Should return vote count"
+      assert_equal false, json_response["upvoted"], "Should show not upvoted"
+      assert_equal 0, json_response["upvotes_count"], "Should show 0 votes"
 
       # CRITICAL: Verify entities still exist
       assert ::Alto::Ticket.exists?(@ticket.id), "🚨 BUG: Ticket deleted in AJAX upvote removal!"
@@ -160,7 +160,7 @@ module Alto
     test "controller should find comment not ticket when processing comment upvote" do
       upvote = @comment.upvotes.create!(user_id: 1)
 
-            # Spy on the controller to see what @upvotable gets set to
+      # Spy on the controller to see what @upvotable gets set to
       original_method = ::Alto::UpvotesController.instance_method(:set_board_and_upvotable)
       upvotable_spy = nil
 
@@ -208,18 +208,18 @@ module Alto
     test "comment upvote routes should be properly mapped" do
       # Test POST route
       assert_recognizes(
-        { controller: 'alto/upvotes', action: 'create', comment_id: '1' },
-        { path: '/feedback/comments/1/upvotes', method: :post }
+        { controller: "alto/upvotes", action: "create", comment_id: "1" },
+        { path: "/feedback/comments/1/upvotes", method: :post }
       )
 
       # Test DELETE route
       assert_recognizes(
-        { controller: 'alto/upvotes', action: 'destroy', comment_id: '1', id: '1' },
-        { path: '/feedback/comments/1/upvotes/1', method: :delete }
+        { controller: "alto/upvotes", action: "destroy", comment_id: "1", id: "1" },
+        { path: "/feedback/comments/1/upvotes/1", method: :delete }
       )
     end
 
-        # Test that the original error route is fixed
+    # Test that the original error route is fixed
     test "DELETE without upvote ID should return 404" do
       # DELETE "/comments/1/upvotes" without an ID should not have a matching route
       # This proves the original routing error is fixed

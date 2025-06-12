@@ -23,5 +23,5 @@ module Alto
   end
 
   # Ensure configuration is available immediately
-  configure {}
+  configure { }
 end

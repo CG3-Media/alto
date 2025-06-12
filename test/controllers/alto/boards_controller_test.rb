@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 module Alto
   class BoardsControllerTest < ActionDispatch::IntegrationTest
@@ -7,11 +7,11 @@ module Alto
     def setup
       # Let Rails transactional fixtures handle data isolation
       # Create test user
-      @user = User.create!(email: 'test@example.com')
+      @user = User.create!(email: "test@example.com")
 
       # Create test status set
       @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
       # Create test board
       @board = Board.create!(

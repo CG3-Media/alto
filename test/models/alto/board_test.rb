@@ -80,7 +80,7 @@ module Alto
       original_slug = board.slug
 
       # Valid slugs when manually set
-      ["test-board-2", "test_board_2", "test123", "another-board-123"].each do |valid_slug|
+      [ "test-board-2", "test_board_2", "test123", "another-board-123" ].each do |valid_slug|
         board.slug = valid_slug
         assert board.valid?, "#{valid_slug} should be valid, errors: #{board.errors[:slug]}"
       end
@@ -95,7 +95,7 @@ module Alto
       board = Board.create!(name: "Test Board", status_set: status_set, item_label_singular: "ticket")
 
       # Invalid slugs when manually set
-      ["test board", "test@board", "test.board", "Test-Board"].each do |invalid_slug|
+      [ "test board", "test@board", "test.board", "Test-Board" ].each do |invalid_slug|
         board.slug = invalid_slug
         assert_not board.valid?, "#{invalid_slug} should be invalid"
         assert board.errors[:slug].present?, "#{invalid_slug} should have slug errors"
@@ -128,7 +128,7 @@ module Alto
       assert_not board_with_status.has_status_tracking?
 
       # Add a status and test again
-      status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
       assert board_with_status.has_status_tracking?
     end
 
@@ -150,10 +150,10 @@ module Alto
 
       # Get all board names in order and filter to just the ones we created
       all_ordered_boards = Board.ordered.pluck(:name)
-      created_board_names = ["A Board", "B Board", "C Board"]
+      created_board_names = [ "A Board", "B Board", "C Board" ]
       ordered_created_boards = all_ordered_boards.select { |name| created_board_names.include?(name) }
 
-      assert_equal ["A Board", "B Board", "C Board"], ordered_created_boards
+      assert_equal [ "A Board", "B Board", "C Board" ], ordered_created_boards
     end
 
     # Item labeling tests
@@ -217,7 +217,7 @@ module Alto
       board = alto_boards(:bugs)
       initial_count = board.fields.count
 
-      field1 = board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
+      field1 = board.fields.create!(label: "Priority", field_type: "select", field_options: [ "Low", "High" ])
       field2 = board.fields.create!(label: "Description", field_type: "textarea")
 
       assert_equal initial_count + 2, board.fields.count
@@ -318,7 +318,7 @@ module Alto
       assert board.publicly_accessible?
     end
 
-        # Single view tests
+    # Single view tests
     test "Board single_view enum accepts valid values" do
       status_set = alto_status_sets(:default)
 

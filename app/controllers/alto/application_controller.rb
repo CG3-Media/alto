@@ -5,7 +5,7 @@ module Alto
     protect_from_forgery with: :exception
 
     # Force engine to use its own layout, not host app's layout
-    layout 'alto/application'
+    layout "alto/application"
 
     before_action :authenticate_user!, unless: -> { Rails.env.test? }
     before_action :check_alto_access!, unless: -> { Rails.env.test? }
@@ -115,7 +115,7 @@ module Alto
     end
 
     def default_board
-      @default_board ||= ::Alto::Board.find_by(slug: 'feedback')
+      @default_board ||= ::Alto::Board.find_by(slug: "feedback")
     end
 
         protected
@@ -128,7 +128,7 @@ module Alto
 
       # Default implementation - use the existing permission system
       unless can_access_admin?
-        redirect_to alto.root_path, alert: 'You do not have permission to access the admin area'
+        redirect_to alto.root_path, alert: "You do not have permission to access the admin area"
       end
     end
 
@@ -162,9 +162,9 @@ module Alto
     def check_alto_access!
       unless can_access_alto?
         if defined?(main_app) && main_app.respond_to?(:root_path)
-          redirect_to main_app.root_path, alert: 'You do not have access to Alto'
+          redirect_to main_app.root_path, alert: "You do not have access to Alto"
         else
-          redirect_to alto.root_path, alert: 'You do not have access to Alto'
+          redirect_to alto.root_path, alert: "You do not have access to Alto"
         end
       end
     end
@@ -184,11 +184,11 @@ module Alto
       end
     end
 
-                # Check for permission methods defined in the initializer configuration
-    # Falls back to provided block if method doesn't exist in config
+        # Check for permission methods defined in the initializer configuration
+        # Falls back to provided block if method doesn't exist in config
         def check_configured_permission(method_name, *args, &fallback_block)
       # Skip delegation for test controllers (they should use secure defaults)
-      unless self.class.name.include?('Test')
+      unless self.class.name.include?("Test")
         # First check if the host app (super class) has this method defined
         if defined?(::ApplicationController) &&
            (::ApplicationController.instance_methods(true).include?(method_name) ||
@@ -204,14 +204,14 @@ module Alto
       end
 
       # For test controllers, skip configured permissions and use defaults (for testing engine behavior)
-      unless self.class.name.include?('Test')
+      unless self.class.name.include?("Test")
         # Check if the host app defined this permission in the initializer
         if defined?(::Alto.config) && ::Alto.config.respond_to?(:has_permission?) && ::Alto.config.has_permission?(method_name)
           return ::Alto.config.call_permission(method_name, self, *args)
         end
       end
 
-      return fallback_block.call
+      fallback_block.call
     end
   end
 end

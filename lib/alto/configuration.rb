@@ -79,12 +79,12 @@ module Alto
     # Database-backed app_name with fallback to default
     def app_name
       return @default_app_name unless database_available?
-      ::Alto::Setting.get('app_name', @default_app_name)
+      ::Alto::Setting.get("app_name", @default_app_name)
     end
 
     def app_name=(value)
       if database_available?
-        ::Alto::Setting.set('app_name', value)
+        ::Alto::Setting.set("app_name", value)
       else
         # During setup/migrations, just store in memory
         @default_app_name = value

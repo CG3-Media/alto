@@ -80,7 +80,7 @@ module Alto
             config = ActiveRecord::Base.configurations.configurations
 
             # Count unique database names (excluding test environments)
-            database_names = config.select { |c| !c.name.include?('test') }.map(&:database).uniq
+            database_names = config.select { |c| !c.name.include?("test") }.map(&:database).uniq
 
             if database_names.length > 1
               multi_db_info[:is_multi_db] = true
@@ -93,8 +93,8 @@ module Alto
           multi_db_info[:available_tasks] = available_tasks.map { |task| task.split[1] }.compact
 
           # Look for primary database task
-          if multi_db_info[:available_tasks].any? { |task| task.include?('primary') }
-            multi_db_info[:primary_database] = 'primary'
+          if multi_db_info[:available_tasks].any? { |task| task.include?("primary") }
+            multi_db_info[:primary_database] = "primary"
             multi_db_info[:is_multi_db] = true
           end
 
@@ -126,7 +126,7 @@ module Alto
         say "⚡ Running database migrations for multi-database setup...", :blue
 
         # Try to run migration on primary database first
-        if multi_db_info[:primary_database] == 'primary'
+        if multi_db_info[:primary_database] == "primary"
           begin
             say "   → Running migration on primary database...", :blue
             rake "db:migrate:primary"
@@ -140,7 +140,7 @@ module Alto
         # Fallback to trying available database-specific tasks
         migration_success = false
         multi_db_info[:available_tasks].each do |task|
-          next if task == 'db:migrate' # Skip generic task
+          next if task == "db:migrate" # Skip generic task
 
           begin
             say "   → Trying #{task}...", :blue
@@ -161,14 +161,14 @@ module Alto
           say "Please run ONE of these commands manually:", :blue
           say ""
 
-          if multi_db_info[:primary_database] == 'primary'
+          if multi_db_info[:primary_database] == "primary"
             say "   # Most common for multi-database Rails apps:", :green
             say "   rails db:migrate:primary", :cyan
             say ""
           end
 
           multi_db_info[:available_tasks].each do |task|
-            next if task == 'db:migrate'
+            next if task == "db:migrate"
             say "   # Alternative:", :blue
             say "   rake #{task}", :cyan
           end
@@ -267,18 +267,18 @@ module Alto
       def create_feature_requests_board
         # Create Feature Requests status set
         status_set = ::Alto::StatusSet.create!(
-          name: 'Feature Requests',
-          description: 'Product ideas and improvements. Statuses: open → planned → in_progress → complete → closed',
+          name: "Feature Requests",
+          description: "Product ideas and improvements. Statuses: open → planned → in_progress → complete → closed",
           is_default: true
         )
 
         # Create statuses for Feature Requests
         [
-          ['Open', 'green', 0, 'open'],
-          ['Planned', 'blue', 1, 'planned'],
-          ['In Progress', 'yellow', 2, 'in_progress'],
-          ['Complete', 'purple', 3, 'complete'],
-          ['Closed', 'gray', 4, 'closed']
+          [ "Open", "green", 0, "open" ],
+          [ "Planned", "blue", 1, "planned" ],
+          [ "In Progress", "yellow", 2, "in_progress" ],
+          [ "Complete", "purple", 3, "complete" ],
+          [ "Closed", "gray", 4, "closed" ]
         ].each do |name, color, position, slug|
           status_set.statuses.create!(
             name: name,
@@ -290,10 +290,10 @@ module Alto
 
         # Create the single default board
         ::Alto::Board.create!(
-          name: 'Feature Requests',
-          slug: 'feature-requests',
-          description: 'Product ideas and improvements. Statuses: open → planned → in_progress → complete → closed',
-          item_label_singular: 'request',
+          name: "Feature Requests",
+          slug: "feature-requests",
+          description: "Product ideas and improvements. Statuses: open → planned → in_progress → complete → closed",
+          item_label_singular: "request",
           status_set: status_set
         )
       end
@@ -324,7 +324,7 @@ module Alto
 
           # Create new filename with current timestamp + alto suffix
           new_filename = "#{timestamp}_#{filename.gsub(/^\d+_/, '')}"
-          new_filename = new_filename.gsub('.rb', '.alto.rb') unless new_filename.include?('alto')
+          new_filename = new_filename.gsub(".rb", ".alto.rb") unless new_filename.include?("alto")
 
           destination_file = File.join(destination_migrations, new_filename)
 
@@ -386,7 +386,7 @@ module Alto
         # Check database with multi-database awareness
         begin
           connection = ActiveRecord::Base.connection
-          if connection.table_exists?('alto_boards')
+          if connection.table_exists?("alto_boards")
             say "✅ Database: All tables ready", :green
           else
             say "⚠️  Database: Tables may not be ready", :yellow
@@ -397,12 +397,12 @@ module Alto
               say "🔍 Multi-Database Setup Detected - Tables Missing!", :yellow
               say "   This might be why tables aren't ready. Try:", :blue
 
-              if multi_db_info[:primary_database] == 'primary'
+              if multi_db_info[:primary_database] == "primary"
                 say "   rails db:migrate:primary", :cyan
               end
 
               multi_db_info[:available_tasks].each do |task|
-                next if task == 'db:migrate'
+                next if task == "db:migrate"
                 say "   rake #{task}", :cyan
               end
 
@@ -419,12 +419,12 @@ module Alto
             say "🔍 Multi-Database Setup Detected!", :yellow
             say "   If tables are missing, try these migration commands:", :blue
 
-            if multi_db_info[:primary_database] == 'primary'
+            if multi_db_info[:primary_database] == "primary"
               say "   rails db:migrate:primary", :cyan
             end
 
             multi_db_info[:available_tasks].each do |task|
-              next if task == 'db:migrate'
+              next if task == "db:migrate"
               say "   rake #{task}", :cyan
             end
           end
@@ -442,7 +442,7 @@ module Alto
           say "⚠️  Boards: Could not check (database may still be initializing)", :yellow
 
           # Additional context for multi-database setups
-          if multi_db_info[:is_multi_db] && e.message.include?('does not exist')
+          if multi_db_info[:is_multi_db] && e.message.include?("does not exist")
             say "   → This looks like a multi-database migration issue", :blue
             say "   → Try the migration commands above first", :blue
           end
@@ -471,9 +471,9 @@ module Alto
 
       def alto_tables_exist?
         begin
-          ActiveRecord::Base.connection.table_exists?('alto_boards') &&
-          ActiveRecord::Base.connection.table_exists?('alto_tickets') &&
-          ActiveRecord::Base.connection.table_exists?('alto_status_sets')
+          ActiveRecord::Base.connection.table_exists?("alto_boards") &&
+          ActiveRecord::Base.connection.table_exists?("alto_tickets") &&
+          ActiveRecord::Base.connection.table_exists?("alto_status_sets")
         rescue
           false
         end

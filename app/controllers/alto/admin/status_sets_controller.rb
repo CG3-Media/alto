@@ -2,7 +2,7 @@ module Alto
   module Admin
     class StatusSetsController < ::Alto::ApplicationController
       before_action :require_admin_access
-      before_action :set_status_set, only: [:show, :edit, :update, :destroy]
+      before_action :set_status_set, only: [ :show, :edit, :update, :destroy ]
 
       def index
         @status_sets = ::Alto::StatusSet.includes(:statuses, :boards).ordered
@@ -23,7 +23,7 @@ module Alto
 
         if @status_set.save
           redirect_to alto.admin_status_set_path(@status_set),
-                      notice: 'Status set was successfully created.'
+                      notice: "Status set was successfully created."
         else
           # Ensure positions are set for validation errors
           @status_set.statuses.each_with_index do |status, index|
@@ -39,7 +39,7 @@ module Alto
       def update
         if @status_set.update(status_set_params)
           redirect_to alto.admin_status_set_path(@status_set),
-                      notice: 'Status set was successfully updated.'
+                      notice: "Status set was successfully updated."
         else
           # Ensure positions are set for validation errors
           @status_set.statuses.each_with_index do |status, index|
@@ -52,13 +52,13 @@ module Alto
       def destroy
         if @status_set.boards.any?
           redirect_to alto.admin_status_sets_path,
-                      alert: 'Cannot delete status set that is in use by boards.'
+                      alert: "Cannot delete status set that is in use by boards."
           return
         end
 
         @status_set.destroy
         redirect_to alto.admin_status_sets_path,
-                    notice: 'Status set was successfully deleted.'
+                    notice: "Status set was successfully deleted."
       end
 
       private
@@ -69,12 +69,12 @@ module Alto
 
       def status_set_params
         params.require(:status_set).permit(:name, :description, :is_default,
-          statuses_attributes: [:id, :name, :color, :position, :slug, :_destroy])
+          statuses_attributes: [ :id, :name, :color, :position, :slug, :_destroy ])
       end
 
       def require_admin_access
         unless can_access_admin?
-          redirect_to alto.root_path, alert: 'Access denied.'
+          redirect_to alto.root_path, alert: "Access denied."
         end
       end
     end

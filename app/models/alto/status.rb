@@ -12,7 +12,7 @@ module Alto
     scope :ordered, -> { order(:position) }
 
     def slug_uniqueness_scope
-      [:status_set_id]
+      [ :status_set_id ]
     end
 
     def slug_source_attribute
@@ -21,24 +21,24 @@ module Alto
 
     def color_classes
       case color
-      when 'green'
-        'bg-green-100 text-green-800'
-      when 'blue'
-        'bg-blue-100 text-blue-800'
-      when 'yellow'
-        'bg-yellow-100 text-yellow-800'
-      when 'red'
-        'bg-red-100 text-red-800'
-      when 'gray'
-        'bg-gray-100 text-gray-800'
-      when 'purple'
-        'bg-purple-100 text-purple-800'
-      when 'orange'
-        'bg-orange-100 text-orange-800'
-      when 'pink'
-        'bg-pink-100 text-pink-800'
+      when "green"
+        "bg-green-100 text-green-800"
+      when "blue"
+        "bg-blue-100 text-blue-800"
+      when "yellow"
+        "bg-yellow-100 text-yellow-800"
+      when "red"
+        "bg-red-100 text-red-800"
+      when "gray"
+        "bg-gray-100 text-gray-800"
+      when "purple"
+        "bg-purple-100 text-purple-800"
+      when "orange"
+        "bg-orange-100 text-orange-800"
+      when "pink"
+        "bg-pink-100 text-pink-800"
       else
-        'bg-gray-100 text-gray-800'
+        "bg-gray-100 text-gray-800"
       end
     end
   end

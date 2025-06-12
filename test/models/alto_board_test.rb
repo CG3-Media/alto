@@ -52,14 +52,14 @@ module Alto
         title: "First Ticket",
         description: "Description",
         user_id: 1,
-        status_slug: 'open'
+        status_slug: "open"
       )
 
       ticket2 = board.tickets.create!(
         title: "Second Ticket",
         description: "Description",
         user_id: 1,
-        status_slug: 'open'
+        status_slug: "open"
       )
 
       assert_equal 2, board.tickets.count
@@ -75,8 +75,8 @@ module Alto
     test "should not have status tracking without status_set" do
       # Create a board with a status set but no statuses in it
       empty_status_set = ::Alto::StatusSet.create!(
-        name: 'Empty Status Set',
-        description: 'Status set with no statuses'
+        name: "Empty Status Set",
+        description: "Status set with no statuses"
       )
       board = Board.create!(name: "Board without Status", status_set: empty_status_set, item_label_singular: "ticket")
       assert_not board.has_status_tracking?
@@ -87,21 +87,21 @@ module Alto
       statuses = board.available_statuses
 
       assert_equal 3, statuses.count
-      assert_equal ['open', 'in-progress', 'closed'], statuses.map(&:slug)
+      assert_equal [ "open", "in-progress", "closed" ], statuses.map(&:slug)
     end
 
     test "should find status by slug" do
       board = Board.create!(name: "Status Board", status_set: @status_set, item_label_singular: "ticket")
-      status = board.status_by_slug('open')
+      status = board.status_by_slug("open")
 
       assert status
-      assert_equal 'Open', status.name
-      assert_equal 'green', status.color
+      assert_equal "Open", status.name
+      assert_equal "green", status.color
     end
 
     test "should get default status slug" do
       board = Board.create!(name: "Status Board", status_set: @status_set, item_label_singular: "ticket")
-      assert_equal 'open', board.default_status_slug
+      assert_equal "open", board.default_status_slug
     end
 
     test "to_param should return slug" do

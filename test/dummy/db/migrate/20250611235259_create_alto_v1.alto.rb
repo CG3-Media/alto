@@ -23,8 +23,8 @@ class CreateAltoV1 < ActiveRecord::Migration[7.0]
     end
 
     add_index :alto_statuses, :slug, if_not_exists: true
-    add_index :alto_statuses, [:status_set_id, :position], if_not_exists: true
-    add_index :alto_statuses, [:status_set_id, :slug], unique: true, if_not_exists: true
+    add_index :alto_statuses, [ :status_set_id, :position ], if_not_exists: true
+    add_index :alto_statuses, [ :status_set_id, :slug ], unique: true, if_not_exists: true
 
     # Boards - different feedback areas (e.g., features, bugs, etc.)
     create_table :alto_boards, if_not_exists: true do |t|
@@ -56,7 +56,7 @@ class CreateAltoV1 < ActiveRecord::Migration[7.0]
     add_index :alto_tickets, :created_at, if_not_exists: true
     add_index :alto_tickets, :title, if_not_exists: true
     add_index :alto_tickets, :description, if_not_exists: true
-    add_index :alto_tickets, [:status_slug, :created_at], if_not_exists: true
+    add_index :alto_tickets, [ :status_slug, :created_at ], if_not_exists: true
 
     # Comments - threaded discussions on tickets
     create_table :alto_comments, if_not_exists: true do |t|
@@ -77,7 +77,7 @@ class CreateAltoV1 < ActiveRecord::Migration[7.0]
       t.timestamps null: false
     end
 
-    add_index :alto_upvotes, [:upvotable_type, :upvotable_id, :user_id],
+    add_index :alto_upvotes, [ :upvotable_type, :upvotable_id, :user_id ],
               unique: true, name: 'index_upvotes_on_upvotable_and_user', if_not_exists: true
 
     # Subscriptions - email notifications for ticket updates
@@ -89,7 +89,7 @@ class CreateAltoV1 < ActiveRecord::Migration[7.0]
     end
 
     add_index :alto_subscriptions, :email, if_not_exists: true
-    add_index :alto_subscriptions, [:ticket_id, :email], unique: true, if_not_exists: true
+    add_index :alto_subscriptions, [ :ticket_id, :email ], unique: true, if_not_exists: true
 
     # Settings - key-value store for engine configuration
     create_table :alto_settings, if_not_exists: true do |t|

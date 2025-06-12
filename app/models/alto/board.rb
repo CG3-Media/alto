@@ -3,7 +3,7 @@ module Alto
     include Sluggable
 
     has_many :tickets, dependent: :restrict_with_error
-    has_many :fields, dependent: :destroy, class_name: 'Alto::Field'
+    has_many :fields, dependent: :destroy, class_name: "Alto::Field"
     belongs_to :status_set
 
     # Enable nested attributes for fields - this is our Rails Way foundation!
@@ -11,13 +11,13 @@ module Alto
                                   allow_destroy: true,
                                   reject_if: ->(attributes) {
                                     # Reject if marked for destruction
-                                    return true if attributes['_destroy'] == '1' || attributes['_destroy'] == true
+                                    return true if attributes["_destroy"] == "1" || attributes["_destroy"] == true
 
                                     # Reject if label is blank (required field)
-                                    attributes['label'].blank?
+                                    attributes["label"].blank?
                                   }
 
-            # Handle custom fields data from the ReactiveRailsForm
+    # Handle custom fields data from the ReactiveRailsForm
     def fields_data=(data)
       return if data.blank?
 
@@ -31,7 +31,7 @@ module Alto
         self.fields.each_with_index do |field, idx|
           fields_attrs[idx.to_s] = {
             id: field.id,
-            _destroy: '1'
+            _destroy: "1"
           }
         end
 
@@ -40,23 +40,23 @@ module Alto
           attr_key = (self.fields.size + index).to_s
 
           field_attrs = {
-            label: field_data['label'],
-            field_type: field_data['field_type'] || 'text_field',
-            required: field_data['required'] || false,
-            placeholder: field_data['placeholder'],
-            position: field_data['position'] || index
+            label: field_data["label"],
+            field_type: field_data["field_type"] || "text_field",
+            required: field_data["required"] || false,
+            placeholder: field_data["placeholder"],
+            position: field_data["position"] || index
           }
 
           # Handle options for select fields
-          if field_data['options'].present?
-            field_attrs[:field_options] = field_data['options'].split("\n").map(&:strip).reject(&:blank?)
+          if field_data["options"].present?
+            field_attrs[:field_options] = field_data["options"].split("\n").map(&:strip).reject(&:blank?)
           end
 
           # Include ID if updating existing field
-          if field_data['id'].present? && !field_data['id'].to_s.empty?
-            field_attrs[:id] = field_data['id']
+          if field_data["id"].present? && !field_data["id"].to_s.empty?
+            field_attrs[:id] = field_data["id"]
             # Find the existing field in our destruction list and remove the _destroy flag
-            existing_key = fields_attrs.keys.find { |k| fields_attrs[k][:id].to_s == field_data['id'].to_s }
+            existing_key = fields_attrs.keys.find { |k| fields_attrs[k][:id].to_s == field_data["id"].to_s }
             if existing_key
               fields_attrs[existing_key] = field_attrs
             else
@@ -93,11 +93,11 @@ module Alto
     validates :name, presence: true, length: { maximum: 100 }
     validates :slug, uniqueness: true
     validates :item_label_singular, presence: true, length: { maximum: 50 },
-              format: { with: /\A[a-z ]+\z/i, message: 'only letters and spaces allowed' }
+              format: { with: /\A[a-z ]+\z/i, message: "only letters and spaces allowed" }
     validates :status_set, presence: true
 
     # View enforcement enum
-    enum :single_view, { card: 'card', list: 'list' }, suffix: true
+    enum :single_view, { card: "card", list: "list" }, suffix: true
 
     scope :ordered, -> { order(:name) }
     scope :public_boards, -> { where(is_admin_only: false) }
@@ -156,7 +156,7 @@ module Alto
 
     # Item labeling method
     def item_name
-      item_label_singular.presence || 'ticket'
+      item_label_singular.presence || "ticket"
     end
 
     # Admin-only access methods
@@ -185,6 +185,5 @@ module Alto
         public_boards
       end
     end
-
   end
 end

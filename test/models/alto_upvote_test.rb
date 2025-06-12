@@ -5,10 +5,10 @@ module Alto
     def setup
       # Create test data
       @status_set = ::Alto::StatusSet.create!(
-        name: 'Test Status Set',
+        name: "Test Status Set",
         is_default: true
       )
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
       @board = Board.create!(name: "Test Board", status_set: @status_set)
       @ticket = @board.tickets.create!(
@@ -31,7 +31,7 @@ module Alto
       assert upvote.valid?
       assert upvote.save
       assert_equal @ticket, upvote.upvotable
-      assert_equal 'Alto::Ticket', upvote.upvotable_type
+      assert_equal "Alto::Ticket", upvote.upvotable_type
     end
 
     test "should create upvote for comment" do
@@ -43,7 +43,7 @@ module Alto
       assert upvote.valid?
       assert upvote.save
       assert_equal @comment, upvote.upvotable
-      assert_equal 'Alto::Comment', upvote.upvotable_type
+      assert_equal "Alto::Comment", upvote.upvotable_type
     end
 
     test "should require user_id" do

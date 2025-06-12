@@ -10,7 +10,7 @@ module Alto
             def update
         # Save settings to database
         settings = {
-          'app_name' => params[:app_name]
+          "app_name" => params[:app_name]
         }
 
         Setting.update_settings(settings)
@@ -18,7 +18,7 @@ module Alto
         # Reload configuration from database
         Setting.load_into_configuration!
 
-        redirect_to alto.admin_settings_path, notice: 'Settings saved successfully and will persist across restarts'
+        redirect_to alto.admin_settings_path, notice: "Settings saved successfully and will persist across restarts"
       end
 
       private

@@ -5,13 +5,13 @@ module Alto
     config.generators do |g|
       g.test_framework :rspec
       g.fixture_replacement :factory_bot
-      g.factory_bot dir: 'spec/factories'
+      g.factory_bot dir: "spec/factories"
     end
 
     # Ensure configuration is available early
     initializer "alto.configuration", before: "active_record.initialize_database" do
       # Initialize configuration early to avoid namespace issues
-      ::Alto.configure {}
+      ::Alto.configure { }
     end
 
     # Auto-setup database schema when engine loads (disabled - use install generator instead)
@@ -44,7 +44,7 @@ module Alto
       ]
 
       # Add reactive_rails_form.js to the precompile list
-      app.config.assets.precompile += %w( alto/reactive_rails_form.js )
+      app.config.assets.precompile += %w[ alto/reactive_rails_form.js ]
     end
 
     # Load persistent settings from database after Rails initialization

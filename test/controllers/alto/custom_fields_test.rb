@@ -5,7 +5,7 @@ module Alto
     include Engine.routes.url_helpers
 
     def setup
-      @user = User.find_or_create_by!(id: 1, email: 'test1@example.com')
+      @user = User.find_or_create_by!(id: 1, email: "test1@example.com")
       @bugs_board = alto_boards(:bugs)
 
       # Clear existing fields to avoid conflicts
@@ -15,7 +15,7 @@ module Alto
       @severity_field = @bugs_board.fields.create!(
         label: "Severity",
         field_type: "select_field",
-        field_options: ["Low", "Medium", "High", "Critical"],  # Array, not JSON string
+        field_options: [ "Low", "Medium", "High", "Critical" ],  # Array, not JSON string
         required: true,
         position: 0
       )
@@ -33,7 +33,7 @@ module Alto
     end
 
     test "should create ticket with valid custom fields" do
-      assert_difference('Alto::Ticket.count') do
+      assert_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Valid Bug Report",
@@ -53,7 +53,7 @@ module Alto
     end
 
     test "should accept any field_values without unpermitted parameter errors" do
-      assert_difference('Alto::Ticket.count') do
+      assert_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Custom Fields Test",
@@ -76,7 +76,7 @@ module Alto
     end
 
     test "should fail validation when required fields are missing" do
-      assert_no_difference('Alto::Ticket.count') do
+      assert_no_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Missing Required Fields",
@@ -94,7 +94,7 @@ module Alto
     end
 
     test "should fail validation when required fields are empty" do
-      assert_no_difference('Alto::Ticket.count') do
+      assert_no_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Empty Required Fields",
@@ -116,12 +116,12 @@ module Alto
       multiselect_field = @bugs_board.fields.create!(
         label: "Affected Components",
         field_type: "multiselect_field",
-        field_options: ["UI", "API", "Database"],  # Array, not JSON string
+        field_options: [ "UI", "API", "Database" ],  # Array, not JSON string
         required: false,
         position: 3
       )
 
-      assert_difference('Alto::Ticket.count') do
+      assert_difference("Alto::Ticket.count") do
         post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Multiselect Test",
@@ -129,7 +129,7 @@ module Alto
             field_values: {
               "severity" => "Low",
               "steps_to_reproduce" => "Test steps",
-              "affected_components" => ["UI", "API"]  # array for multiselect
+              "affected_components" => [ "UI", "API" ]  # array for multiselect
             }
           }
         }

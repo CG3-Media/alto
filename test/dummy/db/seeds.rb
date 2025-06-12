@@ -124,7 +124,7 @@ if bugs_board.fields.empty?
     {
       label: "Severity",
       field_type: "select_field",
-      field_options: ["Low", "Medium", "High", "Critical"],
+      field_options: [ "Low", "Medium", "High", "Critical" ],
       required: true,
       position: 0
     },

@@ -6,8 +6,8 @@ module Alto
   class TicketTest < ActiveSupport::TestCase
     def setup
       # Create test users to ensure they exist for validation
-      @user1 = User.find_or_create_by!(id: 1, email: 'test1@example.com')
-      @user2 = User.find_or_create_by!(id: 2, email: 'test2@example.com')
+      @user1 = User.find_or_create_by!(id: 1, email: "test1@example.com")
+      @user2 = User.find_or_create_by!(id: 2, email: "test2@example.com")
 
       # Use fixtures instead of manually creating status sets and boards
       @status_set = alto_status_sets(:default)
@@ -24,7 +24,7 @@ module Alto
 
       assert ticket.valid?
       assert ticket.save
-      assert_equal 'open', ticket.status_slug
+      assert_equal "open", ticket.status_slug
     end
 
     test "should require title" do
@@ -206,8 +206,8 @@ module Alto
 
     test "should get field value by field object" do
       # Create test fields
-      priority_field = @board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
-      browser_field = @board.fields.create!(label: "Browser", field_type: "select", field_options: ["Chrome", "Safari"])
+      priority_field = @board.fields.create!(label: "Priority", field_type: "select", field_options: [ "Low", "High" ])
+      browser_field = @board.fields.create!(label: "Browser", field_type: "select", field_options: [ "Chrome", "Safari" ])
 
       ticket = Ticket.create!(
         title: "Field Ticket",
@@ -223,8 +223,8 @@ module Alto
 
     test "should set field value by field object" do
       # Create test fields
-      priority_field = @board.fields.create!(label: "Priority", field_type: "select", field_options: ["Low", "High"])
-      browser_field = @board.fields.create!(label: "Browser", field_type: "select", field_options: ["Chrome", "Firefox"])
+      priority_field = @board.fields.create!(label: "Priority", field_type: "select", field_options: [ "Low", "High" ])
+      browser_field = @board.fields.create!(label: "Browser", field_type: "select", field_options: [ "Chrome", "Firefox" ])
 
       ticket = Ticket.create!(
         title: "Field Ticket",
@@ -417,14 +417,14 @@ module Alto
         description: "Description",
         user_id: 1,
         board: @board,
-        status_slug: 'open'
+        status_slug: "open"
       )
 
-      assert_equal 'Open', ticket.status_name
+      assert_equal "Open", ticket.status_name
       status = ticket.status
       assert status
-      assert_equal 'Open', status.name
-      assert_equal 'green', status.color
+      assert_equal "Open", status.name
+      assert_equal "green", status.color
     end
 
     test "should filter by status" do
@@ -433,7 +433,7 @@ module Alto
         description: "Description",
         user_id: 1,
         board: @board,
-        status_slug: 'open'
+        status_slug: "open"
       )
 
       closed_ticket = Ticket.create!(
@@ -441,11 +441,11 @@ module Alto
         description: "Description",
         user_id: 1,
         board: @board,
-        status_slug: 'closed'
+        status_slug: "closed"
       )
 
-      open_tickets = Ticket.by_status('open')
-      closed_tickets = Ticket.by_status('closed')
+      open_tickets = Ticket.by_status("open")
+      closed_tickets = Ticket.by_status("closed")
 
       assert_includes open_tickets, open_ticket
       assert_not_includes open_tickets, closed_ticket
@@ -507,7 +507,7 @@ module Alto
 
     test "should create subscription automatically when ticket is created with valid user" do
       # Use real User model and configuration instead of complex mocks
-      assert_difference 'Alto::Subscription.count', 1 do
+      assert_difference "Alto::Subscription.count", 1 do
         ticket = Ticket.create!(
           title: "Auto Subscription Ticket",
           description: "Should create subscription",
@@ -522,7 +522,7 @@ module Alto
       # Create a user but stub the email lookup to return nil
       user = User.create!(id: 999, email: nil) # User with no email
 
-      assert_no_difference 'Alto::Subscription.count' do
+      assert_no_difference "Alto::Subscription.count" do
         ticket = Ticket.create!(
           title: "No Email Subscription Ticket",
           description: "Should not create subscription when user has no email",
@@ -537,7 +537,7 @@ module Alto
       # Create a user without email for testing
       user_without_email = User.create!(id: 998)
 
-      assert_no_difference 'Alto::Subscription.count' do
+      assert_no_difference "Alto::Subscription.count" do
         ticket = Ticket.create!(
           title: "No Email Ticket",
           description: "Should not create subscription",
@@ -643,8 +643,8 @@ module Alto
 
     test "should parameterize field labels as keys" do
       # Create fields with various label formats
-      priority_field = @board.fields.create!(label: "Priority Level", field_type: "select", field_options: ["Low", "High"])
-      browser_field = @board.fields.create!(label: "Browser Type", field_type: "select", field_options: ["Chrome", "Firefox"])
+      priority_field = @board.fields.create!(label: "Priority Level", field_type: "select", field_options: [ "Low", "High" ])
+      browser_field = @board.fields.create!(label: "Browser Type", field_type: "select", field_options: [ "Chrome", "Firefox" ])
       special_field = @board.fields.create!(label: "OS & Version", field_type: "text_input")
 
       ticket = Ticket.create!(
@@ -709,7 +709,7 @@ module Alto
         user_id: 1,
         board: bugs_board,
         field_values: {
-          "severity" => "High",  # Has severity
+          "severity" => "High"  # Has severity
           # Missing "steps_to_reproduce" which is required
         }
       )

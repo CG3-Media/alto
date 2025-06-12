@@ -2,7 +2,7 @@ module Alto
   module Admin
     class BoardsController < ::Alto::ApplicationController
       before_action :ensure_admin_access
-      before_action :set_board, only: [:edit, :update, :destroy]
+      before_action :set_board, only: [ :edit, :update, :destroy ]
 
       def index
         @boards = ::Alto::Board.includes(:tickets).ordered
@@ -24,7 +24,7 @@ module Alto
         @board = ::Alto::Board.new(board_params)
 
         if @board.save
-          redirect_to admin_boards_path, notice: 'Board was successfully created.'
+          redirect_to admin_boards_path, notice: "Board was successfully created."
         else
           render :new, status: :unprocessable_entity
         end
@@ -35,7 +35,7 @@ module Alto
 
       def update
         if @board.update(board_params)
-          redirect_to admin_boards_path, notice: 'Board was successfully updated.'
+          redirect_to admin_boards_path, notice: "Board was successfully updated."
         else
           render :edit, status: :unprocessable_entity
         end
@@ -43,12 +43,12 @@ module Alto
 
       def destroy
         unless @board.can_be_deleted?
-          redirect_to admin_boards_path, alert: 'Cannot delete board with tickets. Move or delete tickets first.'
+          redirect_to admin_boards_path, alert: "Cannot delete board with tickets. Move or delete tickets first."
           return
         end
 
         @board.destroy
-        redirect_to admin_boards_path, notice: 'Board was successfully deleted.'
+        redirect_to admin_boards_path, notice: "Board was successfully deleted."
       end
 
       private

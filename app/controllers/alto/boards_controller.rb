@@ -1,22 +1,22 @@
 module Alto
   class BoardsController < ::Alto::ApplicationController
-    before_action :set_board, only: [:show, :edit, :update, :destroy]
-    before_action :ensure_can_manage_boards, only: [:new, :create, :edit, :update, :destroy]
+    before_action :set_board, only: [ :show, :edit, :update, :destroy ]
+    before_action :ensure_can_manage_boards, only: [ :new, :create, :edit, :update, :destroy ]
 
     def redirect_to_default
       # Find accessible boards for this user
       accessible_boards = ::Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?)
 
       # Find the default board or any accessible board if default doesn't exist
-      default_board = accessible_boards.find_by(slug: 'feedback') ||
+      default_board = accessible_boards.find_by(slug: "feedback") ||
                       accessible_boards.first
 
       # If no accessible boards exist, redirect appropriately
       if default_board.nil?
         if can_manage_boards?
-          redirect_to boards_path, notice: 'No boards exist yet. Create your first board!'
+          redirect_to boards_path, notice: "No boards exist yet. Create your first board!"
         else
-          redirect_to main_app.root_path, alert: 'No feedback boards are available to you.'
+          redirect_to main_app.root_path, alert: "No feedback boards are available to you."
         end
         return
       end
@@ -56,7 +56,7 @@ module Alto
       @board = Board.new(board_params)
 
       if @board.save
-        redirect_to board_path(@board), notice: 'Board was successfully created.'
+        redirect_to board_path(@board), notice: "Board was successfully created."
       else
         render :new, status: :unprocessable_entity
       end
@@ -67,7 +67,7 @@ module Alto
 
     def update
       if @board.update(board_params)
-        redirect_to board_path(@board), notice: 'Board was successfully updated.'
+        redirect_to board_path(@board), notice: "Board was successfully updated."
       else
         render :edit, status: :unprocessable_entity
       end
@@ -75,12 +75,12 @@ module Alto
 
     def destroy
       unless @board.can_be_deleted?
-        redirect_to admin_boards_path, alert: 'Cannot delete board with tickets. Move or delete tickets first.'
+        redirect_to admin_boards_path, alert: "Cannot delete board with tickets. Move or delete tickets first."
         return
       end
 
       @board.destroy
-      redirect_to admin_boards_path, notice: 'Board was successfully deleted.'
+      redirect_to admin_boards_path, notice: "Board was successfully deleted."
     end
 
     private
@@ -107,7 +107,7 @@ module Alto
 
     def ensure_can_manage_boards
       unless can_manage_boards?
-        redirect_to root_path, alert: 'You do not have permission to manage boards.'
+        redirect_to root_path, alert: "You do not have permission to manage boards."
       end
     end
   end

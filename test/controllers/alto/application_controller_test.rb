@@ -1,11 +1,11 @@
-require 'test_helper'
+require "test_helper"
 
 module Alto
   class ApplicationControllerTest < ActionController::TestCase
     class MockUser
       attr_accessor :id, :email, :admin
 
-      def initialize(id: 1, email: 'test@example.com', admin: false)
+      def initialize(id: 1, email: "test@example.com", admin: false)
         @id = id
         @email = email
         @admin = admin
@@ -46,7 +46,7 @@ module Alto
     def setup
       @controller = TestController.new
       @user = MockUser.new
-      @board = Board.new(id: 1, name: 'Test Board', slug: 'test')
+      @board = Board.new(id: 1, name: "Test Board", slug: "test")
     end
 
     test "permission methods exist and are callable" do

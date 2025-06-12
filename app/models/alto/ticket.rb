@@ -6,7 +6,7 @@ module Alto
     belongs_to :user, polymorphic: true
     has_many :comments, dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
-    has_many :subscriptions, class_name: 'Alto::Subscription', dependent: :destroy
+    has_many :subscriptions, class_name: "Alto::Subscription", dependent: :destroy
 
     validates :title, presence: true, length: { maximum: 255 }
     validates :description, presence: true
@@ -33,16 +33,16 @@ module Alto
     scope :active, -> { where(archived: false) }
     scope :archived, -> { where(archived: true) }
     scope :recent, -> { order(created_at: :desc) }
-    scope :popular, -> { left_joins(:upvotes).group(:id).order('count(alto_upvotes.id) desc') }
+    scope :popular, -> { left_joins(:upvotes).group(:id).order("count(alto_upvotes.id) desc") }
     scope :for_board, ->(board) { where(board: board) }
 
-        # Search scopes
+    # Search scopes
     scope :search_by_content, ->(query) {
       return all if query.blank?
 
       sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
       # Use ILIKE for PostgreSQL, LIKE for others (case-insensitive search)
-      if connection.adapter_name.downcase.include?('postgresql')
+      if connection.adapter_name.downcase.include?("postgresql")
         where("title ILIKE ? OR description ILIKE ?", sanitized_query, sanitized_query)
       else
         where("LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", sanitized_query, sanitized_query)
@@ -53,7 +53,7 @@ module Alto
       return all if query.blank?
 
       sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
-      if connection.adapter_name.downcase.include?('postgresql')
+      if connection.adapter_name.downcase.include?("postgresql")
         joins(:comments).where("alto_comments.content ILIKE ?", sanitized_query)
       else
         joins(:comments).where("LOWER(alto_comments.content) LIKE LOWER(?)", sanitized_query)
@@ -66,7 +66,7 @@ module Alto
       sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
 
       # Combined search in tickets OR comments with a single query
-      if connection.adapter_name.downcase.include?('postgresql')
+      if connection.adapter_name.downcase.include?("postgresql")
         left_joins(:comments).where(
           "(alto_tickets.title ILIKE ? OR alto_tickets.description ILIKE ?) OR alto_comments.content ILIKE ?",
           sanitized_query, sanitized_query, sanitized_query
@@ -110,11 +110,11 @@ module Alto
     end
 
     def status_name
-      status&.name || status_slug&.humanize || 'Unknown'
+      status&.name || status_slug&.humanize || "Unknown"
     end
 
     def status_color_classes
-      status&.color_classes || 'bg-gray-100 text-gray-800'
+      status&.color_classes || "bg-gray-100 text-gray-800"
     end
 
     def available_statuses
@@ -158,8 +158,8 @@ module Alto
     end
 
     def trigger_ticket_status_changed_callback
-      old_status_slug = saved_changes['status_slug'][0]
-      new_status_slug = saved_changes['status_slug'][1]
+      old_status_slug = saved_changes["status_slug"][0]
+      new_status_slug = saved_changes["status_slug"][1]
       ::Alto::CallbackManager.call(:ticket_status_changed, self, old_status_slug, new_status_slug, board, get_user_object(user_id))
     end
 

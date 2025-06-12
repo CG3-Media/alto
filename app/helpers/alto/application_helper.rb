@@ -2,12 +2,12 @@ module Alto
   module ApplicationHelper
     def status_badge(status)
       color_class = case status
-                    when 'open' then 'bg-green-100 text-green-800'
-                    when 'planned' then 'bg-blue-100 text-blue-800'
-                    when 'in_progress' then 'bg-yellow-100 text-yellow-800'
-                    when 'complete' then 'bg-gray-100 text-gray-800'
-                    else 'bg-gray-100 text-gray-800'
-                    end
+      when "open" then "bg-green-100 text-green-800"
+      when "planned" then "bg-blue-100 text-blue-800"
+      when "in_progress" then "bg-yellow-100 text-yellow-800"
+      when "complete" then "bg-gray-100 text-gray-800"
+      else "bg-gray-100 text-gray-800"
+      end
 
       content_tag :span, status.humanize,
                   class: "px-2 py-1 text-xs font-medium rounded-full #{color_class}"
@@ -15,7 +15,7 @@ module Alto
 
     # Unified button helper for consistent styling
     def render_button(text, options = {})
-      render 'shared/button',
+      render "shared/button",
         text: text,
         button_type: options[:button_type] || :primary,
         url: options[:url],
@@ -83,13 +83,13 @@ module Alto
 
     def upvote_count_display(upvotable, size: :small)
       count = upvotable.upvotes_count
-      text_size = size == :large ? 'text-lg' : 'text-sm'
+      text_size = size == :large ? "text-lg" : "text-sm"
 
       content_tag :span, count, class: "#{text_size} font-medium"
     end
 
     def upvote_svg(size: :small)
-      svg_size = size == :large ? 'w-6 h-6' : 'w-4 h-4'
+      svg_size = size == :large ? "w-6 h-6" : "w-4 h-4"
 
       content_tag :svg, class: svg_size, fill: "currentColor", viewBox: "0 0 20 20" do
         content_tag :path, "",
@@ -100,7 +100,7 @@ module Alto
     end
 
     def comment_count_text(count)
-      pluralize(count, 'comment')
+      pluralize(count, "comment")
     end
 
     def time_ago_text(timestamp)
@@ -165,16 +165,16 @@ module Alto
 
     # Default board helper method
     def default_board
-      @default_board ||= ::Alto::Board.find_by(slug: 'feedback')
+      @default_board ||= ::Alto::Board.find_by(slug: "feedback")
     end
 
     # Board item label helpers
     def current_board_item_name
-      current_board&.item_name || 'ticket'
+      current_board&.item_name || "ticket"
     end
 
     def board_item_name(board)
-      board&.item_name || 'ticket'
+      board&.item_name || "ticket"
     end
 
     # Custom fields helpers
@@ -187,12 +187,12 @@ module Alto
     end
 
     def format_custom_field_value(field, value)
-      return '' if value.blank?
+      return "" if value.blank?
 
       case field.field_type
-      when 'multiselect'
+      when "multiselect"
         format_multiselect_value(value)
-      when 'date'
+      when "date"
         format_date_value(value)
       else
         value.to_s
@@ -202,9 +202,9 @@ module Alto
     private
 
     def format_multiselect_value(value)
-      return '' unless value.is_a?(String)
+      return "" unless value.is_a?(String)
 
-      value.split(',').map do |v|
+      value.split(",").map do |v|
         content_tag :span, v.strip,
                    class: "inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1"
       end.join.html_safe

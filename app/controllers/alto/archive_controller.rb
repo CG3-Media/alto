@@ -1,7 +1,7 @@
 module Alto
   class ArchiveController < ::Alto::ApplicationController
     before_action :set_board
-    before_action :set_ticket, only: [:archive, :unarchive]
+    before_action :set_ticket, only: [ :archive, :unarchive ]
 
     def show
       @tickets = @board.tickets.archived

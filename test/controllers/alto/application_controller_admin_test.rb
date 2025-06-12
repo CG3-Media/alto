@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 module Alto
   class ApplicationControllerAdminTest < ActionController::TestCase
@@ -34,7 +34,7 @@ module Alto
 
       # Create test status set
       @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
-      @status_set.statuses.create!(name: 'Open', color: 'green', position: 0, slug: 'open')
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
 
       @public_board = Board.create!(
         name: "Public Board",

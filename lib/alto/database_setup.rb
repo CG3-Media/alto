@@ -31,21 +31,21 @@ module Alto
 
     def self.all_tables_exist?
       required_tables = [
-        'alto_status_sets',
-        'alto_statuses',
-        'alto_boards',
-        'alto_tickets',
-        'alto_comments',
-        'alto_upvotes',
-        'alto_settings',
-        'alto_subscriptions'
+        "alto_status_sets",
+        "alto_statuses",
+        "alto_boards",
+        "alto_tickets",
+        "alto_comments",
+        "alto_upvotes",
+        "alto_settings",
+        "alto_subscriptions"
       ]
 
       connection = ActiveRecord::Base.connection
       required_tables.all? { |table| connection.table_exists?(table) }
     end
 
-        # Legacy method name for backward compatibility
+    # Legacy method name for backward compatibility
     def self.tables_exist?
       all_tables_exist?
     end
@@ -65,16 +65,16 @@ module Alto
 
     def self.copy_migrations_to_host_app
       # Use Rails' built-in engine migration installer
-      require 'rails/generators'
-      require 'rails/generators/migration'
+      require "rails/generators"
+      require "rails/generators/migration"
 
       # This copies all missing migrations from the engine to the host app
       Rails.application.railties.engines.each do |engine|
         if engine.class.name == "Alto::Engine"
-          migrations_path = File.join(engine.root, 'db', 'migrate')
+          migrations_path = File.join(engine.root, "db", "migrate")
           if Dir.exist?(migrations_path)
             Rails.logger.info "[Alto] Copying migrations from engine..."
-            FileUtils.cp_r "#{migrations_path}/.", Rails.root.join('db', 'migrate')
+            FileUtils.cp_r "#{migrations_path}/.", Rails.root.join("db", "migrate")
           end
         end
       end
@@ -88,6 +88,5 @@ module Alto
       Rails.logger.info "[Alto] Running migrations (legacy create_tables called)"
       install_and_run_migrations
     end
-
   end
 end

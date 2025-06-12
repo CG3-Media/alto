@@ -42,14 +42,14 @@ namespace :alto do
     puts ""
 
     required_tables = [
-      'alto_status_sets',
-      'alto_statuses',
-      'alto_boards',
-      'alto_tickets',
-      'alto_comments',
-      'alto_upvotes',
-      'alto_settings',
-      'alto_subscriptions'
+      "alto_status_sets",
+      "alto_statuses",
+      "alto_boards",
+      "alto_tickets",
+      "alto_comments",
+      "alto_upvotes",
+      "alto_settings",
+      "alto_subscriptions"
     ]
 
     connection = ActiveRecord::Base.connection
@@ -83,7 +83,7 @@ namespace :alto do
     print "Are you sure? Type 'yes' to continue: "
 
     input = STDIN.gets.chomp
-    unless input.downcase == 'yes'
+    unless input.downcase == "yes"
       puts "❌ Reset cancelled."
       exit
     end
@@ -92,14 +92,14 @@ namespace :alto do
 
     connection = ActiveRecord::Base.connection
     tables_to_drop = [
-      'alto_subscriptions',
-      'alto_upvotes',
-      'alto_comments',
-      'alto_tickets',
-      'alto_statuses',
-      'alto_status_sets',
-      'alto_boards',
-      'alto_settings'
+      "alto_subscriptions",
+      "alto_upvotes",
+      "alto_comments",
+      "alto_tickets",
+      "alto_statuses",
+      "alto_status_sets",
+      "alto_boards",
+      "alto_settings"
     ]
 
     tables_to_drop.each do |table|
@@ -125,7 +125,7 @@ end
 
 # Helper method to copy only Alto migrations
 def copy_alto_migrations_only
-    require 'fileutils'
+    require "fileutils"
 
     # Get the source migrations directory from the engine
     source_migrations = File.join(::Alto::Engine.root, "db", "migrate")
@@ -152,7 +152,7 @@ def copy_alto_migrations_only
 
       # Create new filename with current timestamp + alto suffix
       new_filename = "#{timestamp}_#{filename.gsub(/^\d+_/, '')}"
-      new_filename = new_filename.gsub('.rb', '.alto.rb') unless new_filename.include?('alto')
+      new_filename = new_filename.gsub(".rb", ".alto.rb") unless new_filename.include?("alto")
 
       destination_file = File.join(destination_migrations, new_filename)
 

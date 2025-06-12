@@ -1,10 +1,10 @@
 module Alto
   class TicketsController < ::Alto::ApplicationController
     before_action :set_board
-    before_action :set_ticket, only: [:show, :edit, :update, :destroy]
-    before_action :check_submit_permission, only: [:new, :create]
+    before_action :set_ticket, only: [ :show, :edit, :update, :destroy ]
+    before_action :check_submit_permission, only: [ :new, :create ]
     before_action :check_board_access
-    before_action :ensure_not_archived, only: [:edit, :update, :destroy]
+    before_action :ensure_not_archived, only: [ :edit, :update, :destroy ]
 
     # Make helper methods available to views
     helper_method :can_user_edit_ticket?, :current_user_subscribed?
@@ -23,11 +23,11 @@ module Alto
 
       # Apply sorting
       @tickets = case params[:sort]
-                 when 'popular'
+      when "popular"
                    @tickets.popular
-                 else
+      else
                    @tickets.recent
-                 end
+      end
 
       @tickets = @tickets.page(params[:page]) if respond_to?(:page)
       @statuses = @board.available_statuses
@@ -62,7 +62,7 @@ module Alto
       process_multiselect_fields(@ticket)
 
       if @ticket.save
-        redirect_to [@board, @ticket], notice: 'Ticket was successfully created.'
+        redirect_to [ @board, @ticket ], notice: "Ticket was successfully created."
       else
         render :new
       end
@@ -70,12 +70,12 @@ module Alto
 
     def edit
       # Users can edit their own tickets, admins can edit any ticket
-      redirect_to [@board, @ticket] unless can_user_edit_ticket?(@ticket)
+      redirect_to [ @board, @ticket ] unless can_user_edit_ticket?(@ticket)
     end
 
     def update
       # Users can edit their own tickets, admins can edit any ticket
-      redirect_to [@board, @ticket] unless can_user_edit_ticket?(@ticket)
+      redirect_to [ @board, @ticket ] unless can_user_edit_ticket?(@ticket)
 
       @ticket.assign_attributes(ticket_params)
 
@@ -83,7 +83,7 @@ module Alto
       process_multiselect_fields(@ticket)
 
       if @ticket.save
-        redirect_to [@board, @ticket], notice: 'Ticket was successfully updated.'
+        redirect_to [ @board, @ticket ], notice: "Ticket was successfully updated."
       else
         render :edit
       end
@@ -91,7 +91,7 @@ module Alto
 
     def destroy
       @ticket.destroy
-      redirect_to board_tickets_url(@board), notice: 'Ticket was successfully deleted.'
+      redirect_to board_tickets_url(@board), notice: "Ticket was successfully deleted."
     end
 
     private
@@ -117,9 +117,9 @@ module Alto
     end
 
     def ticket_params
-      permitted_params = [:title, :description]
+      permitted_params = [ :title, :description ]
       # Only admins can edit status and locked fields
-      permitted_params += [:status_slug, :locked] if can_access_admin?
+      permitted_params += [ :status_slug, :locked ] if can_access_admin?
 
       # Allow all field_values as a hash - more flexible approach
       permitted_params << { field_values: {} }
@@ -129,13 +129,13 @@ module Alto
 
     def check_submit_permission
       unless can_submit_tickets?
-        redirect_to board_tickets_path(@board), alert: 'You do not have permission to submit tickets'
+        redirect_to board_tickets_path(@board), alert: "You do not have permission to submit tickets"
       end
     end
 
     def check_board_access
       unless can_access_board?(@board)
-        redirect_to root_path, alert: 'You do not have permission to access this board.'
+        redirect_to root_path, alert: "You do not have permission to access this board."
       end
     end
 
@@ -178,27 +178,26 @@ module Alto
 
     def ensure_not_archived
       if @ticket.archived?
-        redirect_to [@board, @ticket], alert: 'Archived tickets cannot be modified.'
+        redirect_to [ @board, @ticket ], alert: "Archived tickets cannot be modified."
       end
     end
 
     def determine_view_type
-      @view_type = @board.single_view.presence || (params[:view] == 'list' ? 'list' : 'card')
+      @view_type = @board.single_view.presence || (params[:view] == "list" ? "list" : "card")
       @show_toggle = @board.single_view.blank?
     end
 
     def process_multiselect_fields(ticket)
       return unless ticket.field_values.is_a?(Hash)
 
-      @board.fields.where(field_type: 'multiselect').each do |field|
+      @board.fields.where(field_type: "multiselect").each do |field|
         field_key = field.label.parameterize.underscore
 
         if ticket.field_values[field_key].is_a?(Array)
           # Convert array to comma-separated string
-          ticket.field_values[field_key] = ticket.field_values[field_key].reject(&:blank?).join(',')
+          ticket.field_values[field_key] = ticket.field_values[field_key].reject(&:blank?).join(",")
         end
       end
     end
-
   end
 end

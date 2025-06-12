@@ -31,21 +31,21 @@ puts "\n🧪 Testing basic database operations:"
 
 # Insert a regular ticket
 db.execute("INSERT INTO alto_tickets (title, description, user_type, user_id, board_id, archived, locked, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
-           ["Test Ticket", "Test Description", "User", 1, 1, 0, 0])
+           [ "Test Ticket", "Test Description", "User", 1, 1, 0, 0 ])
 
 ticket_id = db.last_insert_row_id
 puts "✅ Created ticket with ID: #{ticket_id}"
 
 # Check default values
-result = db.execute("SELECT archived, locked FROM alto_tickets WHERE id = ?", [ticket_id])
+result = db.execute("SELECT archived, locked FROM alto_tickets WHERE id = ?", [ ticket_id ])
 archived, locked = result[0]
 
 puts "   archived = #{archived} (should be 0)"
 puts "   locked = #{locked} (should be 0)"
 
 # Archive the ticket
-db.execute("UPDATE alto_tickets SET archived = 1 WHERE id = ?", [ticket_id])
-result = db.execute("SELECT archived, locked FROM alto_tickets WHERE id = ?", [ticket_id])
+db.execute("UPDATE alto_tickets SET archived = 1 WHERE id = ?", [ ticket_id ])
+result = db.execute("SELECT archived, locked FROM alto_tickets WHERE id = ?", [ ticket_id ])
 archived, locked = result[0]
 
 puts "✅ After archiving:"

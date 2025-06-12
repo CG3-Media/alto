@@ -4,8 +4,8 @@ module Alto
 
     belongs_to :ticket
     belongs_to :user, polymorphic: true
-    belongs_to :parent, class_name: 'Alto::Comment', optional: true
-    has_many :replies, class_name: 'Alto::Comment', foreign_key: 'parent_id', dependent: :destroy
+    belongs_to :parent, class_name: "Alto::Comment", optional: true
+    has_many :replies, class_name: "Alto::Comment", foreign_key: "parent_id", dependent: :destroy
     has_many :upvotes, as: :upvotable, dependent: :destroy
 
     validates :content, presence: true
@@ -23,7 +23,7 @@ module Alto
     after_destroy :trigger_comment_deleted_callback
 
     scope :recent, -> { order(created_at: :desc) }
-    scope :popular, -> { left_joins(:upvotes).group(:id).order('count(alto_upvotes.id) desc') }
+    scope :popular, -> { left_joins(:upvotes).group(:id).order("count(alto_upvotes.id) desc") }
     scope :top_level, -> { where(parent_id: nil) }
     scope :threaded, -> { order(:created_at) }
 

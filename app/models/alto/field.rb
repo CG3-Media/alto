@@ -1,16 +1,16 @@
 module Alto
   class Field < ApplicationRecord
-    self.table_name = 'alto_fields'
+    self.table_name = "alto_fields"
 
-    belongs_to :board, class_name: 'Alto::Board'
+    belongs_to :board, class_name: "Alto::Board"
 
     enum :field_type, {
-      text_field: 'text_input',
-      text_area: 'textarea',
-      number_field: 'number',
-      date_field: 'date',
-      select_field: 'select',
-      multiselect_field: 'multiselect'
+      text_field: "text_input",
+      text_area: "textarea",
+      number_field: "number",
+      date_field: "date",
+      select_field: "select",
+      multiselect_field: "multiselect"
     }
 
     validates :label, presence: true, length: { maximum: 100 }
@@ -56,7 +56,7 @@ module Alto
 
     def select_fields_must_have_options
       if needs_options? && options_array.empty?
-        human_type = select_field? ? 'select' : 'multiselect'
+        human_type = select_field? ? "select" : "multiselect"
         errors.add(:field_options, "must be provided for #{human_type} fields")
       end
     end
