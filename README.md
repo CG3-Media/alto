@@ -12,7 +12,6 @@ Alto is a mountable Rails engine for collecting user feedback with multiple boar
 
 [![Ruby](https://img.shields.io/badge/ruby-3.0%2B-red.svg)](https://www.ruby-lang.org)
 [![Rails](https://img.shields.io/badge/rails-7.0%2B-red.svg)](https://rubyonrails.org)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](MIT-LICENSE)
 
 ## Features
 
@@ -300,24 +299,21 @@ This will guide you through removing the engine and optionally cleaning up datab
 
 ## License
 
-MIT License
+Alto Custom License v1.1
+Copyright (c) 2025 Corey Griffin
 
-Copyright (c) 2024
+You are free to use, copy, modify, and deploy this software (“Alto”) in unlimited personal and commercial projects.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+However, the following restrictions apply:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. You may not resell, sublicense, or redistribute Alto — whether in original or modified form — as a standalone product, hosted service, or software offering.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. You may not rebrand or present Alto as your own original product. Derivative works must include attribution and must not imply original authorship.
+
+3. The name “Alto”, associated logos, and brand identity may not be used without prior written permission from the copyright holder.
+
+4. Attribution must be preserved in all copies or substantial portions of the Software, including in open-source forks.
+
+5. Contributions are welcome. Unless otherwise agreed in writing, all contributions are licensed back to the project under the terms of this license and ownership remains with the original author.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
