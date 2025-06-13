@@ -72,47 +72,26 @@
             <div class="space-y-3 flex-1 overflow-y-auto">
               <% status_tickets.each do |ticket| %>
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                  <!-- Title and vote arrow row -->
-                  <div class="flex items-start justify-between gap-3 mb-3">
-                    <div class="flex-1 min-w-0">
+                  <!-- Main Content -->
+                  <div class="flex-1 min-w-0">
+                    <!-- Title -->
+                    <div class="mb-3">
                       <h4 class="font-medium text-gray-900 text-sm leading-tight">
                         <%= link_to ticket.title, alto.board_ticket_path(@board, ticket), class: "hover:text-blue-600" %>
                       </h4>
                     </div>
-                    <div class="flex-shrink-0">
-                      <%= upvote_button(ticket, current_user, size: 'sm') %>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                      <%= render 'ticket_tags', ticket: ticket, board: @board %>
                     </div>
                   </div>
 
-                  <!-- Content preview -->
-                  <% if ticket.description.present? %>
-                    <div class="mb-3">
-                      <p class="text-gray-600 text-xs line-clamp-2">
-                        <%= truncate(ticket.description, length: 80) %>
-                      </p>
-                    </div>
-                  <% end %>
-
-                  <!-- Tags -->
-                  <% if ticket.tags.any? %>
-                    <div class="mb-3">
-                      <div class="flex flex-wrap gap-1">
-                        <% ticket.tags.limit(3).each do |tag| %>
-                          <%= render 'alto/shared/tag', tag: tag, size: 'sm',
-                              link: board_tickets_path(@board, tag: tag.name) %>
-                        <% end %>
-                        <% if ticket.tags.count > 3 %>
-                          <span class="text-xs text-gray-500">+<%= ticket.tags.count - 3 %> more</span>
-                        <% end %>
-                      </div>
-                    </div>
-                  <% end %>
-
-                  <!-- Separator line -->
-                  <div class="border-t border-gray-100 pt-3">
-                    <!-- Comments count and timestamp -->
+                  <!-- Bottom section spanning full width -->
+                  <div class="border-t border-gray-100 pt-3 mt-3">
                     <div class="flex items-center justify-between text-xs">
-                      <div>
+                      <div class="flex items-center gap-3">
+                        <%= upvote_button(ticket, current_user, size: :small) %>
                         <% if ticket.comments.count > 0 %>
                           <%= link_to pluralize(ticket.comments.count, 'comment'),
                               alto.board_ticket_path(@board, ticket, anchor: 'comments'),
@@ -194,17 +173,7 @@
                 </div>
 
                 <!-- Right side: Tags -->
-                <% if ticket.tags.any? %>
-                  <div class="flex flex-wrap gap-2">
-                    <% ticket.tags.limit(3).each do |tag| %>
-                      <%= render 'alto/shared/tag', tag: tag, size: 'sm',
-                          link: board_tickets_path(@board, tag: tag.name) %>
-                    <% end %>
-                    <% if ticket.tags.count > 3 %>
-                      <span class="text-xs text-gray-500">+<%= ticket.tags.count - 3 %> more</span>
-                    <% end %>
-                  </div>
-                <% end %>
+                <%= render 'ticket_tags', ticket: ticket, board: @board %>
               </div>
             </div>
           </div>

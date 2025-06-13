@@ -1,0 +1,19 @@
+<% if ticket.tags.any? %>
+  <div class="flex items-center gap-1">
+    <!-- Show first tag -->
+    <% first_tag = ticket.tags.first %>
+    <%= render 'alto/shared/tag', tag: first_tag, size: 'sm',
+        link: board_tickets_path(@board, tag: first_tag.name) %>
+
+    <!-- Show "+X more" if there are additional tags -->
+    <% if ticket.tags.count > 1 %>
+      <% remaining_tags = ticket.tags.offset(1) %>
+      <% hover_title = remaining_tags.map(&:name).join(', ') %>
+      <%= link_to alto.board_ticket_path(@board, ticket),
+          class: "text-xs text-gray-500 hover:text-blue-600 font-medium",
+          title: hover_title do %>
+        + <%= ticket.tags.count - 1 %> more
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

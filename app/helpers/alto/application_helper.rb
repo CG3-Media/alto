@@ -49,6 +49,11 @@ module Alto
         arrow_size = :large
         count_classes = "text-2xl font-bold mt-2 leading-none"
         label_classes = "text-xs mt-1 leading-none"
+      when :small
+        base_classes = "flex items-center justify-center gap-1 px-2 py-1 rounded-md border"
+        arrow_size = :small
+        count_classes = "text-sm font-bold leading-none"
+        label_classes = "text-xs opacity-75 leading-none"
       when :compact
         base_classes = "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3rem] min-h-[3.5rem] border"
         arrow_size = :medium
@@ -137,6 +142,11 @@ module Alto
         arrow_size = :large
         count_classes = "text-2xl font-bold mt-2 leading-none"
         label_classes = "text-xs mt-1 leading-none"
+      when :small
+        base_classes = "flex items-center justify-center gap-1 px-2 py-1 rounded-md border"
+        arrow_size = :small
+        count_classes = "text-sm font-bold leading-none"
+        label_classes = "text-xs opacity-75 leading-none"
       when :compact
         base_classes = "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3rem] min-h-[3.5rem] border"
         arrow_size = :medium
