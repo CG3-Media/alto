@@ -4,7 +4,7 @@ module Alto
 
     belongs_to :board, class_name: "Alto::Board"
 
-    enum field_type: {
+    enum :field_type, {
       text_field: "text_input",
       text_area: "textarea",
       number_field: "number",

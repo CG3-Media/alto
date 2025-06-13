@@ -70,7 +70,7 @@ module Alto
         @upvotable = Comment.find(params[:comment_id])
         @board = @upvotable.ticket.board
       else
-        redirect_to alto.root_path, alert: "Invalid upvote target"
+        redirect_to alto.home_path, alert: "Invalid upvote target"
       end
     end
 
@@ -80,7 +80,7 @@ module Alto
       elsif @upvotable.is_a?(Comment)
         board_ticket_path(@board, @upvotable.ticket)
       else
-        alto.root_path
+        alto.home_path
       end
     end
 

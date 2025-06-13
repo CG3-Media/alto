@@ -135,7 +135,7 @@ module Alto
 
     def check_board_access
       unless can_access_board?(@board)
-        redirect_to root_path, alert: "You do not have permission to access this board."
+        redirect_to home_path, alert: "You do not have permission to access this board."
       end
     end
 

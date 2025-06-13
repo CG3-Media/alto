@@ -74,7 +74,7 @@ module Alto
 
       def require_admin_access
         unless can_access_admin?
-          redirect_to alto.root_path, alert: "Access denied."
+          redirect_to alto.home_path, alert: "Access denied."
         end
       end
     end

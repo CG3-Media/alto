@@ -128,7 +128,7 @@ module Alto
 
       # Default implementation - use the existing permission system
       unless can_access_admin?
-        redirect_to alto.root_path, alert: "You do not have permission to access the admin area"
+        redirect_to alto.home_path, alert: "You do not have permission to access the admin area"
       end
     end
 
@@ -151,21 +151,13 @@ module Alto
         end
       end
 
-      # Default: redirect to root with fallback for test environment
-      if defined?(main_app) && main_app.respond_to?(:root_path)
-        redirect_to main_app.root_path
-      else
-        redirect_to alto.root_path
-      end
+      # Default: redirect to Alto home
+      redirect_to home_path
     end
 
     def check_alto_access!
       unless can_access_alto?
-        if defined?(main_app) && main_app.respond_to?(:root_path)
-          redirect_to main_app.root_path, alert: "You do not have access to Alto"
-        else
-          redirect_to alto.root_path, alert: "You do not have access to Alto"
-        end
+        redirect_to home_path, alert: "You do not have access to Alto"
       end
     end
 
