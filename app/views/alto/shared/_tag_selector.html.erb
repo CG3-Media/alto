@@ -1,0 +1,186 @@
+<%
+  # Get available tags for this board
+  available_tags = board.tags.ordered
+  selected_tag_ids = ticket.tag_ids || []
+
+  # Check if user can assign tags
+  can_assign = local_assigns[:can_assign] || false
+%>
+
+<% if can_assign && available_tags.any? %>
+  <div class="form-group">
+    <%= label_tag :tag_ids, "Tags", class: "block text-sm font-medium text-gray-700 mb-2" %>
+
+    <div class="space-y-3">
+      <!-- Selected Tags Display -->
+      <div id="selected-tags" class="min-h-[2rem] p-3 border border-gray-300 rounded-md bg-gray-50">
+        <div class="flex flex-wrap gap-2" id="selected-tags-container">
+          <% if selected_tag_ids.any? %>
+            <% board.tags.where(id: selected_tag_ids).each do |tag| %>
+              <div class="selected-tag" data-tag-id="<%= tag.id %>">
+                <%= render 'alto/shared/tag', tag: tag, removable: true %>
+                <%= hidden_field_tag "ticket[tag_ids][]", tag.id %>
+              </div>
+            <% end %>
+          <% else %>
+            <span class="text-sm text-gray-500" id="no-tags-message">No tags selected</span>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Available Tags -->
+      <div>
+        <p class="text-sm text-gray-600 mb-2">Click to add tags:</p>
+        <div class="flex flex-wrap gap-2" id="available-tags">
+          <% available_tags.each do |tag| %>
+            <button type="button"
+                    class="tag-option <%= 'hidden' if selected_tag_ids.include?(tag.id) %>"
+                    data-tag-id="<%= tag.id %>"
+                    data-tag-name="<%= tag.name %>"
+                    data-tag-color="<%= tag.color %>">
+              <%= render 'alto/shared/tag', tag: tag, class: 'cursor-pointer hover:opacity-80' %>
+            </button>
+          <% end %>
+        </div>
+
+        <% if available_tags.empty? %>
+          <p class="text-sm text-gray-500 italic">
+            No tags available.
+            <% if can_access_admin? %>
+              <%= link_to "Create tags", admin_board_tags_path(board),
+                  class: "text-blue-600 hover:text-blue-800" %>
+              to get started.
+            <% else %>
+              Contact an admin to create tags.
+            <% end %>
+          </p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const selectedContainer = document.getElementById('selected-tags-container');
+    const noTagsMessage = document.getElementById('no-tags-message');
+    const availableTagsContainer = document.getElementById('available-tags');
+
+    // Add tag functionality
+    function addTag(tagId, tagName, tagColor) {
+      // Hide the available tag option
+      const availableTag = document.querySelector(`[data-tag-id="${tagId}"]`);
+      if (availableTag) {
+        availableTag.classList.add('hidden');
+      }
+
+      // Create selected tag element
+      const selectedTag = document.createElement('div');
+      selectedTag.className = 'selected-tag';
+      selectedTag.setAttribute('data-tag-id', tagId);
+
+      // Create tag display with remove button
+      const tagDisplay = document.createElement('span');
+      tagDisplay.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+      tagDisplay.style.backgroundColor = tagColor + '20';
+      tagDisplay.style.color = tagColor;
+      tagDisplay.innerHTML = `
+        ${tagName}
+        <button type="button" class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-black hover:bg-opacity-10 js-remove-tag" style="color: ${tagColor};">
+          <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+            <path d="M1.5 1.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
+      `;
+
+      // Create hidden input
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'ticket[tag_ids][]';
+      hiddenInput.value = tagId;
+
+      selectedTag.appendChild(tagDisplay);
+      selectedTag.appendChild(hiddenInput);
+
+      // Hide "no tags" message
+      if (noTagsMessage) {
+        noTagsMessage.style.display = 'none';
+      }
+
+      selectedContainer.appendChild(selectedTag);
+    }
+
+    // Remove tag functionality
+    function removeTag(tagId) {
+      const selectedTag = document.querySelector(`.selected-tag[data-tag-id="${tagId}"]`);
+      if (selectedTag) {
+        selectedTag.remove();
+      }
+
+      // Show the available tag option again
+      const availableTag = document.querySelector(`#available-tags [data-tag-id="${tagId}"]`);
+      if (availableTag) {
+        availableTag.classList.remove('hidden');
+      }
+
+      // Show "no tags" message if no tags selected
+      const remainingTags = document.querySelectorAll('.selected-tag');
+      if (remainingTags.length === 0 && noTagsMessage) {
+        noTagsMessage.style.display = 'inline';
+      }
+    }
+
+    // Event delegation for adding tags
+    availableTagsContainer.addEventListener('click', function(e) {
+      const tagButton = e.target.closest('.tag-option');
+      if (tagButton) {
+        e.preventDefault();
+        const tagId = tagButton.getAttribute('data-tag-id');
+        const tagName = tagButton.getAttribute('data-tag-name');
+        const tagColor = tagButton.getAttribute('data-tag-color') || '#6B7280';
+        addTag(tagId, tagName, tagColor);
+      }
+    });
+
+    // Event delegation for removing tags
+    selectedContainer.addEventListener('click', function(e) {
+      if (e.target.closest('.js-remove-tag')) {
+        e.preventDefault();
+        const selectedTag = e.target.closest('.selected-tag');
+        if (selectedTag) {
+          const tagId = selectedTag.getAttribute('data-tag-id');
+          removeTag(tagId);
+        }
+      }
+    });
+  });
+  </script>
+
+<% elsif can_assign && available_tags.empty? %>
+  <div class="form-group">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+    <p class="text-sm text-gray-500 italic">
+      No tags available.
+      <% if can_access_admin? %>
+        <%= link_to "Create tags", admin_board_tags_path(board),
+            class: "text-blue-600 hover:text-blue-800" %>
+        to get started.
+      <% end %>
+    </p>
+  </div>
+
+<% elsif !can_assign %>
+  <!-- Show tags as read-only if user can't assign -->
+  <% if ticket.tags.any? %>
+    <div class="form-group">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+      <div class="flex flex-wrap gap-2">
+        <% ticket.tags.each do |tag| %>
+          <%= render 'alto/shared/tag', tag: tag %>
+        <% end %>
+      </div>
+      <p class="text-xs text-gray-500 mt-1">
+        Contact an admin to modify tags.
+      </p>
+    </div>
+  <% end %>
+<% end %>

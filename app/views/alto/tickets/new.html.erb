@@ -58,6 +58,12 @@
         </div>
       <% end %>
 
+            <!-- Tag Selection -->
+      <%= render 'alto/shared/tag_selector',
+          board: @board,
+          ticket: @ticket,
+          can_assign: can_assign_tags? %>
+
       <!-- Custom Fields -->
       <% if @board.fields.any? %>
         <div class="border-t border-gray-200 pt-6">

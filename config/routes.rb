@@ -43,7 +43,10 @@ Alto::Engine.routes.draw do
     get "", to: "dashboard#index", as: :dashboard
     get "dashboard", to: "dashboard#index"
     resource :settings, only: [ :show, :update ]
-    resources :boards, param: :slug, except: [ :show ]
+    resources :boards, param: :slug, except: [ :show ] do
+      resources :tags, only: [:create, :new, :edit, :update, :destroy]
+      get :tags, to: "tags#index", as: :tags_index
+    end
     resources :status_sets
   end
 end

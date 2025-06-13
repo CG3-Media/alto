@@ -1,0 +1,44 @@
+<div class="max-w-4xl mx-auto">
+  <nav class="flex mb-8" aria-label="Breadcrumb">
+    <ol role="list" class="flex items-center space-x-4">
+      <li>
+        <div class="flex">
+          <%= link_to "Boards", admin_boards_path, class: "text-sm font-medium text-gray-500 hover:text-gray-700" %>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          <%= link_to @board.name, admin_board_path(@board), class: "ml-4 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          <%= link_to "Tags", admin_board_tags_path(@board), class: "ml-4 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          <span class="ml-4 text-sm font-medium text-gray-900" aria-current="page">New Tag</span>
+        </div>
+      </li>
+    </ol>
+  </nav>
+
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Create New Tag</h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Create a new tag for organizing <%= @board.item_name.pluralize %> in "<%= @board.name %>".
+    </p>
+  </div>
+
+  <%= render 'form' %>
+</div>

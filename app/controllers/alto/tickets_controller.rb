@@ -7,7 +7,7 @@ module Alto
     before_action :ensure_not_archived, only: [ :edit, :update, :destroy ]
 
     # Make helper methods available to views
-    helper_method :can_user_edit_ticket?, :current_user_subscribed?
+    helper_method :can_user_edit_ticket?, :current_user_subscribed?, :can_assign_tags?
 
     def index
       # Set this as the current board in session
@@ -21,6 +21,9 @@ module Alto
       # Apply status filter
       @tickets = @tickets.by_status(params[:status]) if params[:status].present?
 
+      # Apply tag filter
+      @tickets = @tickets.tagged_with(params[:tag]) if params[:tag].present?
+
       # Apply sorting
       @tickets = case params[:sort]
       when "popular"
@@ -31,7 +34,9 @@ module Alto
 
       @tickets = @tickets.page(params[:page]) if respond_to?(:page)
       @statuses = @board.available_statuses
+      @tags = @board.tags.used.ordered
       @search_query = params[:search]
+      @selected_tag = params[:tag]
 
       # Determine view type based on board settings
       determine_view_type
@@ -121,6 +126,11 @@ module Alto
       # Only admins can edit status and locked fields
       permitted_params += [ :status_slug, :locked ] if can_access_admin?
 
+      # Allow tag assignment based on permissions
+      if can_assign_tags?
+        permitted_params << { tag_ids: [] }
+      end
+
       # Allow all field_values as a hash - more flexible approach
       permitted_params << { field_values: {} }
 
@@ -185,6 +195,14 @@ module Alto
     def determine_view_type
       @view_type = @board.single_view.presence || (params[:view] == "list" ? "list" : "card")
       @show_toggle = @board.single_view.blank?
+    end
+
+    def can_assign_tags?
+      # Admins can always assign tags
+      return true if can_access_admin?
+
+      # Regular users can assign tags if board allows public tagging
+      @board.allow_public_tagging?
     end
 
     def process_multiselect_fields(ticket)

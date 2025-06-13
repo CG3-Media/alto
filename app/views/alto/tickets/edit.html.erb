@@ -49,13 +49,19 @@
         <% end %>
       </div>
 
+            <!-- Tag Selection -->
+      <%= render 'alto/shared/tag_selector',
+          board: @board,
+          ticket: @ticket,
+          can_assign: can_assign_tags? %>
+
       <!-- Custom Fields -->
       <% if @board.fields.any? %>
         <div class="border-t border-gray-200 pt-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Additional Information</h3>
           <div class="space-y-4">
             <% @board.fields.sort_by { |field| field.position || 0 }.each do |field| %>
-               <%= render 'alto/shared/custom_board_fields', field: field, ticket: @ticket, form: form %>
+              <%= render 'alto/shared/custom_board_fields', field: field, ticket: @ticket, form: form %>
             <% end %>
           </div>
         </div>

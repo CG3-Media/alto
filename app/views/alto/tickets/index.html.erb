@@ -53,14 +53,30 @@
       <!-- Status filters (only show in list view) -->
       <div id="status-filters" class="flex flex-wrap gap-2" <%= 'style="display: none;"'.html_safe unless show_status_filters %>>
         <%= link_to "All", alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: params[:view]),
-            class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status].blank?}" %>
+            class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status].blank? && params[:tag].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status].blank? && params[:tag].blank?}" %>
         <% if @board.has_status_tracking? %>
           <% @statuses.each do |status| %>
-            <%= link_to status.name, alto.board_tickets_path(@board, status: status.slug, search: params[:search], sort: params[:sort], view: params[:view]),
+            <%= link_to status.name, alto.board_tickets_path(@board, status: status.slug, search: params[:search], sort: params[:sort], view: params[:view], tag: params[:tag]),
                 class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status] == status.slug} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status] == status.slug}" %>
           <% end %>
         <% end %>
       </div>
+
+      <!-- Tag filters -->
+      <% if @tags.any? %>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-sm text-gray-500 px-2 py-1">Tags:</span>
+          <%= link_to "All", alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: params[:view], status: params[:status]),
+              class: "px-3 py-1 text-xs rounded-full border #{'bg-blue-100 text-blue-700' if params[:tag].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:tag].blank?}" %>
+          <% @tags.each do |tag| %>
+            <%= link_to alto.board_tickets_path(@board, tag: tag.name, search: params[:search], sort: params[:sort], view: params[:view], status: params[:status]) do %>
+                             <%= render 'alto/shared/tag', tag: tag,
+                   class: params[:tag] == tag.name ? 'ring-2 ring-offset-1 ring-blue-400' : 'hover:opacity-80',
+                   show_count: true %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <!-- Sort Toggle -->
@@ -139,6 +155,21 @@
                     </div>
                   <% end %>
 
+                  <!-- Tags -->
+                  <% if ticket.tags.any? %>
+                    <div class="mb-3">
+                      <div class="flex flex-wrap gap-1">
+                        <% ticket.tags.limit(3).each do |tag| %>
+                          <%= render 'alto/shared/tag', tag: tag, size: 'sm',
+                              link: board_tickets_path(@board, tag: tag.name) %>
+                        <% end %>
+                        <% if ticket.tags.count > 3 %>
+                          <span class="text-xs text-gray-500">+<%= ticket.tags.count - 3 %> more</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+
                   <!-- Separator line -->
                   <div class="border-t border-gray-100 pt-3">
                     <!-- Comments count and timestamp -->
@@ -206,6 +237,18 @@
               <p class="text-gray-600 text-sm line-clamp-2">
                 <%= truncate(ticket.description, length: 150) %>
               </p>
+
+              <!-- Tags -->
+              <% if ticket.tags.any? %>
+                <div class="mt-3">
+                  <div class="flex flex-wrap gap-2">
+                    <% ticket.tags.each do |tag| %>
+                      <%= render 'alto/shared/tag', tag: tag, size: 'sm',
+                          link: board_tickets_path(@board, tag: tag.name) %>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
             </div>
 
             <!-- Upvote Button -->

@@ -22,7 +22,7 @@
     <!-- Top row: Title/Description + Voting -->
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
-        <!-- Status Badge -->
+        <!-- Status Badge and Tags -->
         <div class="mb-3 flex items-center gap-2 flex-wrap">
           <% if @ticket.archived? %>
             <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600">
@@ -38,6 +38,15 @@
             <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
               🔒 Locked
             </span>
+          <% end %>
+
+          <!-- Tags -->
+          <% if @ticket.tags.any? %>
+            <% @ticket.tags.each do |tag| %>
+                             <%= render 'alto/shared/tag', tag: tag,
+                   link: board_tickets_path(@board, tag: tag.name),
+                   size: 'sm' %>
+            <% end %>
           <% end %>
         </div>
 
