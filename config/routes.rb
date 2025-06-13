@@ -1,6 +1,6 @@
 Alto::Engine.routes.draw do
-  # Root redirects to default board
-  root "boards#redirect_to_default"
+  # Default route redirects to default board (no named route to avoid conflicts)
+  get "", to: "boards#redirect_to_default"
 
   # Global activity across all boards
   get "activity", to: "activity#index"
@@ -39,7 +39,9 @@ Alto::Engine.routes.draw do
 
   # Admin routes
   namespace :admin do
-    root "dashboard#index"
+    # Admin dashboard at /admin (no named routes to avoid conflicts)
+    get "", to: "dashboard#index"
+    get "dashboard", to: "dashboard#index"
     resource :settings, only: [ :show, :update ]
     resources :boards, param: :slug, except: [ :show ]
     resources :status_sets

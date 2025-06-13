@@ -98,7 +98,7 @@ module Alto
     validates :status_set, presence: true
 
     # View enforcement enum
-    enum :single_view, { card: "card", list: "list" }, suffix: true
+    enum single_view: { card: "card", list: "list" }, _suffix: true
 
     scope :ordered, -> { order(:name) }
     scope :public_boards, -> { where(is_admin_only: false) }

@@ -3,9 +3,14 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in alto.gemspec.
 gemspec
 
+# Required for Rails 7.0 compatibility with Ruby 3.1
+gem "logger"
+
 gem "puma"
 
-gem "sqlite3"
+gem "pg"
+
+gem "sqlite3", "~> 1.4"
 
 gem "propshaft"
 
