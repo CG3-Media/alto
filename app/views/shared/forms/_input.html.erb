@@ -58,6 +58,12 @@
     <input type="<%= input_type %>" <%= input_options.reject { |k, v| (k == :disabled && !v) || (k == :required && !v) }.map { |k, v| "#{k}=\"#{v}\"" }.join(' ').html_safe %>>
   <% end %>
 
+  <% if helper_text.present? %>
+    <p class="text-sm text-gray-500">
+      <%= helper_text %>
+    </p>
+  <% end %>
+
   <% if show_errors && has_errors %>
     <% model.errors[field_name].each do |error| %>
       <p class="text-sm text-red-600"><%= error %></p>

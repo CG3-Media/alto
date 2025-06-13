@@ -1,123 +1,154 @@
-<%= form_with model: [:admin, @board, @tag], local: true, class: "space-y-6" do |f| %>
-  <div class="bg-white shadow rounded-lg">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h3 class="text-lg font-medium text-gray-900">
-        <%= @tag.persisted? ? "Edit Tag" : "Create New Tag" %>
-      </h3>
-    </div>
+<div rf rf-model="tag" id="tag-form">
+  <%= form_with model: [:admin, @board, @tag], local: true, class: "space-y-6" do |f| %>
+    <% if @tag.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <h4 class="font-medium">Please fix the following errors:</h4>
+        <ul class="mt-2 list-disc list-inside">
+          <% @tag.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-    <div class="px-6 py-4 space-y-6">
-      <!-- Tag Name -->
-      <div>
-        <%= f.label :name, class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_field :name,
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">
+          <%= @tag.persisted? ? "Edit Tag" : "Create New Tag" %>
+        </h3>
+      </div>
+
+      <div class="px-6 py-4 space-y-6">
+        <!-- Tag Name -->
+        <%= render 'shared/forms/input',
+            form: f,
+            field_name: :name,
             placeholder: "e.g., bug, feature, urgent",
-            class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" %>
-        <% if @tag.errors[:name].any? %>
-          <p class="mt-2 text-sm text-red-600">
-            <%= @tag.errors[:name].first %>
-          </p>
-        <% end %>
-        <p class="mt-2 text-sm text-gray-500">
-          Tag names should be lowercase, and can contain letters, numbers, hyphens, underscores, and dots.
-        </p>
-      </div>
+            model: @tag,
+            required: true,
+            helper_text: "Tag names should be lowercase, and can contain letters, numbers, hyphens, underscores, and dots.",
+            html_options: { 'rf-key': 'tag-name' } %>
 
-      <!-- Tag Color -->
-      <div>
-        <%= f.label :color, class: "block text-sm font-medium text-gray-700" %>
-        <div class="mt-1 flex items-center space-x-3">
-          <%= f.color_field :color,
-              value: @tag.color.presence || "#3B82F6",
-              class: "h-10 w-20 border border-gray-300 rounded-md cursor-pointer focus:ring-blue-500 focus:border-blue-500" %>
-          <div class="flex-1">
-            <%= f.text_field :color,
-                placeholder: "#3B82F6",
-                class: "block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" %>
+        <!-- Tag Color -->
+        <div>
+          <%= f.label :color, class: "block text-sm font-medium text-gray-700" %>
+          <div class="mt-1 flex items-center space-x-3">
+            <%= f.color_field :color,
+                value: @tag.color.presence || "#3B82F6",
+                class: "h-10 w-20 border border-gray-300 rounded-md cursor-pointer focus:ring-blue-500 focus:border-blue-500",
+                'rf-key': 'tag-color-picker' %>
+            <div class="flex-1">
+              <%= f.text_field :color,
+                  placeholder: "#3B82F6",
+                  class: "block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm #{'border-red-300' if @tag.errors[:color].any?}",
+                  'rf-key': 'tag-color' %>
+            </div>
           </div>
-        </div>
-        <% if @tag.errors[:color].any? %>
-          <p class="mt-2 text-sm text-red-600">
-            <%= @tag.errors[:color].first %>
+          <% if @tag.errors[:color].any? %>
+            <p class="mt-2 text-sm text-red-600">
+              <%= @tag.errors[:color].first %>
+            </p>
+          <% end %>
+          <p class="mt-2 text-sm text-gray-500">
+            Choose a color to help visually distinguish this tag. Must be a valid hex color (e.g., #ff0000).
           </p>
-        <% end %>
-        <p class="mt-2 text-sm text-gray-500">
-          Choose a color to help visually distinguish this tag. Must be a valid hex color (e.g., #ff0000).
-        </p>
-      </div>
+        </div>
 
-      <!-- Tag Description -->
-      <div>
-        <%= f.label :description, class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_area :description,
-            rows: 3,
+        <!-- Tag Description -->
+        <%= render 'shared/forms/text_area',
+            form: f,
+            field_name: :description,
             placeholder: "Optional description of when to use this tag...",
-            class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" %>
-        <% if @tag.errors[:description].any? %>
-          <p class="mt-2 text-sm text-red-600">
-            <%= @tag.errors[:description].first %>
-          </p>
-        <% end %>
-        <p class="mt-2 text-sm text-gray-500">
-          Optional description to help users understand when to use this tag.
-        </p>
-      </div>
+            rows: 3,
+            model: @tag,
+            helper_text: "Optional description to help users understand when to use this tag." %>
 
-      <!-- Preview -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Preview</label>
-        <div class="p-4 bg-gray-50 rounded-lg">
-          <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-600">Tag will appear as:</span>
-            <span id="tag-preview"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  style="background-color: <%= @tag.color.presence || '#3B82F6' %>20; color: <%= @tag.color.presence || '#3B82F6' %>;">
-              <%= @tag.name.presence || 'tag-name' %>
-            </span>
+        <!-- Preview -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-600">Tag will appear as:</span>
+              <span id="tag-preview"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    style="background-color: <%= @tag.color.presence || '#3B82F6' %>20; color: <%= @tag.color.presence || '#3B82F6' %>;">
+                <%= @tag.name.presence || 'tag-name' %>
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Form Actions -->
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-      <%= link_to "Cancel", admin_board_tags_path(@board),
-          class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+      <!-- Form Actions -->
+      <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+        <%= render 'shared/buttons/secondary',
+            text: "Cancel",
+            url: admin_board_tags_path(@board) %>
 
-      <%= f.submit (@tag.persisted? ? "Update Tag" : "Create Tag"),
-          class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+        <%= render 'shared/buttons/primary',
+            text: (@tag.persisted? ? "Update Tag" : "Create Tag"),
+            type: "submit" %>
+      </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const nameInput = document.getElementById('<%= dom_id(@tag, :name) %>');
-  const colorInput = document.getElementById('<%= dom_id(@tag, :color) %>');
-  const colorPicker = document.querySelector('input[type="color"]');
-  const preview = document.getElementById('tag-preview');
+  const container = document.getElementById('tag-form')
+  if (!container) return
 
-  function updatePreview() {
-    const name = nameInput.value || 'tag-name';
-    const color = colorInput.value || '#3B82F6';
+  // Listen for RF field changes to update preview
+  container.addEventListener('rf:field:change', function(e) {
+    const { key, value } = e.detail
 
-    preview.textContent = name;
-    preview.style.backgroundColor = color + '20';
-    preview.style.color = color;
-  }
-
-  function syncColorInputs() {
-    const color = this.value;
-    if (this.type === 'color') {
-      colorInput.value = color;
-    } else {
-      colorPicker.value = color;
+    if (key === 'tag-name' || key === 'tag-color' || key === 'tag-color-picker') {
+      updateTagPreview()
     }
-    updatePreview();
+  })
+
+  // Also listen for input events on the color picker and text field for real-time sync
+  container.addEventListener('input', function(e) {
+    const target = e.target
+
+    // Sync color inputs
+    if (target.name && target.name.includes('[color]')) {
+      const colorPicker = container.querySelector('input[type="color"][rf-key="tag-color-picker"]')
+      const colorText = container.querySelector('input[type="text"][rf-key="tag-color"]')
+
+      if (target.type === 'color' && colorText) {
+        colorText.value = target.value
+      } else if (target.type === 'text' && colorPicker) {
+        // Only update color picker if it's a valid hex color
+        if (/^#[0-9A-F]{6}$/i.test(target.value)) {
+          colorPicker.value = target.value
+        }
+      }
+
+      updateTagPreview()
+    }
+  })
+
+  // Update tag preview function
+  function updateTagPreview() {
+    const nameField = container.querySelector('input[rf-key="tag-name"]')
+    const colorField = container.querySelector('input[rf-key="tag-color"]')
+    const preview = document.getElementById('tag-preview')
+
+    if (nameField && colorField && preview) {
+      const name = nameField.value || 'tag-name'
+      const color = colorField.value || '#3B82F6'
+
+      // Validate hex color format
+      const validColor = /^#[0-9A-F]{6}$/i.test(color) ? color : '#3B82F6'
+
+      preview.textContent = name
+      preview.style.backgroundColor = validColor + '20'
+      preview.style.color = validColor
+    }
   }
 
-  nameInput.addEventListener('input', updatePreview);
-  colorInput.addEventListener('input', syncColorInputs);
-  colorPicker.addEventListener('input', syncColorInputs);
-});
+  // Initial preview update
+  updateTagPreview()
+})
 </script>
