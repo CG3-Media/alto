@@ -137,75 +137,76 @@
 
   <!-- Row View (Traditional List) -->
   <!-- DEBUG: @view_type = <%= @view_type %>, showing list view: <%= @view_type == 'list' %> -->
-  <div id="row-view" class="space-y-4" <%= 'style="display: none;"'.html_safe if @view_type == 'card' %>>
+  <div id="row-view" class="space-y-3" <%= 'style="display: none;"'.html_safe if @view_type == 'card' %>>
     <% if @tickets.any? %>
       <% @tickets.each do |ticket| %>
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <!-- Top row: Title/Description + Voting -->
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1">
-              <!-- Status Badge -->
-              <% if @board.has_status_tracking? %>
-                <div class="mb-2">
-                  <span class="px-2 py-1 text-xs font-medium rounded-full <%= ticket.status_color_classes %>">
-                    <%= ticket.status_name %>
-                  </span>
+        <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-all">
+          <div class="flex items-start gap-4">
+            <!-- Upvote Section -->
+            <div class="flex flex-col items-center flex-shrink-0 pt-1">
+              <%= upvote_button(ticket, current_user, size: :compact) %>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 min-w-0">
+              <!-- Header with title and status -->
+              <div class="flex items-start justify-between mb-2">
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+                    <%= link_to ticket.title, alto.board_ticket_path(@board, ticket), class: "hover:text-blue-600" %>
+                  </h3>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <% if @board.has_status_tracking? %>
+                    <span class="px-3 py-1 text-sm font-medium rounded-full <%= ticket.status_color_classes %>">
+                      <%= ticket.status_name %>
+                    </span>
+                  <% end %>
                   <% if ticket.locked? %>
-                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 ml-2">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
                       🔒 Locked
                     </span>
                   <% end %>
                 </div>
-              <% else %>
-                <% if ticket.locked? %>
-                  <div class="mb-2">
-                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                      🔒 Locked
-                    </span>
-                  </div>
-                <% end %>
-              <% end %>
-
-              <!-- Title -->
-              <div class="mb-2">
-                <h3 class="text-lg font-semibold text-gray-900">
-                  <%= link_to ticket.title, alto.board_ticket_path(@board, ticket), class: "hover:text-blue-600" %>
-                </h3>
               </div>
 
-              <p class="text-gray-600 text-sm line-clamp-2">
-                <%= truncate(ticket.description, length: 150) %>
-              </p>
+              <!-- Description -->
+              <% if ticket.description.present? %>
+                <div class="border-b border-gray-100 pb-3 mb-3">
+                  <p class="text-gray-600 text-sm line-clamp-2">
+                    <%= truncate(ticket.description, length: 120) %>
+                  </p>
+                </div>
+              <% end %>
 
-              <!-- Tags -->
-              <% if ticket.tags.any? %>
-                <div class="mt-3">
+              <!-- Footer with metadata and tags -->
+              <div class="flex items-center justify-between">
+                <!-- Left side: User and metadata -->
+                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                  <div class="flex items-center space-x-2">
+                    <%= render 'alto/shared/user_avatar', user_id: ticket.user_id, size: :sm %>
+                    <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
+                  </div>
+                  <span><%= link_to pluralize(ticket.comments.count, 'comment'),
+                      alto.board_ticket_path(@board, ticket, anchor: 'comments'),
+                      class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
+                  <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
+                </div>
+
+                <!-- Right side: Tags -->
+                <% if ticket.tags.any? %>
                   <div class="flex flex-wrap gap-2">
-                    <% ticket.tags.each do |tag| %>
+                    <% ticket.tags.limit(3).each do |tag| %>
                       <%= render 'alto/shared/tag', tag: tag, size: 'sm',
                           link: board_tickets_path(@board, tag: tag.name) %>
                     <% end %>
+                    <% if ticket.tags.count > 3 %>
+                      <span class="text-xs text-gray-500">+<%= ticket.tags.count - 3 %> more</span>
+                    <% end %>
                   </div>
-                </div>
-              <% end %>
+                <% end %>
+              </div>
             </div>
-
-            <!-- Upvote Button -->
-            <div class="flex flex-col items-center ml-4">
-              <%= upvote_button(ticket, current_user) %>
-            </div>
-          </div>
-
-          <!-- Bottom row: Metadata -->
-          <div class="flex items-center space-x-4 text-sm text-gray-500">
-                        <div class="flex items-center space-x-2">
-              <%= render 'alto/shared/user_avatar', user_id: ticket.user_id, size: :sm %>
-              <span>By <span class="font-medium text-gray-700"><%= user_display_name(ticket.user_id) %></span></span>
-            </div>
-            <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
-            <span><%= link_to pluralize(ticket.comments.count, 'comment'),
-                alto.board_ticket_path(@board, ticket, anchor: 'comments'),
-                class: "text-gray-500 hover:text-blue-600 font-medium" %></span>
           </div>
         </div>
       <% end %>

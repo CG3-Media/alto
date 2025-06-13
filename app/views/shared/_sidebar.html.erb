@@ -2,50 +2,8 @@
 <div class="w-64 bg-white shadow-sm border-r border-gray-200 h-full fixed left-0 top-0 pt-20 overflow-y-auto z-10 hidden lg:block sleek-scrollbar">
   <div class="p-4 space-y-6">
 
-    <!-- Status Filters -->
-    <% if defined?(current_board) && current_board %>
-      <% status_collapsed = cookies['sidebar-section-0'] == 'true' %>
-      <div class="feedback-sidebar-section">
-        <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
-          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Status</h3>
-          <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors"><%= status_collapsed ? '+' : '−' %></span>
-        </div>
-        <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if status_collapsed %>>
-          <nav class="space-y-1">
-            <%= link_to alto.board_tickets_path(current_board),
-                class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status].blank? ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
-              All Tickets
-              <span class="ml-2 text-xs text-gray-500"><%= current_board.tickets.count %></span>
-            <% end %>
-
-            <% current_board.available_statuses.each do |status| %>
-              <% count = current_board.tickets.by_status(status.slug).count %>
-              <%= link_to alto.board_tickets_path(current_board, status: status.slug),
-                  class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ params[:status] == status.slug ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
-                <div class="flex items-center">
-                  <span class="w-2 h-2 rounded-full mr-2 <%= case status.color
-                    when 'green' then 'bg-green-500'
-                    when 'blue' then 'bg-blue-500'
-                    when 'yellow' then 'bg-yellow-500'
-                    when 'red' then 'bg-red-500'
-                    when 'gray' then 'bg-gray-500'
-                    when 'purple' then 'bg-purple-500'
-                    when 'orange' then 'bg-orange-500'
-                    when 'pink' then 'bg-pink-500'
-                    else 'bg-gray-500'
-                    end %>"></span>
-                  <%= status.name %>
-                </div>
-                <span class="ml-2 text-xs text-gray-500"><%= count %></span>
-              <% end %>
-            <% end %>
-          </nav>
-        </div>
-      </div>
-    <% end %>
-
     <!-- Recent Activity -->
-    <% activity_collapsed = cookies['sidebar-section-1'] == 'true' %>
+    <% activity_collapsed = cookies['sidebar-section-0'] == 'true' %>
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
         <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Recent Activity</h3>
@@ -108,7 +66,7 @@
     </div>
 
     <!-- Boards Section -->
-    <% boards_collapsed = cookies['sidebar-section-2'] == 'true' %>
+    <% boards_collapsed = cookies['sidebar-section-1'] == 'true' %>
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
         <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Boards</h3>
@@ -161,7 +119,7 @@
 
     <!-- Admin Section -->
     <% if can_access_admin? %>
-      <% admin_collapsed = cookies['sidebar-section-3'] == 'true' %>
+      <% admin_collapsed = cookies['sidebar-section-2'] == 'true' %>
       <div class="feedback-sidebar-section">
         <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
           <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Admin</h3>
@@ -180,7 +138,7 @@
             <%= link_to alto.admin_boards_path,
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"></path>
               </svg>
               Manage Boards
             <% end %>

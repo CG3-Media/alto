@@ -40,21 +40,35 @@ module Alto
 
     def ajax_upvote_button(upvotable, current_user, options = {})
       upvoted = upvotable.upvoted_by?(current_user)
+      size = options[:size] || :default
 
-      css_classes = if options[:large]
-        "flex flex-col items-center p-3 rounded-lg"
+      # Define size-specific styling
+      case size
+      when :large
+        base_classes = "flex flex-col items-center justify-center p-4 rounded-xl min-w-[4rem] min-h-[5rem]"
+        arrow_size = :large
+        count_classes = "text-2xl font-bold mt-2 leading-none"
+        label_classes = "text-xs mt-1 leading-none"
+      when :compact
+        base_classes = "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3rem] min-h-[3.5rem] border"
+        arrow_size = :medium
+        count_classes = "text-lg font-bold mt-1.5 leading-none"
+        label_classes = "text-xs opacity-75 leading-none"
       else
-        "flex items-center space-x-1 px-2 py-1 rounded-md"
+        base_classes = "flex flex-col items-center justify-center p-3 rounded-lg min-w-[3.5rem] min-h-[4.5rem] border"
+        arrow_size = :medium
+        count_classes = "text-xl font-bold mt-2 leading-none"
+        label_classes = "text-xs leading-none"
       end
 
       # Add styling based on upvote state
       if upvoted
-        css_classes += " bg-blue-50 text-blue-600 hover:bg-blue-100"
+        state_classes = " bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-lg transform scale-105"
       else
-        css_classes += " text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+        state_classes = " bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md"
       end
 
-      css_classes += " transition-colors duration-200 cursor-pointer"
+      css_classes = base_classes + state_classes + " transition-all duration-200 cursor-pointer group"
 
       # Use the toggle path for unified upvote handling
       toggle_path = upvote_toggle_path_for(upvotable)
@@ -69,13 +83,10 @@ module Alto
                 upvotable_type: upvotable.class.name
               } do
         content = ""
-        if options[:large]
-          content += content_tag(:div, upvote_svg(size: :large))
-          content += content_tag(:span, upvotable.upvotes_count, class: "text-lg font-bold", data: { upvote_count: true })
-          content += content_tag(:span, "votes", class: "text-xs")
-        else
-          content += content_tag(:div, upvote_svg)
-          content += content_tag(:span, upvotable.upvotes_count, class: "text-sm font-medium", data: { upvote_count: true })
+        content += content_tag(:div, upvote_svg(size: arrow_size), class: "group-hover:scale-110 transition-transform duration-200")
+        content += content_tag(:span, upvotable.upvotes_count, class: count_classes, data: { upvote_count: true })
+        if size == :large
+          content += content_tag(:span, "votes", class: label_classes)
         end
         content.html_safe
       end
@@ -89,7 +100,11 @@ module Alto
     end
 
     def upvote_svg(size: :small)
-      svg_size = size == :large ? "w-6 h-6" : "w-4 h-4"
+      svg_size = case size
+                 when :large then "w-8 h-8"
+                 when :medium then "w-5 h-5"
+                 else "w-4 h-4"
+                 end
 
       content_tag :svg, class: svg_size, fill: "currentColor", viewBox: "0 0 20 20" do
         content_tag :path, "",
@@ -112,21 +127,35 @@ module Alto
     end
 
     def disabled_upvote_button(upvotable, options = {})
-      css_classes = if options[:large]
-        "flex flex-col items-center p-3 text-gray-300"
+      size = options[:size] || :default
+
+      # Define size-specific styling to match active buttons
+      case size
+      when :large
+        base_classes = "flex flex-col items-center justify-center p-4 rounded-xl min-w-[4rem] min-h-[5rem]"
+        arrow_size = :large
+        count_classes = "text-2xl font-bold mt-2 leading-none"
+        label_classes = "text-xs mt-1 leading-none"
+      when :compact
+        base_classes = "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3rem] min-h-[3.5rem] border"
+        arrow_size = :medium
+        count_classes = "text-lg font-bold mt-1.5 leading-none"
+        label_classes = "text-xs opacity-75 leading-none"
       else
-        "flex items-center space-x-1 px-2 py-1 text-gray-300"
+        base_classes = "flex flex-col items-center justify-center p-3 rounded-lg min-w-[3.5rem] min-h-[4.5rem] border"
+        arrow_size = :medium
+        count_classes = "text-xl font-bold mt-2 leading-none"
+        label_classes = "text-xs leading-none"
       end
+
+      css_classes = base_classes + " bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
 
       content_tag :div, class: css_classes do
         content = ""
-        if options[:large]
-          content += content_tag(:div, upvote_svg(size: :large))
-          content += content_tag(:span, upvotable.upvotes_count, class: "text-lg font-bold")
-          content += content_tag(:span, "votes", class: "text-xs")
-        else
-          content += upvote_svg.to_s
-          content += content_tag(:span, upvotable.upvotes_count, class: "text-sm font-medium")
+        content += content_tag(:div, upvote_svg(size: arrow_size))
+        content += content_tag(:span, upvotable.upvotes_count, class: count_classes)
+        if size == :large
+          content += content_tag(:span, "votes", class: label_classes)
         end
         content.html_safe
       end

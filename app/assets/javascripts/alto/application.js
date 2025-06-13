@@ -35,9 +35,10 @@ function handleUpvoteClick(button) {
   //   buttonElement: button
   // });
 
-  // Disable button during request
+  // Disable button during request with better visual feedback
   button.style.pointerEvents = 'none';
-  button.style.opacity = '0.6';
+  button.style.transform = 'scale(0.95)';
+  button.style.opacity = '0.7';
 
   fetch(url, {
     method: method,
@@ -83,25 +84,41 @@ function handleUpvoteClick(button) {
     // Re-enable button
     button.style.pointerEvents = '';
     button.style.opacity = '';
+    button.style.transform = '';
   });
 }
 
 function updateUpvoteButton(button, isUpvoted, upvotesCount) {
   const countElement = button.querySelector('[data-upvote-count]');
-  const iconElement = button.querySelector('svg');
 
   // Update count
   if (countElement) {
     countElement.textContent = upvotesCount;
   }
 
-  // Update button appearance
+  // Update button appearance based on new styling
   if (isUpvoted) {
-    button.classList.remove('text-gray-400', 'hover:text-blue-600', 'hover:bg-blue-50');
-    button.classList.add('bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
+    // Remove unvoted state classes
+    button.classList.remove(
+      'bg-white', 'text-gray-600', 'border-gray-200',
+      'hover:border-blue-400', 'hover:bg-blue-50', 'hover:text-blue-600', 'hover:shadow-md'
+    );
+    // Add upvoted state classes
+    button.classList.add(
+      'bg-blue-600', 'text-white', 'border-blue-600',
+      'hover:bg-blue-700', 'shadow-lg', 'transform', 'scale-105'
+    );
   } else {
-    button.classList.remove('bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
-    button.classList.add('text-gray-400', 'hover:text-blue-600', 'hover:bg-blue-50');
+    // Remove upvoted state classes
+    button.classList.remove(
+      'bg-blue-600', 'text-white', 'border-blue-600',
+      'hover:bg-blue-700', 'shadow-lg', 'transform', 'scale-105'
+    );
+    // Add unvoted state classes
+    button.classList.add(
+      'bg-white', 'text-gray-600', 'border-gray-200',
+      'hover:border-blue-400', 'hover:bg-blue-50', 'hover:text-blue-600', 'hover:shadow-md'
+    );
   }
 
   // Always use DELETE for toggle URLs - the backend toggle action handles both add/remove
