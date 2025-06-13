@@ -22,7 +22,6 @@
 
   # UI configuration
   container_class ||= ""
-  chip_style ||= :colored               # :colored, :plain, :bordered
   show_search ||= true                  # Whether to show search input
   max_height ||= "max-h-60"             # Dropdown max height
 
@@ -60,7 +59,6 @@
           <div class="selected-item-chip template-item" style="display: none;">
             <%= render 'alto/shared/forms/multi_select_chip',
                 item: nil,
-                chip_style: chip_style,
                 item_display_method: item_display_method,
                 item_icon_method: item_icon_method,
                 is_template: true %>
@@ -76,7 +74,6 @@
             <div class="selected-item-chip" data-item-value="<%= item.send(item_value_method) %>">
               <%= render 'alto/shared/forms/multi_select_chip',
                   item: item,
-                  chip_style: chip_style,
                   item_display_method: item_display_method,
                   item_icon_method: item_icon_method,
                   is_template: false %>

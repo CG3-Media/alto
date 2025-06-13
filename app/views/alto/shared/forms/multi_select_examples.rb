@@ -8,8 +8,7 @@
     available_items: @board.tags.ordered,
     selected_items: @ticket.tags,
     label: "Tags",
-    item_display_method: :name,
-    chip_style: :colored %>
+    item_display_method: :name %>
 
 # 2. Assigning users to a project
 <%= render 'alto/shared/forms/multi_select',
@@ -22,8 +21,7 @@
     placeholder: "Search users by name or email...",
     item_display_method: :name,
     item_subtitle_method: :email,
-    item_icon_method: :avatar_emoji,  # If users have avatar emojis
-    chip_style: :bordered %>
+    item_icon_method: :avatar_emoji %>  # If users have avatar emojis
 
 # 3. Categories without form builder
 <%= render 'alto/shared/forms/multi_select',
@@ -36,7 +34,7 @@
     item_search_method: :full_path,  # Search by full category path
     empty_message: "No categories available" %>
 
-# 4. Simple plain style selection
+# 4. Simple selection without search
 <%= render 'alto/shared/forms/multi_select',
     form: form,
     model: @post,
@@ -44,7 +42,6 @@
     available_items: Topic.published,
     selected_items: @post.topics,
     label: "Topics",
-    chip_style: :plain,
     show_search: false,  # No search for small lists
     max_height: "max-h-40" %>
 

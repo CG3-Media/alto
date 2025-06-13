@@ -59,10 +59,19 @@
       <% end %>
 
             <!-- Tag Selection -->
-      <%= render 'alto/shared/tag_selector',
-          board: @board,
-          ticket: @ticket,
-          can_assign: can_assign_tags? %>
+      <% if can_assign_tags? %>
+        <%= render 'alto/shared/forms/multi_select',
+            form: form,
+            model: @ticket,
+            field_name: :tag_ids,
+            available_items: @board.tags.ordered,
+            selected_items: @ticket.tags,
+            label: "Tags",
+            placeholder: "Search and select tags...",
+            item_display_method: :name,
+            item_icon_method: nil,
+            help_text: nil %>
+      <% end %>
 
       <!-- Custom Fields -->
       <% if @board.fields.any? %>

@@ -1,23 +1,13 @@
 <%
   # Chip display partial
   item ||= nil
-  chip_style ||= :colored
   item_display_method ||= :name
   item_icon_method ||= nil
   is_template ||= false
   readonly ||= false
 
-  # Determine chip classes based on style
-  chip_classes = case chip_style
-  when :colored
-    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-gray-300 bg-gray-100 text-gray-700"
-  when :plain
-    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
-  when :bordered
-    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-gray-300 text-gray-700"
-  else
-    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium"
-  end
+  # Default chip styling
+  chip_classes = "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-gray-300 bg-gray-100 text-gray-700"
 
   # Get item attributes if not a template
   if !is_template && item
