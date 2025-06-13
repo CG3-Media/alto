@@ -87,7 +87,7 @@
               <span class="text-sm text-gray-500 font-mono"><%= status.slug %></span>
             </div>
             <div class="text-sm text-gray-400">
-              Position: <%= status.position %>
+              <%= status.publicly_viewable? ? "Public" : "Admin only" %>
             </div>
           </div>
         <% end %>

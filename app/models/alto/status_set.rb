@@ -44,5 +44,14 @@ module Alto
     def status_options_for_select
       statuses.map { |status| [ status.name, status.slug ] }
     end
+
+    def public_statuses
+      statuses.publicly_viewable
+    end
+
+    def status_options_for_select_filtered(is_admin: false)
+      filtered_statuses = is_admin ? statuses : public_statuses
+      filtered_statuses.map { |status| [ status.name, status.slug ] }
+    end
   end
 end

@@ -14,8 +14,8 @@ module Alto
 
       def new
         @status_set = ::Alto::StatusSet.new
-        # Build one initial status
-        @status_set.statuses.build(position: 0)
+        # Build one initial status with default values
+        @status_set.statuses.build(position: 0, viewable_by_public: true)
       end
 
       def create
@@ -37,6 +37,7 @@ module Alto
       end
 
       def update
+        Rails.logger.info "Status Set Params: #{status_set_params.inspect}"
         if @status_set.update(status_set_params)
           redirect_to alto.admin_status_set_path(@status_set),
                       notice: "Status set was successfully updated."
@@ -69,7 +70,7 @@ module Alto
 
       def status_set_params
         params.require(:status_set).permit(:name, :description, :is_default,
-          statuses_attributes: [ :id, :name, :color, :position, :slug, :_destroy ])
+          statuses_attributes: [ :id, :name, :color, :position, :slug, :viewable_by_public, :_destroy ])
       end
 
       def require_admin_access

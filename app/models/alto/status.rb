@@ -10,6 +10,10 @@ module Alto
     validates :position, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
     scope :ordered, -> { order(:position) }
+    scope :publicly_viewable, -> { where(viewable_by_public: true) }
+
+    # Set default value for new records
+    after_initialize :set_defaults, if: :new_record?
 
     def slug_uniqueness_scope
       [ :status_set_id ]
@@ -17,6 +21,10 @@ module Alto
 
     def slug_source_attribute
       :name
+    end
+
+    def publicly_viewable?
+      viewable_by_public?
     end
 
     def color_classes
@@ -40,6 +48,12 @@ module Alto
       else
         "bg-gray-100 text-gray-800"
       end
+    end
+
+    private
+
+    def set_defaults
+      self.viewable_by_public = true if viewable_by_public.nil?
     end
   end
 end

@@ -15,6 +15,9 @@ module Alto
 
       @tickets = @board.tickets.active.includes(:upvotes, :comments)
 
+      # Filter by viewable statuses for non-admin users
+      @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
+
       # Apply search filter
       @tickets = @tickets.search(params[:search]) if params[:search].present?
 
@@ -33,7 +36,7 @@ module Alto
       end
 
       @tickets = @tickets.page(params[:page]) if respond_to?(:page)
-      @statuses = @board.available_statuses
+      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
       @tags = @board.tags.used.ordered
       @search_query = params[:search]
       @selected_tag = params[:tag]

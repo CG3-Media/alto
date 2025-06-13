@@ -140,14 +140,35 @@ module Alto
       status_set.statuses.ordered
     end
 
+    def available_statuses_for_user(is_admin: false)
+      return [] unless status_set
+      is_admin ? status_set.statuses.ordered : status_set.public_statuses.ordered
+    end
+
     def status_options_for_select
       return [] unless status_set
       status_set.status_options_for_select
     end
 
+    def status_options_for_select_filtered(is_admin: false)
+      return [] unless status_set
+      status_set.status_options_for_select_filtered(is_admin: is_admin)
+    end
+
     def default_status_slug
       return nil unless status_set
       status_set.first_status&.slug
+    end
+
+    def default_status_slug_for_user(is_admin: false)
+      return nil unless status_set
+
+      if is_admin
+        status_set.first_status&.slug
+      else
+        # Return the first publicly viewable status
+        status_set.public_statuses.first&.slug
+      end
     end
 
     def status_by_slug(slug)

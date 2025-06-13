@@ -1,4 +1,4 @@
 <%= render 'alto/shared/filter_dropdown',
     field_name: :status,
-    options: [["All statuses", ""]] + (@board.has_status_tracking? ? @statuses.map { |status| [status.name, status.slug] } : []),
+    options: [["All statuses", ""]] + (@board.has_status_tracking? ? @board.status_options_for_select_filtered(is_admin: can_access_admin?) : []),
     current_value: params[:status] %>

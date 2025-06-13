@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updatePosition(fieldContainer)
     generateSlug(fieldContainer)
     updateColorPreview(fieldContainer)
+    initializeViewableCheckbox(fieldContainer)
   })
 
   container.addEventListener('rf:field:remove', function(e) {
@@ -216,6 +217,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       previewElement.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClasses[color] || 'bg-gray-100 text-gray-800'}`
       previewElement.textContent = name
+    }
+  }
+
+  // Initialize viewable_by_public checkbox for new fields
+  function initializeViewableCheckbox(fieldContainer) {
+    const checkbox = fieldContainer.querySelector('input[type="checkbox"][name*="[viewable_by_public]"]')
+
+    if (checkbox) {
+      // Set default to checked (true) for new statuses
+      checkbox.checked = true
     }
   }
 })

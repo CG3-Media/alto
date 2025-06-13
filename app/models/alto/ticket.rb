@@ -38,6 +38,18 @@ module Alto
     scope :popular, -> { left_joins(:upvotes).group(:id).order("count(alto_upvotes.id) desc") }
     scope :for_board, ->(board) { where(board: board) }
 
+    # Filter tickets by viewable statuses based on user permissions
+    scope :with_viewable_statuses, ->(is_admin: false) {
+      if is_admin
+        all
+      else
+        # Only show tickets with publicly viewable statuses
+        joins(board: { status_set: :statuses })
+          .where("alto_tickets.status_slug = alto_statuses.slug AND alto_statuses.viewable_by_public = ?", true)
+          .distinct
+      end
+    }
+
     # Search scopes
     scope :search_by_content, ->(query) {
       return all if query.blank?
@@ -182,7 +194,7 @@ module Alto
     # Tagging methods
     def tag_with(tag_objects_or_names)
       tag_objects_or_names = Array(tag_objects_or_names)
-      
+
       # Convert names to tag objects if needed
       tag_objects = tag_objects_or_names.map do |item|
         if item.is_a?(String)
@@ -202,10 +214,10 @@ module Alto
 
     def tag_list=(tag_names)
       tag_names = Array(tag_names).map(&:to_s).reject(&:blank?)
-      
+
       # Find existing tags for this board
       existing_tags = board.tags.where(name: tag_names)
-      
+
       # Only assign existing tags (don't create new ones)
       self.tags = existing_tags
     end
@@ -274,7 +286,10 @@ module Alto
       return unless board.present?
 
       if status_slug.blank?
-        self.status_slug = board.default_status_slug
+        # For regular users, ensure the default status is publicly viewable
+        user_object = get_user_object(user_id)
+        is_admin = user_object && user_object.respond_to?(:can?) && user_object.can?(:access_admin)
+        self.status_slug = board.default_status_slug_for_user(is_admin: is_admin)
       end
     end
 
