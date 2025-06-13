@@ -1,6 +1,6 @@
 <div class="space-y-6">
   <%= render 'alto/shared/page_header',
-      title: "🗂️ Manage Boards",
+      title: "Manage Boards",
       actions: [
         {
           type: :link,
@@ -24,11 +24,6 @@
         <div class="flex flex-col justify-between bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
         <!-- Card Header -->
           <div class="p-6 pb-4">
-            <% if board.admin_only? %>
-              <div class="mb-2 whitespace-nowrap inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                🔒 Admin Only
-              </div>
-            <% end %>
             <div class="flex items-start justify-between">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center">
@@ -37,7 +32,14 @@
                         class: "hover:text-blue-600 transition-colors" %>
                   </h3>
                 </div>
-                <p class="text-sm text-gray-500 mt-1">/<%= board.slug %></p>
+                <div class="flex items-center mt-1 space-x-2">
+                  <% if board.admin_only? %>
+                    <div class="whitespace-nowrap inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      🔒 Admin Only
+                    </div>
+                  <% end %>
+                  <p class="text-sm text-gray-500">/<%= board.slug %></p>
+                </div>
               </div>
               <div class="flex-shrink-0 ml-2">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -55,13 +57,6 @@
                 No description provided
               </p>
             <% end %>
-          </div>
-
-          <div class="flex items-center p-2 pb-6 px-6 text-xs text-gray-500">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            Created <%= time_ago_in_words(board.created_at) %> ago
           </div>
 
           <!-- Card Footer -->

@@ -12,6 +12,13 @@
       <%= link_to alto.home_path, class: "text-xl font-semibold text-gray-900" do %>
         <%= app_name %>
       <% end %>
+
+      <!-- Board Name -->
+      <% if defined?(current_board) && current_board %>
+        <%= link_to current_board.name,
+            alto.board_tickets_path(current_board),
+            class: "text-sm font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded-md" %>
+      <% end %>
     </div>
 
     <!-- Search Bar & New Ticket (only show on ticket pages) -->

@@ -37,8 +37,10 @@ module Alto
       end
 
       inactive_classes = case type
-      when :rounded, :toggle
+      when :rounded
         "bg-white text-gray-700 hover:bg-gray-50"
+      when :toggle
+        "text-gray-700 hover:bg-gray-50"
       when :sort
         "text-gray-600 hover:text-gray-900"
       end

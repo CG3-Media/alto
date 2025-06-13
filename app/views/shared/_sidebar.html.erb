@@ -48,14 +48,7 @@
     <% activity_collapsed = cookies['sidebar-section-1'] == 'true' %>
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
-        <% if defined?(current_board) && current_board %>
-          <%= link_to alto.board_activity_path(current_board),
-              class: "text-sm font-semibold text-gray-900 uppercase tracking-wide hover:text-blue-600 transition-colors flex-1" do %>
-            Recent Activity
-          <% end %>
-        <% else %>
-          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Recent Activity</h3>
-        <% end %>
+        <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Recent Activity</h3>
         <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors ml-2"><%= activity_collapsed ? '+' : '−' %></span>
       </div>
       <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if activity_collapsed %>>
@@ -118,19 +111,13 @@
     <% boards_collapsed = cookies['sidebar-section-2'] == 'true' %>
     <div class="feedback-sidebar-section">
       <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
-        <% if can_access_admin? %>
-          <%= link_to alto.admin_boards_path,
-              class: "text-sm font-semibold text-gray-900 uppercase tracking-wide hover:text-blue-600 transition-colors flex-1" do %>
-            Boards
-          <% end %>
-        <% else %>
-          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Boards</h3>
-        <% end %>
+        <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Boards</h3>
         <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors ml-2"><%= boards_collapsed ? '+' : '−' %></span>
       </div>
-      <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if boards_collapsed %>>
+            <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if boards_collapsed %>>
         <nav class="space-y-1">
-          <% Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered.each do |board| %>
+          <% accessible_boards = Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered %>
+          <% accessible_boards.each do |board| %>
             <% ticket_count = board.tickets_count %>
             <%= link_to alto.board_tickets_path(board),
                 class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ board == current_board ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
@@ -153,6 +140,22 @@
                 class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-500 rounded-md hover:text-gray-700 hover:bg-gray-50" %>
           <% end %>
         </nav>
+
+        <% if accessible_boards.count > 1 %>
+          <div class="mt-4 pt-3 border-t border-gray-200">
+            <% if can_access_admin? %>
+              <%= link_to alto.admin_boards_path,
+                  class: "text-xs text-blue-600 hover:text-blue-800 font-medium" do %>
+                View all boards →
+              <% end %>
+            <% else %>
+              <%= link_to alto.boards_path,
+                  class: "text-xs text-blue-600 hover:text-blue-800 font-medium" do %>
+                View all boards →
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     </div>
 
@@ -218,15 +221,7 @@
       <div class="px-4 space-y-6">
         <!-- Mobile version uses simplified content for performance -->
         <div>
-          <% if can_access_admin? %>
-            <%= link_to alto.admin_boards_path,
-                class: "text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 block hover:text-blue-600 transition-colors",
-                onclick: "toggleMobileSidebar()" do %>
-              Boards
-            <% end %>
-          <% else %>
-            <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
-          <% end %>
+          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
           <nav class="space-y-1">
             <% Alto::Board.ordered.each do |board| %>
               <%= link_to board.name, alto.board_tickets_path(board),

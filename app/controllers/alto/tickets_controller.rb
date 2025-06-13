@@ -193,8 +193,29 @@ module Alto
     end
 
     def determine_view_type
-      @view_type = @board.single_view.presence || (params[:view] == "list" ? "list" : "card")
-      @show_toggle = @board.single_view.blank?
+      # If board enforces a single view, use that
+      if @board.single_view.present?
+        @view_type = @board.single_view
+        @show_toggle = false
+        return
+      end
+
+      # If user explicitly chose a view via URL parameter, use it and store preference
+      if params[:view].present?
+        @view_type = params[:view] == "list" ? "list" : "card"
+        # Store user's view preference in session for this board
+        session[:view_preferences] ||= {}
+        session[:view_preferences][@board.slug] = @view_type
+      else
+        # No URL parameter - check for stored preference, fallback to default
+        stored_preferences = session[:view_preferences] || {}
+        @view_type = stored_preferences[@board.slug] || "card"
+      end
+
+      @show_toggle = true
+
+      # Debug logging to understand what's happening
+      Rails.logger.info "[ALTO DEBUG] Board: #{@board.name}, single_view: #{@board.single_view.inspect}, params[:view]: #{params[:view].inspect}, stored_preference: #{session.dig(:view_preferences, @board.slug).inspect}, @view_type: #{@view_type.inspect}, @show_toggle: #{@show_toggle.inspect}"
     end
 
     def can_assign_tags?

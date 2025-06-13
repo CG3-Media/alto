@@ -26,7 +26,7 @@ module Alto
         @board = ::Alto::Board.new(board_params)
 
         if @board.save
-          redirect_to admin_boards_path, notice: "Board was successfully created."
+          redirect_to admin_boards_path, notice: "Board '#{@board.name}' was successfully created."
         else
           # Ensure at least one field is present for re-rendering the form
           @board.fields.build(position: 0) if @board.fields.empty?
@@ -39,7 +39,7 @@ module Alto
 
       def update
         if @board.update(board_params)
-          redirect_to admin_boards_path, notice: "Board was successfully updated."
+          redirect_to board_path(@board), notice: "Board '#{@board.name}' was successfully updated."
         else
           # Ensure at least one field is present for re-rendering the form
           @board.fields.build(position: 0) if @board.fields.empty?
@@ -54,7 +54,7 @@ module Alto
         end
 
         @board.destroy
-        redirect_to admin_boards_path, notice: "Board was successfully deleted."
+        redirect_to admin_boards_path, notice: "Board '#{@board.name}' was successfully deleted."
       end
 
       private

@@ -1,6 +1,6 @@
-<%= form_with(model: [:admin, @board], local: true, class: "space-y-8") do |form| %>
+<%= form_with(model: [:admin, @board], local: true) do |form| %>
   <% if @board.errors.any? %>
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-8">
       <h4 class="font-medium">Please fix the following errors:</h4>
       <ul class="mt-2 list-disc list-inside">
         <% @board.errors.full_messages.each do |message| %>
@@ -10,107 +10,134 @@
     </div>
   <% end %>
 
-  <!-- Name and Item Label side by side -->
+  <!-- Board Details -->
   <div class="bg-gray-50 p-6 rounded-lg">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:divide-x md:divide-gray-300">
-      <div>
-        <%= render 'shared/forms/input',
-            form: form,
-            field_name: :name,
-            placeholder: "Board name",
-            model: @board,
-            required: true %>
-      </div>
-      <div class="md:pl-6">
-        <%= render 'shared/forms/input',
-            form: form,
-            field_name: :item_label_singular,
-            label_text: "Item Label (Singular)",
-            description: "What individual items are called (ticket, post, request, issue...)",
-            placeholder: "ticket, post, request, issue...",
-            model: @board %>
-      </div>
-    </div>
-  </div>
+    <div class="space-y-6">
+      <h3 class="text-lg font-medium text-gray-900">Board Details</h3>
 
-  <!-- Description -->
-  <div class="bg-gray-50 p-6 rounded-lg">
-    <div class="space-y-2">
-      <%= form.label :description, "Description", class: "block text-sm font-medium text-gray-700" %>
-      <p class="text-sm text-gray-500">
-        Help users understand what this board is for. This description appears on the board listing and header.
-      </p>
-      <%= form.text_area :description,
-          placeholder: "Optional description for this board",
-          rows: 3,
-          class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical" %>
-      <% if @board.errors[:description].any? %>
-        <% @board.errors[:description].each do |error| %>
-          <p class="text-sm text-red-600"><%= error %></p>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Admin Only Board -->
-  <div class="bg-gray-50 p-6 rounded-lg">
-    <div class="space-y-2">
-      <div class="flex items-start">
-        <div class="flex items-center h-5">
-          <%= form.check_box :is_admin_only,
-              class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:divide-x md:divide-gray-300">
+        <div>
+          <%= render 'shared/forms/input',
+              form: form,
+              field_name: :name,
+              placeholder: "Board name",
+              model: @board,
+              required: true %>
         </div>
-        <div class="-mt-1 ml-3">
-          <%= form.label :is_admin_only, "Admin-Only Board", class: "text-sm font-medium text-gray-700" %>
-          <p class="text-sm text-gray-500">
-            🔒 Only administrators can view and access this board. Regular users won't see it in listings or be able to access it directly.
-          </p>
+        <div class="md:pl-6">
+          <%= render 'shared/forms/input',
+              form: form,
+              field_name: :item_label_singular,
+              label_text: "Item Label (Singular)",
+              description: "What individual items are called (ticket, post, request, issue...)",
+              placeholder: "ticket, post, request, issue...",
+              model: @board %>
         </div>
       </div>
-      <% if @board.errors[:is_admin_only].any? %>
-        <% @board.errors[:is_admin_only].each do |error| %>
-          <p class="text-sm text-red-600"><%= error %></p>
+
+      <div class="space-y-2">
+        <%= form.label :description, "Description", class: "block text-sm font-medium text-gray-700" %>
+        <p class="text-sm text-gray-500">
+          Help users understand what this board is for. This description appears on the board listing and header.
+        </p>
+        <%= form.text_area :description,
+            placeholder: "Optional description for this board",
+            rows: 3,
+            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical" %>
+        <% if @board.errors[:description].any? %>
+          <% @board.errors[:description].each do |error| %>
+            <p class="text-sm text-red-600"><%= error %></p>
+          <% end %>
         <% end %>
-      <% end %>
+      </div>
     </div>
   </div>
 
-  <!-- Status Set and View Mode side by side -->
-  <div class="bg-gray-50 p-6 rounded-lg">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:divide-x md:divide-gray-300">
-      <div>
-        <%= render 'shared/forms/dropdown',
+  <!-- Display & Tracking -->
+  <div class="bg-gray-50 p-6 rounded-lg mt-8">
+    <div class="space-y-6">
+      <h3 class="text-lg font-medium text-gray-900">Display & Tracking</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:divide-x md:divide-gray-300">
+        <div>
+          <%= render 'shared/forms/dropdown',
+              form: form,
+              field_name: :status_set_id,
+              label_text: "Status Set",
+              description: raw("Choose how items will be tracked. #{link_to "Manage status sets", alto.admin_status_sets_path, class: "text-blue-600 hover:text-blue-500"}"),
+              options: options_from_collection_for_select(::Alto::StatusSet.ordered, :id, :name, @board.status_set_id),
+              prompt: 'Select a status set...',
+              include_blank: false,
+              model: @board %>
+        </div>
+        <div class="md:pl-6">
+          <%= render 'shared/forms/dropdown',
             form: form,
-            field_name: :status_set_id,
-            label_text: "Status Set",
-            description: raw("Choose how items will be tracked. #{link_to "Manage status sets", alto.admin_status_sets_path, class: "text-blue-600 hover:text-blue-500"}"),
-            options: options_from_collection_for_select(::Alto::StatusSet.ordered, :id, :name, @board.status_set_id),
-            prompt: 'Select a status set...',
-            include_blank: false,
+            field_name: :single_view,
+            label_text: "View Mode",
+            description: "Control how users view items. Choose \"Both\" to let users toggle, or enforce a specific view.",
+            options: options_for_select([
+              ['Both (user can choose)', ''],
+              ['Card only', 'card'],
+              ['List only', 'list']
+            ], @board.single_view),
             model: @board %>
+        </div>
       </div>
-      <div class="md:pl-6">
-        <%= render 'shared/forms/dropdown',
-          form: form,
-          field_name: :single_view,
-          label_text: "View Mode",
-          description: "Control how users view items. Choose \"Both\" to let users toggle, or enforce a specific view.",
-          options: options_for_select([
-            ['Both (user can choose)', ''],
-            ['Card only', 'card'],
-            ['List only', 'list']
-          ], @board.single_view),
-          model: @board %>
+    </div>
+  </div>
+
+  <!-- Board Permissions -->
+  <div class="bg-gray-50 p-6 rounded-lg mt-8">
+    <div class="space-y-4">
+      <h3 class="text-lg font-medium text-gray-900">Board Permissions</h3>
+
+      <div class="space-y-4">
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <%= form.check_box :is_admin_only,
+                class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <div class="-mt-1 ml-3">
+            <%= form.label :is_admin_only, "Admin-Only Board", class: "text-sm font-medium text-gray-700" %>
+            <p class="text-sm text-gray-500">
+              🔒 Only administrators can view and access this board. Regular users won't see it in listings or be able to access it directly.
+            </p>
+          </div>
+        </div>
+        <% if @board.errors[:is_admin_only].any? %>
+          <% @board.errors[:is_admin_only].each do |error| %>
+            <p class="text-sm text-red-600"><%= error %></p>
+          <% end %>
+        <% end %>
+
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <%= form.check_box :allow_public_tagging,
+                class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <div class="-mt-1 ml-3">
+            <%= form.label :allow_public_tagging, "Allow Public Tagging", class: "text-sm font-medium text-gray-700" %>
+            <p class="text-sm text-gray-500">
+              🏷️ Allow regular users to create and apply tags to items on this board. When disabled, only administrators can manage tags.
+            </p>
+          </div>
+        </div>
+        <% if @board.errors[:allow_public_tagging].any? %>
+          <% @board.errors[:allow_public_tagging].each do |error| %>
+            <p class="text-sm text-red-600"><%= error %></p>
+          <% end %>
+        <% end %>
       </div>
     </div>
   </div>
 
   <!-- Custom Fields Section -->
-  <div class="bg-gray-50 p-6 rounded-lg">
+  <div class="bg-gray-50 p-6 rounded-lg mt-8">
     <%= render 'field_customization' %>
   </div>
 
-  <div class="flex justify-end space-x-3 pt-4">
+  <div class="flex justify-end space-x-3 pt-4 mt-8">
     <%= render 'shared/buttons/secondary',
         text: "Cancel",
         url: alto.admin_boards_path %>

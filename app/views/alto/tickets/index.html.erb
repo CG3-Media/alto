@@ -44,6 +44,7 @@
   <% end %>
 
   <!-- Card View (Kanban Style) -->
+  <!-- DEBUG: @view_type = <%= @view_type %>, showing card view: <%= @view_type != 'list' %> -->
   <div id="card-view" class="kanban-view min-h-screen" <%= 'style="display: none;"'.html_safe if @view_type == 'list' %>>
     <% if @tickets.any? && @board.has_status_tracking? %>
       <div class="flex overflow-x-auto pb-4 min-h-full">
@@ -135,6 +136,7 @@
   </div>
 
   <!-- Row View (Traditional List) -->
+  <!-- DEBUG: @view_type = <%= @view_type %>, showing list view: <%= @view_type == 'list' %> -->
   <div id="row-view" class="space-y-4" <%= 'style="display: none;"'.html_safe if @view_type == 'card' %>>
     <% if @tickets.any? %>
       <% @tickets.each do |ticket| %>
