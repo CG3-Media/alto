@@ -71,7 +71,7 @@ module Alto
       end
 
       def tag_params
-        params.require(:tag).permit(:name, :color, :description)
+        params.require(:tag).permit(:name, :color)
       end
 
       def ensure_can_manage_boards

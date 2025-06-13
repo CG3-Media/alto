@@ -14,7 +14,7 @@
     <div class="flex items-center space-x-4 ml-4">
       <% actions.each do |action| %>
         <% if action[:type] == :link %>
-          <%= render 'alto/shared/button',
+          <%= render 'shared/button',
               text: action[:text],
               url: action[:path],
               method: action[:method],

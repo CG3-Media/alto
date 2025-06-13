@@ -4,12 +4,13 @@
       subtitle: "Manage tags for organizing #{@board.item_name.pluralize}",
       actions: [
         {
+          type: :link,
           text: "New Tag",
           path: new_admin_board_tag_path(@board),
-          button_type: :primary,
-          icon: "plus"
+          button_type: :primary
         },
         {
+          type: :link,
           text: "Board Settings",
           path: edit_admin_board_path(@board),
           button_type: :secondary
