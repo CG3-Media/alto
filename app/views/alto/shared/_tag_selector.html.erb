@@ -2,156 +2,250 @@
   # Get available tags for this board
   available_tags = board.tags.ordered
   selected_tag_ids = ticket.tag_ids || []
+  selected_tags = board.tags.where(id: selected_tag_ids)
 
   # Check if user can assign tags
   can_assign = local_assigns[:can_assign] || false
 %>
 
 <% if can_assign && available_tags.any? %>
-  <div class="form-group">
+  <div class="form-group" rf rf-model="tag_selector">
     <%= label_tag :tag_ids, "Tags", class: "block text-sm font-medium text-gray-700 mb-2" %>
 
-    <div class="space-y-3">
-      <!-- Selected Tags Display -->
-      <div id="selected-tags" class="min-h-[2rem] p-3 border border-gray-300 rounded-md bg-gray-50">
-        <div class="flex flex-wrap gap-2" id="selected-tags-container">
-          <% if selected_tag_ids.any? %>
-            <% board.tags.where(id: selected_tag_ids).each do |tag| %>
-              <div class="selected-tag" data-tag-id="<%= tag.id %>">
-                <%= render 'alto/shared/tag', tag: tag, removable: true %>
-                <%= hidden_field_tag "ticket[tag_ids][]", tag.id %>
+    <div class="relative">
+      <!-- Tag Input Container -->
+      <div class="min-h-[42px] w-full border border-gray-300 rounded-md bg-white px-3 py-2 cursor-text"
+           id="tag-input-container">
+
+                <!-- Selected Tags (chips) -->
+        <div rf-nest-for="selected_tags" class="inline-flex flex-wrap gap-1 mr-2">
+          <!-- Hidden template for new tags - MUST BE FIRST for RRF to use as template -->
+          <div rf-nest-item style="display: none;" class="selected-tag-chip template-item">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border tag-chip-display">
+              <span class="tag-name"></span>
+              <button rf-nest-remove type="button" class="hover:bg-black hover:bg-opacity-10 rounded-sm">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                </svg>
+              </button>
+            </span>
+            <%= hidden_field_tag "ticket[tag_ids][]", "", class: "tag-id-input" %>
+          </div>
+
+          <% selected_tags.each do |tag| %>
+            <div rf-nest-item data-tag-id="<%= tag.id %>" class="selected-tag-chip">
+              <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border"
+                    style="background-color: <%= tag.color %>15; color: <%= tag.color %>; border-color: <%= tag.color %>30;">
+                <%= tag.name %>
+                <button rf-nest-remove type="button" class="hover:bg-black hover:bg-opacity-10 rounded-sm">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                  </svg>
+                </button>
+              </span>
+              <%= hidden_field_tag "ticket[tag_ids][]", tag.id %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Search Input -->
+        <input type="text"
+               rf-key="dropdown_open"
+               placeholder="<%= selected_tags.any? ? 'Add more tags...' : 'Search and select tags...' %>"
+               class="inline-block min-w-[120px] border-none outline-none bg-transparent text-sm"
+               id="tag-search-input"
+               autocomplete="off">
+      </div>
+
+      <!-- Dropdown Panel -->
+      <div rf-show-if="dropdown_open=focused"
+           class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+
+        <!-- Available Tags List -->
+        <div class="py-1">
+          <% if available_tags.any? %>
+            <% available_tags.each do |tag| %>
+              <div class="tag-option px-3 py-2 hover:bg-gray-50 cursor-pointer border-l-2 <%= selected_tag_ids.include?(tag.id) ? 'opacity-50 pointer-events-none' : '' %>"
+                   data-tag-id="<%= tag.id %>"
+                   data-tag-name="<%= tag.name %>"
+                   data-tag-color="<%= tag.color %>"
+                   style="border-left-color: <%= tag.color %>;">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium" style="color: <%= tag.color %>;">
+                    <%= tag.name %>
+                  </span>
+                  <% if selected_tag_ids.include?(tag.id) %>
+                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                  <% end %>
+                </div>
               </div>
             <% end %>
           <% else %>
-            <span class="text-sm text-gray-500" id="no-tags-message">No tags selected</span>
+            <div class="px-3 py-2 text-sm text-gray-500">
+              No tags available
+            </div>
           <% end %>
         </div>
-      </div>
-
-      <!-- Available Tags -->
-      <div>
-        <p class="text-sm text-gray-600 mb-2">Click to add tags:</p>
-        <div class="flex flex-wrap gap-2" id="available-tags">
-          <% available_tags.each do |tag| %>
-            <button type="button"
-                    class="tag-option <%= 'hidden' if selected_tag_ids.include?(tag.id) %>"
-                    data-tag-id="<%= tag.id %>"
-                    data-tag-name="<%= tag.name %>"
-                    data-tag-color="<%= tag.color %>">
-              <%= render 'alto/shared/tag', tag: tag, class: 'cursor-pointer hover:opacity-80' %>
-            </button>
-          <% end %>
-        </div>
-
-        <% if available_tags.empty? %>
-          <p class="text-sm text-gray-500 italic">
-            No tags available.
-            <% if can_access_admin? %>
-              <%= link_to "Create tags", admin_board_tags_path(board),
-                  class: "text-blue-600 hover:text-blue-800" %>
-              to get started.
-            <% else %>
-              Contact an admin to create tags.
-            <% end %>
-          </p>
-        <% end %>
       </div>
     </div>
   </div>
 
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const selectedContainer = document.getElementById('selected-tags-container');
-    const noTagsMessage = document.getElementById('no-tags-message');
-    const availableTagsContainer = document.getElementById('available-tags');
+    const container = document.querySelector('[rf-model="tag_selector"]');
+    if (!container) return;
 
-    // Add tag functionality
-    function addTag(tagId, tagName, tagColor) {
-      // Hide the available tag option
-      const availableTag = document.querySelector(`[data-tag-id="${tagId}"]`);
-      if (availableTag) {
-        availableTag.classList.add('hidden');
-      }
+    const searchInput = document.getElementById('tag-search-input');
+    const inputContainer = document.getElementById('tag-input-container');
 
-      // Create selected tag element
-      const selectedTag = document.createElement('div');
-      selectedTag.className = 'selected-tag';
-      selectedTag.setAttribute('data-tag-id', tagId);
-
-      // Create tag display with remove button
-      const tagDisplay = document.createElement('span');
-      tagDisplay.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
-      tagDisplay.style.backgroundColor = tagColor + '20';
-      tagDisplay.style.color = tagColor;
-      tagDisplay.innerHTML = `
-        ${tagName}
-        <button type="button" class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-black hover:bg-opacity-10 js-remove-tag" style="color: ${tagColor};">
-          <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
-            <path d="M1.5 1.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-        </button>
-      `;
-
-      // Create hidden input
-      const hiddenInput = document.createElement('input');
-      hiddenInput.type = 'hidden';
-      hiddenInput.name = 'ticket[tag_ids][]';
-      hiddenInput.value = tagId;
-
-      selectedTag.appendChild(tagDisplay);
-      selectedTag.appendChild(hiddenInput);
-
-      // Hide "no tags" message
-      if (noTagsMessage) {
-        noTagsMessage.style.display = 'none';
-      }
-
-      selectedContainer.appendChild(selectedTag);
+    // Get RRF instance
+    const instance = container._rfInstance;
+    if (!instance) {
+      console.error('RRF instance not found for tag selector');
+      return;
     }
 
-    // Remove tag functionality
-    function removeTag(tagId) {
-      const selectedTag = document.querySelector(`.selected-tag[data-tag-id="${tagId}"]`);
-      if (selectedTag) {
-        selectedTag.remove();
-      }
+    // Track selected tag IDs
+    let selectedTagIds = new Set(<%= selected_tag_ids.to_json.html_safe %>);
 
-      // Show the available tag option again
-      const availableTag = document.querySelector(`#available-tags [data-tag-id="${tagId}"]`);
-      if (availableTag) {
-        availableTag.classList.remove('hidden');
-      }
+    // Store pending tag data for the next addition
+    let pendingTagData = null;
 
-      // Show "no tags" message if no tags selected
-      const remainingTags = document.querySelectorAll('.selected-tag');
-      if (remainingTags.length === 0 && noTagsMessage) {
-        noTagsMessage.style.display = 'inline';
-      }
-    }
+    // Focus/blur handling for dropdown visibility
+    searchInput.addEventListener('focus', () => {
+      instance.signals.signal('dropdown_open', 'focused').set('focused');
+    });
 
-    // Event delegation for adding tags
-    availableTagsContainer.addEventListener('click', function(e) {
-      const tagButton = e.target.closest('.tag-option');
-      if (tagButton) {
-        e.preventDefault();
-        const tagId = tagButton.getAttribute('data-tag-id');
-        const tagName = tagButton.getAttribute('data-tag-name');
-        const tagColor = tagButton.getAttribute('data-tag-color') || '#6B7280';
-        addTag(tagId, tagName, tagColor);
+    searchInput.addEventListener('blur', (e) => {
+      // Delay hiding to allow clicks on dropdown items
+      setTimeout(() => {
+        // Check if focus is still within our component
+        if (!container.contains(document.activeElement)) {
+          instance.signals.signal('dropdown_open', '').set('');
+        }
+      }, 150);
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        instance.signals.signal('dropdown_open', '').set('');
       }
     });
 
-    // Event delegation for removing tags
-    selectedContainer.addEventListener('click', function(e) {
-      if (e.target.closest('.js-remove-tag')) {
-        e.preventDefault();
-        const selectedTag = e.target.closest('.selected-tag');
-        if (selectedTag) {
-          const tagId = selectedTag.getAttribute('data-tag-id');
-          removeTag(tagId);
+    // Click on container focuses the input
+    inputContainer.addEventListener('click', (e) => {
+      if (e.target === inputContainer || e.target.closest('.selected-tag-chip')) {
+        searchInput.focus();
+      }
+    });
+
+        // Capture tag clicks and store data for RRF event
+    container.addEventListener('click', (e) => {
+      const tagOption = e.target.closest('.tag-option');
+      if (tagOption && !tagOption.classList.contains('pointer-events-none')) {
+        // Store the tag data for the upcoming rf:field:add event
+        pendingTagData = {
+          id: tagOption.dataset.tagId,
+          name: tagOption.dataset.tagName,
+          color: tagOption.dataset.tagColor,
+          element: tagOption
+        };
+
+        console.log('🏷️ Clicked tag:', pendingTagData.name, 'ID:', pendingTagData.id);
+
+        // Manually trigger RRF's addNestedItem
+        const nestedContainer = container.querySelector('[rf-nest-for="selected_tags"]');
+        if (nestedContainer && instance) {
+          instance.addNestedItem(nestedContainer, 'selected_tags');
         }
       }
     });
+
+    // Handle the RRF field:add event to populate the new item
+    container.addEventListener('rf:field:add', function(e) {
+      const { item, groupName } = e.detail;
+      if (groupName !== 'selected_tags' || !pendingTagData) return;
+
+      console.log('🏷️ RRF added item, populating with:', pendingTagData.name);
+
+      // Populate the new chip with pending tag data
+      const chipDisplay = item.querySelector('.tag-chip-display');
+      const tagNameSpan = item.querySelector('.tag-name');
+      const tagIdInput = item.querySelector('.tag-id-input');
+
+      if (chipDisplay && tagNameSpan && tagIdInput) {
+        // Style the chip
+        chipDisplay.style.backgroundColor = pendingTagData.color + '15';
+        chipDisplay.style.color = pendingTagData.color;
+        chipDisplay.style.borderColor = pendingTagData.color + '30';
+
+        // Set content
+        tagNameSpan.textContent = pendingTagData.name;
+        tagIdInput.value = pendingTagData.id;
+
+        // Show the chip
+        item.style.display = '';
+        item.dataset.tagId = pendingTagData.id;
+
+        // Update tracking and UI
+        selectedTagIds.add(pendingTagData.id);
+        pendingTagData.element.classList.add('opacity-50', 'pointer-events-none');
+
+        // Clear search and update placeholder
+        searchInput.value = '';
+        searchInput.placeholder = 'Add more tags...';
+
+        console.log('🏷️ Successfully populated tag:', pendingTagData.name);
+
+        // Clear pending data
+        pendingTagData = null;
+      }
+    });
+
+    // Tag removal handling
+    container.addEventListener('rf:field:remove', function(e) {
+      const { item, groupName } = e.detail;
+      if (groupName !== 'selected_tags') return;
+
+      const tagId = item.dataset.tagId;
+      if (tagId) {
+        // Re-enable the tag option
+        const tagOption = container.querySelector(`[data-tag-id="${tagId}"]`);
+        if (tagOption) {
+          tagOption.classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        // Update tracking
+        selectedTagIds.delete(tagId);
+
+        // Update placeholder if no tags left
+        if (selectedTagIds.size === 0) {
+          searchInput.placeholder = 'Search and select tags...';
+        }
+
+        console.log('🏷️ Removed tag with ID:', tagId);
+      }
+    });
+
+    // Simple search filtering
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const tagOptions = container.querySelectorAll('.tag-option');
+
+      tagOptions.forEach(option => {
+        const tagName = option.dataset.tagName.toLowerCase();
+        const matches = tagName.includes(searchTerm);
+        option.style.display = matches ? '' : 'none';
+      });
+    });
+
+    // Initialize dropdown state
+    instance.signals.signal('dropdown_open', '');
+
+    console.log('🏷️ Scalable tag selector initialized with', selectedTagIds.size, 'selected tags');
   });
   </script>
 
