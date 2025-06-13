@@ -40,14 +40,7 @@
             </span>
           <% end %>
 
-          <!-- Tags -->
-          <% if @ticket.tags.any? %>
-            <% @ticket.tags.each do |tag| %>
-                             <%= render 'alto/shared/tag', tag: tag,
-                   link: board_tickets_path(@board, tag: tag.name),
-                   size: 'sm' %>
-            <% end %>
-          <% end %>
+
         </div>
 
         <!-- Title -->
@@ -68,6 +61,19 @@
         <%= upvote_button(@ticket, current_user, large: true) %>
       </div>
     </div>
+
+    <!-- Tags -->
+    <% if @ticket.tags.any? %>
+      <div class="-mt-2 mb-6">
+        <div class="flex flex-wrap gap-2">
+          <% @ticket.tags.each do |tag| %>
+            <%= render 'alto/shared/tag', tag: tag,
+                link: board_tickets_path(@board, tag: tag.name),
+                size: 'sm' %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
     <!-- Bottom row: Metadata -->
     <div class="flex items-center space-x-4 text-sm text-gray-500">
