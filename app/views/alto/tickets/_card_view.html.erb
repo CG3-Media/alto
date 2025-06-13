@@ -1,0 +1,68 @@
+<div id="card-view" class="kanban-view min-h-screen" <%= 'style="display: none;"'.html_safe if view_type == 'list' %>>
+  <% if tickets.any? && board.has_status_tracking? %>
+    <div class="flex overflow-x-auto pb-4 min-h-full">
+      <% statuses.each do |status| %>
+        <% status_tickets = tickets.select { |t| t.status_slug == status.slug } %>
+        <div class="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4 flex flex-col min-h-full">
+          <div class="flex items-center justify-between mb-4 flex-shrink-0">
+            <div class="flex items-center">
+              <span class="w-3 h-3 rounded-full mr-2 <%= case status.color
+                when 'green' then 'bg-green-500'
+                when 'blue' then 'bg-blue-500'
+                when 'yellow' then 'bg-yellow-500'
+                when 'red' then 'bg-red-500'
+                when 'gray' then 'bg-gray-500'
+                when 'purple' then 'bg-purple-500'
+                when 'orange' then 'bg-orange-500'
+                when 'pink' then 'bg-pink-500'
+                else 'bg-gray-500'
+                end %>"></span>
+              <h3 class="font-semibold text-gray-900"><%= status.name %></h3>
+            </div>
+            <span class="text-sm text-gray-500 bg-white px-2 py-1 rounded-full"><%= status_tickets.count %></span>
+          </div>
+
+          <div class="space-y-3 flex-1 overflow-y-auto">
+            <% status_tickets.each do |ticket| %>
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                <!-- Main Content -->
+                <div class="flex-1 min-w-0">
+                  <!-- Title -->
+                  <div class="mb-3">
+                    <h4 class="font-medium text-gray-900 text-sm leading-tight">
+                      <%= link_to ticket.title, alto.board_ticket_path(board, ticket), class: "hover:text-blue-600" %>
+                    </h4>
+                  </div>
+
+                  <!-- Tags -->
+                  <div class="mb-3">
+                    <%= render 'ticket_tags', ticket: ticket, board: board %>
+                  </div>
+                </div>
+
+                <!-- Bottom section spanning full width -->
+                <div class="border-t border-gray-100 pt-3 mt-3">
+                  <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3">
+                      <%= upvote_button(ticket, current_user, size: :small) %>
+                      <% if ticket.comments.count > 0 %>
+                        <%= link_to pluralize(ticket.comments.count, 'comment'),
+                            alto.board_ticket_path(board, ticket, anchor: 'comments'),
+                            class: "text-gray-500 hover:text-blue-600 font-medium" %>
+                      <% else %>
+                        <span class="text-gray-400">No comments</span>
+                      <% end %>
+                    </div>
+                    <div class="text-gray-500">
+                      <%= time_ago_in_words(ticket.created_at) %> ago
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
