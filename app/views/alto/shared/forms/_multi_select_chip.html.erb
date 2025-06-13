@@ -1,0 +1,53 @@
+<%
+  # Chip display partial
+  item ||= nil
+  chip_style ||= :colored
+  item_display_method ||= :name
+  item_color_method ||= nil
+  item_icon_method ||= nil
+  is_template ||= false
+  readonly ||= false
+
+  # Determine chip classes based on style
+  chip_classes = case chip_style
+  when :colored
+    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border"
+  when :plain
+    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
+  when :bordered
+    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-gray-300 text-gray-700"
+  else
+    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium"
+  end
+
+  # Get item attributes if not a template
+  if !is_template && item
+    display_text = item.send(item_display_method)
+    color = item_color_method && item.respond_to?(item_color_method) ? item.send(item_color_method) : nil
+    icon = item_icon_method && item.respond_to?(item_icon_method) ? item.send(item_icon_method) : nil
+  end
+%>
+
+<span class="<%= chip_classes %> chip-display"
+      <% if chip_style == :colored && color && !is_template %>
+        style="background-color: <%= color %>15; color: <%= color %>; border-color: <%= color %>30;"
+      <% end %>>
+
+  <% if icon && !is_template %>
+    <span class="chip-icon"><%= icon %></span>
+  <% elsif is_template %>
+    <span class="chip-icon"></span>
+  <% end %>
+
+  <span class="chip-text">
+    <%= is_template ? "" : display_text %>
+  </span>
+
+  <% unless readonly %>
+    <button type="button" class="chip-remove-btn hover:bg-black hover:bg-opacity-10 rounded-sm">
+      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+      </svg>
+    </button>
+  <% end %>
+</span>

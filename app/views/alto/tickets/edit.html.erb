@@ -50,10 +50,20 @@
       </div>
 
             <!-- Tag Selection -->
-      <%= render 'alto/shared/tag_selector',
-          board: @board,
-          ticket: @ticket,
-          can_assign: can_assign_tags? %>
+      <%= render 'alto/shared/forms/multi_select',
+          form: form,
+          model: @ticket,
+          field_name: :tag_ids,
+          available_items: @board.tags.ordered,
+          selected_items: @ticket.tags,
+          can_select: can_assign_tags?,
+          label: "Tags",
+          placeholder: "Search and select tags...",
+          item_display_method: :name,
+          item_color_method: :color,
+          chip_style: :colored,
+          create_path: can_access_admin? ? admin_board_tags_path(@board) : nil,
+          help_text: nil %>
 
       <!-- Custom Fields -->
       <% if @board.fields.any? %>
