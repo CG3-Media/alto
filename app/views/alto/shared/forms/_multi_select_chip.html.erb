@@ -11,7 +11,7 @@
   # Determine chip classes based on style
   chip_classes = case chip_style
   when :colored
-    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border"
+    "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border border-gray-300 bg-gray-100 text-gray-700"
   when :plain
     "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
   when :bordered
@@ -28,10 +28,7 @@
   end
 %>
 
-<span class="<%= chip_classes %> chip-display"
-      <% if chip_style == :colored && color && !is_template %>
-        style="background-color: <%= color %>15; color: <%= color %>; border-color: <%= color %>30;"
-      <% end %>>
+<span class="<%= chip_classes %> chip-display">
 
   <% if icon && !is_template %>
     <span class="chip-icon"><%= icon %></span>

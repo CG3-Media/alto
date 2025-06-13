@@ -110,11 +110,10 @@
           <% if available_items.any? %>
             <% available_items.each do |item| %>
               <% item_value = item.send(item_value_method).to_s %>
-              <div class="item-option px-3 py-2 hover:bg-gray-50 cursor-pointer <%= 'opacity-50 pointer-events-none' if selected_values.include?(item_value) %>"
+              <div class="item-option px-3 py-2 hover:bg-gray-50 cursor-pointer border-l-2 border-gray-200 <%= 'opacity-50 pointer-events-none' if selected_values.include?(item_value) %>"
                    data-item-value="<%= item_value %>"
                    data-item-display="<%= item.send(item_display_method) %>"
                    data-item-search="<%= item.send(item_search_method).to_s.downcase %>"
-                   <%= "data-item-color=\"#{item.send(item_color_method)}\"" if item_color_method && item.respond_to?(item_color_method) %>
                    <%= "data-item-icon=\"#{item.send(item_icon_method)}\"" if item_icon_method && item.respond_to?(item_icon_method) %>>
 
                 <div class="flex items-center justify-between">
@@ -124,7 +123,7 @@
                     <% end %>
 
                     <div>
-                      <div class="text-sm font-medium">
+                      <div class="text-sm font-medium text-gray-700">
                         <%= item.send(item_display_method) %>
                       </div>
                       <% if item_subtitle_method && item.respond_to?(item_subtitle_method) %>
