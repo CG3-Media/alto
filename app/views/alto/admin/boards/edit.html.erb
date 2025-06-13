@@ -10,10 +10,16 @@
         },
         {
           type: :link,
-          text: "📦 View Archive",
+          text: "Manage Tags",
+          path: alto.admin_board_tags_path(@board),
+          button_type: :secondary
+        },
+        {
+          type: :link,
+          text: "View Archive",
           path: alto.board_archive_path(@board),
           button_type: :secondary
-        }
+        },
       ] %>
 
   <div class="bg-white shadow rounded-lg p-6">
