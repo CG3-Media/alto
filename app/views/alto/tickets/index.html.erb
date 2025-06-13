@@ -22,71 +22,8 @@
       title: @board.name,
       actions: actions %>
 
-      <%
-    # View type is now determined by controller
-    show_status_filters = @view_type == 'list'
-  %>
-
-  <!-- View Toggle | Status Filters | Sort Options -->
-  <div class="flex justify-between items-center flex-wrap gap-4">
-    <div class="flex items-center gap-4">
-      <!-- View Toggle -->
-      <% if @show_toggle && @board.has_status_tracking? && params[:status].blank? %>
-        <div class="flex bg-gray-100 rounded-md p-1">
-          <%= link_to alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: 'card'),
-              class: "px-3 py-1 text-sm rounded-md transition-colors #{'bg-white text-gray-900 shadow-sm' if @view_type == 'card'} #{'text-gray-600 hover:text-gray-900' if @view_type != 'card'}" do %>
-            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            Board
-          <% end %>
-          <%= link_to alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: 'list'),
-              class: "px-3 py-1 text-sm rounded-md transition-colors #{'bg-white text-gray-900 shadow-sm' if @view_type == 'list'} #{'text-gray-600 hover:text-gray-900' if @view_type != 'list'}" do %>
-            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-            </svg>
-            List
-          <% end %>
-        </div>
-      <% end %>
-
-      <!-- Status filters (only show in list view) -->
-      <div id="status-filters" class="flex flex-wrap gap-2" <%= 'style="display: none;"'.html_safe unless show_status_filters %>>
-        <%= link_to "All", alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: params[:view]),
-            class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status].blank? && params[:tag].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status].blank? && params[:tag].blank?}" %>
-        <% if @board.has_status_tracking? %>
-          <% @statuses.each do |status| %>
-            <%= link_to status.name, alto.board_tickets_path(@board, status: status.slug, search: params[:search], sort: params[:sort], view: params[:view], tag: params[:tag]),
-                class: "px-3 py-1 text-sm rounded-full border #{'bg-gray-900 text-white' if params[:status] == status.slug} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:status] == status.slug}" %>
-          <% end %>
-        <% end %>
-      </div>
-
-      <!-- Tag filters -->
-      <% if @tags.any? %>
-        <div class="flex flex-wrap gap-2">
-          <span class="text-sm text-gray-500 px-2 py-1">Tags:</span>
-          <%= link_to "All", alto.board_tickets_path(@board, search: params[:search], sort: params[:sort], view: params[:view], status: params[:status]),
-              class: "px-3 py-1 text-xs rounded-full border #{'bg-blue-100 text-blue-700' if params[:tag].blank?} #{'bg-white text-gray-700 hover:bg-gray-50' unless params[:tag].blank?}" %>
-          <% @tags.each do |tag| %>
-            <%= link_to alto.board_tickets_path(@board, tag: tag.name, search: params[:search], sort: params[:sort], view: params[:view], status: params[:status]) do %>
-                             <%= render 'alto/shared/tag', tag: tag,
-                   class: params[:tag] == tag.name ? 'ring-2 ring-offset-1 ring-blue-400' : 'hover:opacity-80',
-                   show_count: true %>
-            <% end %>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-
-    <!-- Sort Toggle -->
-    <div class="flex space-x-2">
-      <%= link_to "Recent", alto.board_tickets_path(@board, sort: 'recent', search: params[:search], status: params[:status], view: params[:view]),
-          class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] != 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] == 'popular'}" %>
-      <%= link_to "Popular", alto.board_tickets_path(@board, sort: 'popular', search: params[:search], status: params[:status], view: params[:view]),
-          class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] == 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] != 'popular'}" %>
-    </div>
-  </div>
+      <!-- Filtering Controls -->
+  <%= render 'filters_bar' %>
 
   <!-- Search Results Info -->
   <% if @search_query.present? %>

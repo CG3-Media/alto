@@ -1,0 +1,9 @@
+<div class="flex justify-between items-center flex-wrap gap-4">
+  <div class="flex items-center gap-4">
+    <%= render 'view_toggle' if show_view_toggle? %>
+    <%= render 'status_filters' if show_status_filters? %>
+    <%= render 'tag_filters' if @tags.any? %>
+  </div>
+
+  <%= render 'sort_toggle' %>
+</div>
