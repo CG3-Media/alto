@@ -34,9 +34,17 @@ namespace :alto do
       fields = create_custom_fields(boards)
       puts "✅ Created #{fields.length} custom fields across boards"
 
+      # Create tags for boards
+      tags = create_sample_tags(boards)
+      puts "✅ Created #{tags.length} tags across all boards"
+
       # Create tickets
       tickets = create_sample_tickets(boards, sample_users, status_data[:statuses])
       puts "✅ Created #{tickets.length} tickets across all boards"
+
+      # Create tag assignments
+      taggings = create_sample_taggings(tickets, tags)
+      puts "✅ Created #{taggings.length} tag assignments for tickets"
 
       # Create comments with threading
       comments = create_sample_comments(tickets, sample_users)
@@ -52,7 +60,9 @@ namespace :alto do
       puts "📊 Summary:"
       puts "   • #{boards.length} boards with different themes"
       puts "   • #{fields.length} custom fields across Bug Reports and Feature Requests"
+      puts "   • #{tags.length} tags with realistic colors and categories"
       puts "   • #{tickets.length} tickets with varied content and field values"
+      puts "   • #{taggings.length} tag assignments showing realistic usage patterns"
       puts "   • #{comments.length} comments with threading (up to 3 levels)"
       puts "   • #{upvotes.length} upvotes distributed across content"
       puts ""
@@ -78,6 +88,8 @@ namespace :alto do
     # Delete in proper order to avoid foreign key constraints
     upvotes_count = Alto::Upvote.destroy_all.length
     comments_count = Alto::Comment.destroy_all.length
+    taggings_count = Alto::Tagging.destroy_all.length
+    tags_count = Alto::Tag.destroy_all.length
     tickets_count = Alto::Ticket.destroy_all.length
     boards_count = Alto::Board.destroy_all.length
     statuses_count = Alto::Status.destroy_all.length
@@ -86,6 +98,8 @@ namespace :alto do
     puts "✅ Cleared all data:"
     puts "   • #{upvotes_count} upvotes"
     puts "   • #{comments_count} comments"
+    puts "   • #{taggings_count} taggings"
+    puts "   • #{tags_count} tags"
     puts "   • #{tickets_count} tickets"
     puts "   • #{boards_count} boards"
     puts "   • #{statuses_count} statuses"
@@ -328,205 +342,384 @@ private
   def create_sample_tickets(boards, sample_users, statuses)
     tickets = []
 
-    # Bug Reports
+    # Bug Reports - Create 3-4 tickets per status for better distribution
     bugs_board = boards.find { |b| b.name == "Bug Reports" }
-
-    bug_tickets = [
-      {
-        title: "Login button not working on mobile Safari",
-        description: "When I try to log in using Safari on iPhone, the login button doesn't respond to taps. Works fine on Chrome and other browsers.\n\nSteps to reproduce:\n1. Open app in Safari on iPhone\n2. Go to login page\n3. Tap login button\n4. Nothing happens\n\nExpected: Should log me in\nActual: Button doesn't respond",
-        status_slug: statuses[:bug][:new].slug
-      },
-      {
-        title: "Dashboard loading very slowly",
-        description: "The main dashboard takes 15-20 seconds to load, which feels way too slow. Other pages load quickly, but the dashboard specifically has performance issues.\n\nI'm on a decent internet connection (100mbps) so it's not a network issue on my end.",
-        status_slug: statuses[:bug][:triaged].slug
-      },
-      {
-        title: "Email notifications not being sent",
-        description: "I've enabled email notifications in my settings, but I'm not receiving any emails when there are updates to tickets I'm following.\n\nChecked spam folder - nothing there either.",
-        status_slug: statuses[:bug][:in_progress].slug
-      },
-      {
-        title: "Search results showing deleted items",
-        description: "When I search for tickets, the results include items that have been deleted. Clicking on them shows a 404 error.\n\nThe search index probably isn't being updated when items are deleted.",
-        status_slug: statuses[:bug][:testing].slug
-      },
-      {
-        title: "File upload breaks with large images",
-        description: "Trying to upload images larger than 2MB causes the upload to fail with a generic error message. Would be nice to have:\n\n1. Better error message\n2. Image compression\n3. Progress indicator",
-        status_slug: statuses[:bug][:fixed].slug
+    if bugs_board && statuses[:bug]
+      bug_ticket_templates = {
+        new: [
+          {
+            title: "Login button not working on mobile Safari",
+            description: "When I try to log in using Safari on iPhone, the login button doesn't respond to taps. Works fine on Chrome and other browsers.",
+            severity: "High", os: "iOS 17", browser: "Mobile Safari"
+          },
+          {
+            title: "Page crashes when uploading videos",
+            description: "The entire page becomes unresponsive when trying to upload video files larger than 50MB.",
+            severity: "Critical", os: "Windows 11", browser: "Chrome"
+          },
+          {
+            title: "Text input fields not accepting special characters",
+            description: "Cannot type symbols like @, #, $ in description fields. They just don't appear.",
+            severity: "Medium", os: "macOS Sonoma", browser: "Safari"
+          },
+          {
+            title: "Profile image upload shows wrong preview",
+            description: "When uploading a new profile image, the preview shows a completely different image.",
+            severity: "Low", os: "Ubuntu 22.04", browser: "Firefox"
+          }
+        ],
+        triaged: [
+          {
+            title: "Dashboard loading very slowly",
+            description: "The main dashboard takes 15-20 seconds to load, which feels way too slow. Other pages load quickly.",
+            severity: "High", os: "Windows 11", browser: "Chrome"
+          },
+          {
+            title: "Charts not rendering on older browsers",
+            description: "Dashboard charts show as blank squares in Internet Explorer 11 and older Edge versions.",
+            severity: "Medium", os: "Windows 10", browser: "Edge"
+          },
+          {
+            title: "Search auto-complete causing memory leaks",
+            description: "After using search for a while, the browser becomes sluggish and eventually crashes.",
+            severity: "High", os: "macOS Ventura", browser: "Chrome"
+          }
+        ],
+        in_progress: [
+          {
+            title: "Email notifications not being sent",
+            description: "I've enabled email notifications in my settings, but I'm not receiving any emails when there are updates.",
+            severity: "High", os: "macOS Sonoma", browser: "Safari"
+          },
+          {
+            title: "Mobile menu doesn't close after selection",
+            description: "On mobile devices, the hamburger menu stays open after selecting a menu item.",
+            severity: "Medium", os: "iOS 17", browser: "Mobile Safari"
+          },
+          {
+            title: "Date picker shows wrong month",
+            description: "The date picker component is off by one month - selecting January shows December.",
+            severity: "Medium", os: "Android 14", browser: "Chrome Mobile"
+          },
+          {
+            title: "Keyboard navigation broken in forms",
+            description: "Tab key doesn't move focus between form fields in the expected order.",
+            severity: "Medium", os: "Windows 11", browser: "Firefox"
+          }
+        ],
+        testing: [
+          {
+            title: "Search results showing deleted items",
+            description: "When I search for tickets, the results include items that have been deleted. Clicking shows 404.",
+            severity: "Medium", os: "Ubuntu 22.04", browser: "Firefox"
+          },
+          {
+            title: "Export function generates corrupted CSV files",
+            description: "Downloaded CSV files from the export feature cannot be opened in Excel or Google Sheets.",
+            severity: "High", os: "Windows 10", browser: "Edge"
+          },
+          {
+            title: "API rate limiting too aggressive",
+            description: "Mobile app gets rate-limited after just 10 requests per minute, making it unusable.",
+            severity: "High", os: "iOS 16", browser: "Mobile App"
+          }
+        ],
+        fixed: [
+          {
+            title: "File upload breaks with large images",
+            description: "Trying to upload images larger than 2MB causes the upload to fail with a generic error message.",
+            severity: "Low", os: "Windows 10", browser: "Edge"
+          },
+          {
+            title: "Timezone display incorrect for users",
+            description: "All timestamps show in UTC instead of the user's local timezone setting.",
+            severity: "Medium", os: "macOS Monterey", browser: "Chrome"
+          },
+          {
+            title: "Duplicate entries in dropdown menus",
+            description: "Several dropdown menus show duplicate options, making selection confusing.",
+            severity: "Low", os: "Ubuntu 20.04", browser: "Firefox"
+          }
+        ],
+        wont_fix: [
+          {
+            title: "Support for Internet Explorer 6",
+            description: "Please add support for Internet Explorer 6 for legacy systems in our organization.",
+            severity: "Low", os: "Windows XP", browser: "Internet Explorer 6"
+          },
+          {
+            title: "Make all text blink for attention",
+            description: "It would be great if all important text could blink to grab user attention.",
+            severity: "Low", os: "Windows 11", browser: "Chrome"
+          }
+        ]
       }
-    ]
 
-    bug_tickets.each_with_index do |ticket_data, index|
-      user = sample_users.sample || nil
+      bug_ticket_templates.each do |status_key, template_tickets|
+        status = statuses[:bug][status_key]
+        next unless status
 
-      # Sample field values for bug reports
-      sample_field_values = [
+        template_tickets.each do |template|
+          user = sample_users.sample || nil
+
+          field_values = {
+            "severity" => template[:severity],
+            "operating_system" => template[:os],
+            "browser" => template[:browser],
+            "steps_to_reproduce" => "#{template[:description]}\n\nSteps to reproduce:\n1. Navigate to the affected area\n2. Perform the described action\n3. Observe the issue"
+          }
+
+          ticket = Alto::Ticket.create!(
+            title: template[:title],
+            description: template[:description],
+            board: bugs_board,
+            user: user,
+            status_slug: status.slug,
+            field_values: field_values,
+            created_at: rand(30.days).seconds.ago
+          )
+          tickets << ticket
+        end
+      end
+    end
+
+    # Feature Requests - Create 3-4 tickets per status
+    features_board = boards.find { |b| b.name == "Feature Requests" }
+    if features_board && statuses[:feature]
+      feature_ticket_templates = {
+        proposed: [
+          {
+            title: "Dark mode support",
+            description: "It would be great to have a dark mode option in the user preferences. Many modern applications offer this.",
+            would_pay: "Yes"
+          },
+          {
+            title: "Two-factor authentication",
+            description: "Add 2FA support for enhanced security. Support for TOTP apps like Google Authenticator.",
+            would_pay: "Yes"
+          },
+          {
+            title: "Keyboard shortcuts for power users",
+            description: "Add keyboard shortcuts for common actions like creating tickets (Ctrl+N), searching (Ctrl+K), etc.",
+            would_pay: "No"
+          },
+          {
+            title: "Custom email templates",
+            description: "Allow administrators to customize the email notification templates with company branding.",
+            would_pay: "Yes"
+          }
+        ],
+        under_review: [
+          {
+            title: "Bulk actions for ticket management",
+            description: "As an admin, I often need to update multiple tickets at once. Bulk status changes, assignments, etc.",
+            would_pay: "No"
+          },
+          {
+            title: "Advanced user permissions",
+            description: "More granular permission system with role-based access control for different board sections.",
+            would_pay: "Yes"
+          },
+          {
+            title: "API webhooks for integrations",
+            description: "Webhook support so external systems can be notified when tickets are created or updated.",
+            would_pay: "Yes"
+          }
+        ],
+        approved: [
+          {
+            title: "Advanced search and filtering",
+            description: "Enhanced search with filters by date range, user, tags, status, and saved search queries.",
+            would_pay: "Yes"
+          },
+          {
+            title: "Ticket templates for common issues",
+            description: "Pre-defined templates for common types of tickets to speed up the creation process.",
+            would_pay: "No"
+          },
+          {
+            title: "Calendar view for deadlines",
+            description: "A calendar interface showing tickets with due dates and milestones for better project planning.",
+            would_pay: "Yes"
+          },
+          {
+            title: "Real-time notifications",
+            description: "Push notifications and real-time updates when tickets are modified or commented on.",
+            would_pay: "No"
+          }
+        ],
+        in_development: [
+          {
+            title: "Mobile app",
+            description: "A native mobile app with push notifications, offline support, and camera integration.",
+            would_pay: "Yes"
+          },
+          {
+            title: "Rich text editor with formatting",
+            description: "Replace plain text areas with a rich text editor supporting markdown, links, and inline images.",
+            would_pay: "No"
+          },
+          {
+            title: "Time tracking for tickets",
+            description: "Built-in time tracking functionality to log hours spent on tickets for billing and reporting.",
+            would_pay: "Yes"
+          }
+        ],
+        released: [
+          {
+            title: "Integration with Slack",
+            description: "Slack integration with channel notifications, ticket creation from Slack, and status commands.",
+            would_pay: "No"
+          },
+          {
+            title: "File attachments support",
+            description: "Allow users to attach screenshots, documents, and other files to tickets and comments.",
+            would_pay: "Yes"
+          },
+          {
+            title: "Email-to-ticket creation",
+            description: "Create tickets by sending emails to a designated address, great for customer support workflows.",
+            would_pay: "Yes"
+          }
+        ],
+        rejected: [
+          {
+            title: "AI-powered ticket categorization",
+            description: "Using machine learning to automatically categorize tickets. Probably too ambitious for now.",
+            would_pay: "No"
+          },
+          {
+            title: "Blockchain integration for ticket history",
+            description: "Use blockchain to create an immutable history of all ticket changes and comments.",
+            would_pay: "No"
+          }
+        ]
+      }
+
+      feature_ticket_templates.each do |status_key, template_tickets|
+        status = statuses[:feature][status_key]
+        next unless status
+
+        template_tickets.each do |template|
+          user = sample_users.sample
+
+          field_values = {
+            "would_pay_extra_for_this_feature" => template[:would_pay]
+          }
+
+          ticket = Alto::Ticket.create!(
+            title: template[:title],
+            description: template[:description],
+            board: features_board,
+            user: user,
+            status_slug: status.slug,
+            field_values: field_values,
+            created_at: rand(45.days).seconds.ago
+          )
+          tickets << ticket
+        end
+      end
+    end
+
+    # General Feedback - More varied feedback
+    feedback_board = boards.find { |b| b.name == "General Feedback" }
+    if feedback_board
+      feedback_tickets = [
         {
-          "severity" => "High",
-          "operating_system" => "iOS 17",
-          "browser" => "Mobile Safari",
-          "steps_to_reproduce" => "1. Open app in Safari on iPhone\n2. Go to login page\n3. Tap login button\n4. Nothing happens"
+          title: "Love the new interface design!",
+          description: "Just wanted to say the recent UI update looks fantastic. Much cleaner and more intuitive than before."
         },
         {
-          "severity" => "Medium",
-          "operating_system" => "Windows 11",
-          "browser" => "Chrome",
-          "steps_to_reproduce" => "1. Navigate to dashboard\n2. Wait for page to load\n3. Notice 15-20 second delay"
+          title: "Suggestion: keyboard shortcuts",
+          description: "It would be nice to have keyboard shortcuts for common actions. Would speed up workflow for power users."
         },
         {
-          "severity" => "High",
-          "operating_system" => "macOS Sonoma",
-          "browser" => "Safari",
-          "steps_to_reproduce" => "1. Enable email notifications in settings\n2. Follow a ticket\n3. No emails received when ticket is updated"
+          title: "Documentation could be better",
+          description: "The help docs are a bit sparse. More examples and screenshots would be helpful, especially for admin features."
         },
         {
-          "severity" => "Medium",
-          "operating_system" => "Ubuntu 22.04",
-          "browser" => "Firefox",
-          "steps_to_reproduce" => "1. Search for any term\n2. Results include deleted items\n3. Click on deleted item shows 404"
+          title: "Great customer support experience",
+          description: "Had an issue last week and the support team was super responsive and helpful. Really appreciate it!"
         },
         {
-          "severity" => "Low",
-          "operating_system" => "Windows 10",
-          "browser" => "Edge",
-          "steps_to_reproduce" => "1. Try to upload image >2MB\n2. Upload fails with generic error\n3. No progress indicator shown"
+          title: "Performance has improved significantly",
+          description: "The latest updates have made everything much faster. Loading times are down and everything feels snappy."
+        },
+        {
+          title: "Mobile experience needs work",
+          description: "The mobile version is functional but could use some UX improvements. The buttons are a bit small."
+        },
+        {
+          title: "Training materials are excellent",
+          description: "The onboarding videos and tutorials really helped our team get up to speed quickly."
+        },
+        {
+          title: "Would like more customization options",
+          description: "It would be great to customize the dashboard layout and choose which widgets to display."
         }
       ]
 
-      ticket = Alto::Ticket.create!(
-        title: ticket_data[:title],
-        description: ticket_data[:description],
-        board: bugs_board,
-        user: user,
-        status_slug: ticket_data[:status_slug],
-        field_values: sample_field_values[index] || sample_field_values[0],
-        created_at: rand(30.days).seconds.ago
-      )
-      tickets << ticket
+      feedback_tickets.each do |ticket_data|
+        user = sample_users.sample
+        ticket = Alto::Ticket.create!(
+          title: ticket_data[:title],
+          description: ticket_data[:description],
+          board: feedback_board,
+          user: user,
+          created_at: rand(20.days).seconds.ago
+        )
+        tickets << ticket
+      end
     end
 
-    # Feature Requests
-    features_board = boards.find { |b| b.name == "Feature Requests" }
-    feature_tickets = [
-      {
-        title: "Dark mode support",
-        description: "It would be great to have a dark mode option in the user preferences. Many modern applications offer this and it's easier on the eyes, especially during evening work sessions.\n\nCould include:\n- Toggle in user settings\n- System preference detection\n- Smooth transition between modes",
-        status_slug: statuses[:feature][:proposed].slug
-      },
-      {
-        title: "Bulk actions for ticket management",
-        description: "As an admin, I often need to update multiple tickets at once. It would be helpful to have bulk actions like:\n\n- Change status of multiple tickets\n- Assign multiple tickets to a user\n- Add tags to multiple tickets\n- Delete multiple tickets\n\nCheckboxes next to each ticket with an actions dropdown would work well.",
-        status_slug: statuses[:feature][:under_review].slug
-      },
-      {
-        title: "Advanced search and filtering",
-        description: "The current search is pretty basic. Would love to see:\n\n- Filter by date range\n- Filter by user/author\n- Filter by tags\n- Filter by status\n- Saved search queries\n- Search within comments too\n\nBasically make it easier to find specific tickets in large boards.",
-        status_slug: statuses[:feature][:approved].slug
-      },
-      {
-        title: "Mobile app",
-        description: "A native mobile app would be amazing! The web version works on mobile but a dedicated app would provide:\n\n- Push notifications\n- Better offline support\n- Native sharing\n- Camera integration for screenshots\n- Faster navigation",
-        status_slug: statuses[:feature][:in_development].slug
-      },
-      {
-        title: "Integration with Slack",
-        description: "Slack integration would be super useful for teams. Features could include:\n\n- Notifications in Slack channels when tickets are created/updated\n- Ability to create tickets from Slack\n- Link previews for ticket URLs\n- Commands like /ticket-status\n\nThis was requested by our whole team!",
-        status_slug: statuses[:feature][:released].slug
-      },
-      {
-        title: "AI-powered ticket categorization",
-        description: "Using machine learning to automatically categorize and tag tickets based on their content. This could help with:\n\n- Auto-assigning to the right team\n- Detecting duplicate tickets\n- Suggesting similar existing tickets\n- Priority scoring\n\nProbably too ambitious for now but would be cool in the future.",
-        status_slug: statuses[:feature][:rejected].slug
-      }
-    ]
-
-    feature_tickets.each_with_index do |ticket_data, index|
-      user = sample_users.sample
-
-      # Sample field values for feature requests
-      sample_field_values = [
-        { "would_pay_extra_for_this_feature" => "Yes" },
-        { "would_pay_extra_for_this_feature" => "No" },
-        { "would_pay_extra_for_this_feature" => "Yes" },
-        { "would_pay_extra_for_this_feature" => "Yes" },
-        { "would_pay_extra_for_this_feature" => "No" },
-        { "would_pay_extra_for_this_feature" => "No" }
+    # Internal Issues - More systematic coverage
+    internal_board = boards.find { |b| b.name == "Internal Issues" }
+    if internal_board && statuses[:bug]
+      internal_tickets = [
+        {
+          title: "Server migration planning",
+          description: "Need to plan the migration to the new server infrastructure. Key considerations include downtime minimization and data backup strategy.",
+          status_slug: statuses[:bug][:new].slug
+        },
+        {
+          title: "Update security dependencies",
+          description: "Several security vulnerabilities reported in our dependencies. Need to update Rails and other gems.",
+          status_slug: statuses[:bug][:triaged].slug
+        },
+        {
+          title: "Database performance optimization",
+          description: "Query performance has degraded. Need to analyze slow queries and add proper indexing.",
+          status_slug: statuses[:bug][:in_progress].slug
+        },
+        {
+          title: "Backup system verification",
+          description: "Regular verification that our backup systems are working correctly and data can be restored.",
+          status_slug: statuses[:bug][:testing].slug
+        },
+        {
+          title: "SSL certificate renewal automation",
+          description: "Automate SSL certificate renewals to prevent expiration issues in production.",
+          status_slug: statuses[:bug][:fixed].slug
+        },
+        {
+          title: "Legacy API deprecation timeline",
+          description: "Plan the deprecation of legacy API endpoints and communication strategy for affected clients.",
+          status_slug: statuses[:bug][:new].slug
+        }
       ]
 
-      ticket = Alto::Ticket.create!(
-        title: ticket_data[:title],
-        description: ticket_data[:description],
-        board: features_board,
-        user: user,
-        status_slug: ticket_data[:status_slug],
-        field_values: sample_field_values[index] || sample_field_values[0],
-        created_at: rand(45.days).seconds.ago
-      )
-      tickets << ticket
-    end
-
-    # General Feedback
-    feedback_board = boards.find { |b| b.name == "General Feedback" }
-    feedback_tickets = [
-      {
-        title: "Love the new interface design!",
-        description: "Just wanted to say the recent UI update looks fantastic. Much cleaner and more intuitive than before. Great job on the visual refresh!"
-      },
-      {
-        title: "Suggestion: keyboard shortcuts",
-        description: "It would be nice to have keyboard shortcuts for common actions like creating a new ticket (maybe Ctrl+N), searching (Ctrl+K), etc. Would speed up workflow for power users."
-      },
-      {
-        title: "Documentation could be better",
-        description: "The help docs are a bit sparse. More examples and screenshots would be helpful, especially for the admin features."
-      },
-      {
-        title: "Great customer support experience",
-        description: "Had an issue last week and the support team was super responsive and helpful. Really appreciate the quick turnaround!"
-      }
-    ]
-
-    feedback_tickets.each do |ticket_data|
-      user = sample_users.sample
-      ticket = Alto::Ticket.create!(
-        title: ticket_data[:title],
-        description: ticket_data[:description],
-        board: feedback_board,
-        user: user,
-        created_at: rand(20.days).seconds.ago
-      )
-      tickets << ticket
-    end
-
-    # Internal Issues (admin only)
-    internal_board = boards.find { |b| b.name == "Internal Issues" }
-    internal_tickets = [
-      {
-        title: "Server migration planning",
-        description: "Need to plan the migration to the new server infrastructure. Key considerations:\n\n- Downtime minimization\n- Data backup strategy\n- Performance testing\n- Rollback plan",
-        status_slug: statuses[:bug][:new].slug
-      },
-      {
-        title: "Update security dependencies",
-        description: "Several security vulnerabilities reported in our dependencies. Need to update:\n\n- Rails to latest patch version\n- jQuery to address XSS issues\n- Update SSL certificates\n\nSchedule for maintenance window.",
-        status_slug: statuses[:bug][:in_progress].slug
-      }
-    ]
-
-    internal_tickets.each do |ticket_data|
-      user = sample_users.sample
-      ticket = Alto::Ticket.create!(
-        title: ticket_data[:title],
-        description: ticket_data[:description],
-        board: internal_board,
-        user: user,
-        status_slug: ticket_data[:status_slug],
-        created_at: rand(7.days).seconds.ago
-      )
-      tickets << ticket
+      internal_tickets.each do |ticket_data|
+        user = sample_users.sample
+        ticket = Alto::Ticket.create!(
+          title: ticket_data[:title],
+          description: ticket_data[:description],
+          board: internal_board,
+          user: user,
+          status_slug: ticket_data[:status_slug],
+          created_at: rand(7.days).seconds.ago
+        )
+        tickets << ticket
+      end
     end
 
     tickets
@@ -709,5 +902,138 @@ private
     end
 
     upvotes
+  end
+
+  def create_sample_tags(boards)
+    tags = []
+
+    # Bug Reports Board Tags
+    bugs_board = boards.find { |b| b.name == "Bug Reports" }
+    if bugs_board
+      bug_tags = [
+        { name: "critical", color: "#dc2626" },
+        { name: "ui-bug", color: "#ea580c" },
+        { name: "performance", color: "#ca8a04" },
+        { name: "mobile", color: "#2563eb" },
+        { name: "browser-specific", color: "#7c3aed" },
+        { name: "regression", color: "#be185d" },
+        { name: "security", color: "#dc2626" },
+        { name: "data-loss", color: "#dc2626" }
+      ]
+
+      bug_tags.each do |tag_data|
+        tag = Alto::Tag.find_or_create_by!(name: tag_data[:name], board: bugs_board) do |t|
+          t.color = tag_data[:color]
+        end
+        tags << tag
+      end
+    end
+
+    # Feature Requests Board Tags
+    features_board = boards.find { |b| b.name == "Feature Requests" }
+    if features_board
+      feature_tags = [
+        { name: "enhancement", color: "#16a34a" },
+        { name: "user-experience", color: "#2563eb" },
+        { name: "integration", color: "#7c3aed" },
+        { name: "api", color: "#059669" },
+        { name: "mobile-app", color: "#2563eb" },
+        { name: "accessibility", color: "#0891b2" },
+        { name: "admin-tools", color: "#be185d" },
+        { name: "reporting", color: "#ca8a04" },
+        { name: "automation", color: "#059669" },
+        { name: "enterprise", color: "#374151" }
+      ]
+
+      feature_tags.each do |tag_data|
+        tag = Alto::Tag.find_or_create_by!(name: tag_data[:name], board: features_board) do |t|
+          t.color = tag_data[:color]
+        end
+        tags << tag
+      end
+    end
+
+    # General Feedback Board Tags
+    feedback_board = boards.find { |b| b.name == "General Feedback" }
+    if feedback_board
+      feedback_tags = [
+        { name: "praise", color: "#16a34a" },
+        { name: "suggestion", color: "#2563eb" },
+        { name: "complaint", color: "#dc2626" },
+        { name: "documentation", color: "#ca8a04" },
+        { name: "training", color: "#7c3aed" },
+        { name: "onboarding", color: "#059669" }
+      ]
+
+      feedback_tags.each do |tag_data|
+        tag = Alto::Tag.find_or_create_by!(name: tag_data[:name], board: feedback_board) do |t|
+          t.color = tag_data[:color]
+        end
+        tags << tag
+      end
+    end
+
+    # Internal Issues Board Tags
+    internal_board = boards.find { |b| b.name == "Internal Issues" }
+    if internal_board
+      internal_tags = [
+        { name: "infrastructure", color: "#374151" },
+        { name: "security", color: "#dc2626" },
+        { name: "maintenance", color: "#ca8a04" },
+        { name: "urgent", color: "#dc2626" },
+        { name: "planning", color: "#2563eb" },
+        { name: "technical-debt", color: "#ea580c" }
+      ]
+
+      internal_tags.each do |tag_data|
+        tag = Alto::Tag.find_or_create_by!(name: tag_data[:name], board: internal_board) do |t|
+          t.color = tag_data[:color]
+        end
+        tags << tag
+      end
+    end
+
+    tags
+  end
+
+  def create_sample_taggings(tickets, tags)
+    taggings = []
+
+    tickets.each do |ticket|
+      # Get tags for this ticket's board
+      board_tags = tags.select { |tag| tag.board == ticket.board }
+      next if board_tags.empty?
+
+      # Assign 1-3 tags per ticket with realistic patterns
+      tag_count = case ticket.board.name
+      when "Bug Reports"
+        # Bug reports often have multiple tags (severity, category, etc.)
+        rand(1..3)
+      when "Feature Requests"
+        # Feature requests tend to have 2-3 category tags
+        rand(2..3)
+      when "General Feedback"
+        # General feedback usually has 1-2 tags
+        rand(1..2)
+      when "Internal Issues"
+        # Internal issues often have specific categorization
+        rand(1..2)
+      else
+        rand(1..2)
+      end
+
+      selected_tags = board_tags.sample(tag_count)
+
+      selected_tags.each do |tag|
+        begin
+          tagging = Alto::Tagging.find_or_create_by!(taggable: ticket, tag: tag)
+          taggings << tagging
+        rescue ActiveRecord::RecordInvalid => e
+          # Skip duplicates if any
+        end
+      end
+    end
+
+    taggings
   end
 end
