@@ -80,7 +80,8 @@ module Alto
                 upvote_button: true,
                 upvoted: upvoted,
                 upvotable_id: upvotable.id,
-                upvotable_type: upvotable.class.name
+                upvotable_type: upvotable.class.name,
+                remote: false
               } do
         content = ""
         content += content_tag(:div, upvote_svg(size: arrow_size), class: "group-hover:scale-110 transition-transform duration-200")

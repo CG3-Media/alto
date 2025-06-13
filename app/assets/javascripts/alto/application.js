@@ -10,14 +10,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeUpvoteButtons() {
-  // Handle upvote button clicks
+  // Handle upvote button clicks - use capture phase to intercept before Rails UJS
   document.addEventListener('click', function(e) {
     const upvoteButton = e.target.closest('[data-upvote-button]');
     if (!upvoteButton) return;
 
+    // Stop all event propagation to prevent Rails UJS from handling this
     e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    console.log('🎯 Upvote button clicked, handling with AJAX');
     handleUpvoteClick(upvoteButton);
-  });
+  }, true); // Use capture phase to run before Rails UJS
 }
 
 function handleUpvoteClick(button) {
@@ -26,14 +31,14 @@ function handleUpvoteClick(button) {
   const upvotableId = button.dataset.upvotableId;
   const upvotableType = button.dataset.upvotableType;
 
-  // Debug logging (uncomment for troubleshooting)
-  // console.log('🎯 Upvote click detected:', {
-  //   url: url,
-  //   method: method,
-  //   upvotableId: upvotableId,
-  //   upvotableType: upvotableType,
-  //   buttonElement: button
-  // });
+  // Debug logging for troubleshooting
+  console.log('🎯 Upvote click detected:', {
+    url: url,
+    method: method,
+    upvotableId: upvotableId,
+    upvotableType: upvotableType,
+    buttonElement: button
+  });
 
   // Disable button during request with better visual feedback
   button.style.pointerEvents = 'none';
@@ -49,12 +54,12 @@ function handleUpvoteClick(button) {
     }
   })
     .then(response => {
-    // Debug logging (uncomment for troubleshooting)
-    // console.log('🌐 Response received:', {
-    //   status: response.status,
-    //   statusText: response.statusText,
-    //   url: response.url
-    // });
+    // Debug logging for troubleshooting
+    console.log('🌐 Response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -63,8 +68,8 @@ function handleUpvoteClick(button) {
     return response.json();
   })
   .then(data => {
-    // Debug logging (uncomment for troubleshooting)
-    // console.log('📦 Response data:', data);
+    // Debug logging for troubleshooting
+    console.log('📦 Response data:', data);
 
     if (data.error) {
       throw new Error(data.error);
@@ -73,8 +78,8 @@ function handleUpvoteClick(button) {
     updateUpvoteButton(button, data.upvoted, data.upvotes_count);
     updateUpvoteUrl(button, data.upvoted);
 
-    // Debug logging (uncomment for troubleshooting)
-    // console.log('✅ Upvote update completed successfully');
+    // Debug logging for troubleshooting
+    console.log('✅ Upvote update completed successfully');
   })
   .catch(error => {
     console.error('🚨 Upvote error:', error);
