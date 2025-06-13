@@ -18,7 +18,7 @@
       ] %>
 
   <!-- Tag Statistics -->
-  <div class="bg-white shadow rounded-lg mb-6">
+  <div class="mt-6 bg-white shadow rounded-lg mb-6">
     <div class="px-6 py-4 border-b border-gray-200">
       <h3 class="text-lg font-medium text-gray-900">Tag Statistics</h3>
     </div>
@@ -48,7 +48,7 @@
     <div class="px-6 py-4">
       <div class="flex items-center justify-between">
         <div>
-          <h4 class="text-sm font-medium text-gray-900">Allow Public Tagging</h4>
+          <h4 class="text-sm font-medium text-gray-900">Allow Public Tagging for <%= @board.name %></h4>
           <p class="text-sm text-gray-500">
             When enabled, users can assign existing tags when creating or editing <%= @board.item_name.pluralize %>.
           </p>
