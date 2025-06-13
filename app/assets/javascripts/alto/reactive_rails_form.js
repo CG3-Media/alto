@@ -193,6 +193,7 @@ class RFInstance {
     this.setupConditionalVisibility()
     this.setupNestedForms()
     this.setupAutoSerialization()
+    this.setupFocusTracking()
     this.logDebug('RRF instance initialized', { id: this.id, model: this.modelName })
   }
 
@@ -728,6 +729,102 @@ class RFInstance {
   }
 
   // PUBLIC API
+
+  // Focus management API
+  focus(selector = null) {
+    let targetElement = null
+
+    if (selector) {
+      // Focus specific element by selector
+      targetElement = this.container.querySelector(selector)
+    } else {
+      // Focus first focusable element
+      targetElement = this.container.querySelector('input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    }
+
+    if (targetElement) {
+      targetElement.focus()
+      this.signals.signal('focused_element', targetElement).set(targetElement)
+      this.signals.signal('has_focus', true).set(true)
+      this.logDebug('🎯 Focused element:', targetElement.tagName, targetElement.className)
+
+      // Dispatch custom event
+      this.dispatchEvent('rf:focus', { element: targetElement, selector })
+    }
+
+    return this
+  }
+
+  blur(selector = null) {
+    if (selector) {
+      // Blur specific element
+      const targetElement = this.container.querySelector(selector)
+      if (targetElement) {
+        targetElement.blur()
+      }
+    } else {
+      // Blur currently focused element
+      const focusedElement = this.getFocusedElement()
+      if (focusedElement) {
+        focusedElement.blur()
+      }
+    }
+
+    this.signals.signal('focused_element', null).set(null)
+    this.signals.signal('has_focus', false).set(false)
+    this.logDebug('🎯 Blurred element')
+
+    // Dispatch custom event
+    this.dispatchEvent('rf:blur', { selector })
+
+    return this
+  }
+
+  getFocusedElement() {
+    return this.signals.peek('focused_element')
+  }
+
+  hasFocus() {
+    return this.signals.peek('has_focus') === true
+  }
+
+  // Check if a specific element is focused
+  isElementFocused(element) {
+    return this.getFocusedElement() === element
+  }
+
+  // FOCUS TRACKING SETUP
+
+  setupFocusTracking() {
+    // Track focus on all form inputs
+    this.addListener(this.container, 'focusin', (e) => {
+      const focusableElement = e.target.closest('input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (focusableElement) {
+        this.signals.signal('focused_element', focusableElement).set(focusableElement)
+        this.signals.signal('has_focus', true).set(true)
+        this.logDebug('🎯 Element focused:', focusableElement.tagName, focusableElement.id || focusableElement.className)
+
+        // Dispatch custom event
+        this.dispatchEvent('rf:focus', { element: focusableElement })
+      }
+    }, 'focus-tracking')
+
+    // Track blur on all form inputs
+    this.addListener(this.container, 'focusout', (e) => {
+      // Small delay to check if focus moved to another element within container
+      setTimeout(() => {
+        const currentlyFocused = document.activeElement
+        if (!this.container.contains(currentlyFocused)) {
+          this.signals.signal('focused_element', null).set(null)
+          this.signals.signal('has_focus', false).set(false)
+          this.logDebug('🎯 Container lost focus')
+
+          // Dispatch custom event
+          this.dispatchEvent('rf:blur', { element: e.target })
+        }
+      }, 10)
+    }, 'focus-tracking')
+  }
 
   serialize(options = {}) {
     const { format = 'json' } = options

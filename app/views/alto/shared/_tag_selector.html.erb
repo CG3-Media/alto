@@ -113,8 +113,14 @@
     // Store pending tag data for the next addition
     let pendingTagData = null;
 
-    // Focus/blur handling for dropdown visibility
+            // Focus/blur handling for dropdown visibility
     searchInput.addEventListener('focus', () => {
+      // Set dropdown-specific signal when search input is focused
+      instance.signals.signal('dropdown_open', 'focused').set('focused');
+    });
+
+    // Click on search input always opens dropdown (even if already focused)
+    searchInput.addEventListener('click', () => {
       instance.signals.signal('dropdown_open', 'focused').set('focused');
     });
 
@@ -135,10 +141,12 @@
       }
     });
 
-    // Click on container focuses the input
+    // Click on container focuses the input and ensures dropdown is open
     inputContainer.addEventListener('click', (e) => {
       if (e.target === inputContainer || e.target.closest('.selected-tag-chip')) {
         searchInput.focus();
+        // Always set dropdown to open when clicking the container
+        instance.signals.signal('dropdown_open', 'focused').set('focused');
       }
     });
 
@@ -205,6 +213,8 @@
       }
     });
 
+
+
     // Tag removal handling
     container.addEventListener('rf:field:remove', function(e) {
       const { item, groupName } = e.detail;
@@ -225,6 +235,10 @@
         if (selectedTagIds.size === 0) {
           searchInput.placeholder = 'Search and select tags...';
         }
+
+        // Keep focus on search input and dropdown open
+        searchInput.focus();
+        instance.signals.signal('dropdown_open', 'focused').set('focused');
 
         console.log('🏷️ Removed tag with ID:', tagId);
       }
