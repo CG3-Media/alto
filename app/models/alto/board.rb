@@ -205,7 +205,7 @@ module Alto
         all
       else
         public_boards
+              end
       end
-    end
   end
 end

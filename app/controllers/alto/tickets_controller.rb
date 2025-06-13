@@ -209,7 +209,7 @@ module Alto
       else
         # No URL parameter - check for stored preference, fallback to default
         stored_preferences = session[:view_preferences] || {}
-        @view_type = stored_preferences[@board.slug] || "card"
+        @view_type = stored_preferences[@board.slug] || "list"
       end
 
       @show_toggle = true
