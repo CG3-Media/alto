@@ -18,7 +18,6 @@
   item_display_method ||= :name         # Method to get item's display text
   item_search_method ||= item_display_method # Method to search against
   item_subtitle_method ||= nil          # Optional subtitle/description
-  item_color_method ||= nil             # Optional color method for visual styling
   item_icon_method ||= nil              # Optional icon/emoji method
 
   # UI configuration
@@ -28,11 +27,8 @@
   max_height ||= "max-h-60"             # Dropdown max height
 
   # Behavior configuration
-  allow_create ||= false                # Allow creating new items inline
-  create_path ||= nil                   # Path to create new items
   empty_message ||= "No items available"
   help_text ||= nil
-  readonly_message ||= "You don't have permission to modify this selection."
 
   # Model configuration
   model_name ||= model&.class&.name&.underscore || 'model'
@@ -41,7 +37,7 @@
   selected_values = selected_items.map { |item| item.send(item_value_method).to_s }
 %>
 
-<% if can_select && (available_items.any? || allow_create) %>
+<% if available_items.any? %>
   <div class="form-group <%= container_class %>"
        data-multi-select
        data-model-name="<%= model_name %>"
@@ -66,7 +62,6 @@
                 item: nil,
                 chip_style: chip_style,
                 item_display_method: item_display_method,
-                item_color_method: item_color_method,
                 item_icon_method: item_icon_method,
                 is_template: true %>
             <% if form %>
@@ -83,7 +78,6 @@
                   item: item,
                   chip_style: chip_style,
                   item_display_method: item_display_method,
-                  item_color_method: item_color_method,
                   item_icon_method: item_icon_method,
                   is_template: false %>
               <% if form %>
@@ -142,23 +136,6 @@
                 </div>
               </div>
             <% end %>
-          <% elsif !allow_create %>
-            <div class="px-3 py-2 text-sm text-gray-500">
-              <%= empty_message %>
-            </div>
-          <% end %>
-
-          <% if allow_create && create_path %>
-            <div class="border-t border-gray-200">
-              <%= link_to create_path, class: "block px-3 py-2 text-sm text-blue-600 hover:bg-gray-50" do %>
-                <span class="flex items-center space-x-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                  </svg>
-                  <span>Create new <%= label.singularize.downcase %></span>
-                </span>
-              <% end %>
-            </div>
           <% end %>
         </div>
       </div>
@@ -169,7 +146,7 @@
     <% end %>
   </div>
 
-<% elsif can_select && available_items.empty? && !allow_create %>
+<% elsif available_items.empty? %>
   <!-- No items available -->
   <div class="form-group <%= container_class %>">
     <% if show_label %>
@@ -177,33 +154,7 @@
     <% end %>
     <p class="text-sm text-gray-500 italic">
       <%= empty_message %>
-      <% if create_path %>
-        <%= link_to "Create #{label.downcase}", create_path, class: "text-blue-600 hover:text-blue-800" %>
-        to get started.
-      <% end %>
     </p>
   </div>
 
-<% elsif !can_select && selected_items.any? %>
-  <!-- Read-only display -->
-  <div class="form-group <%= container_class %>">
-    <% if show_label %>
-      <label class="block text-sm font-medium text-gray-700 mb-2"><%= label %></label>
-    <% end %>
-    <div class="flex flex-wrap gap-2">
-      <% selected_items.each do |item| %>
-        <%= render 'alto/shared/forms/multi_select_chip',
-            item: item,
-            chip_style: chip_style,
-            item_display_method: item_display_method,
-            item_color_method: item_color_method,
-            item_icon_method: item_icon_method,
-            is_template: false,
-            readonly: true %>
-      <% end %>
-    </div>
-    <% if readonly_message %>
-      <p class="text-xs text-gray-500 mt-1"><%= readonly_message %></p>
-    <% end %>
-  </div>
 <% end %>

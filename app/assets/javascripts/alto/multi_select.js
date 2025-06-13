@@ -93,7 +93,6 @@ function initializeMultiSelect(container) {
 
     const itemValue = option.dataset.itemValue;
     const itemDisplay = option.dataset.itemDisplay;
-    const itemColor = option.dataset.itemColor;
     const itemIcon = option.dataset.itemIcon;
 
     if (!itemValue) return;
@@ -102,7 +101,6 @@ function initializeMultiSelect(container) {
     addSelectedItem({
       value: itemValue,
       display: itemDisplay,
-      color: itemColor,
       icon: itemIcon
     });
 
@@ -134,13 +132,6 @@ function initializeMultiSelect(container) {
 
     if (chipText) chipText.textContent = itemData.display;
     if (valueInput) valueInput.value = itemData.value;
-
-    // Apply color if available
-    if (chipDisplay && itemData.color) {
-      chipDisplay.style.backgroundColor = itemData.color + '15';
-      chipDisplay.style.color = itemData.color;
-      chipDisplay.style.borderColor = itemData.color + '30';
-    }
 
     // Apply icon if available
     if (chipIcon && itemData.icon) {

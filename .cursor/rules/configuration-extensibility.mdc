@@ -104,7 +104,7 @@ module Alto::ApplicationHelper
   end
 
   def page_header(title, actions: [], subtitle: nil)
-    render 'shared/page_header',
+    render 'alto/shared/page_header',
            title: title,
            actions: actions,
            subtitle: subtitle

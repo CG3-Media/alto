@@ -7,10 +7,8 @@
     field_name: :tag_ids,
     available_items: @board.tags.ordered,
     selected_items: @ticket.tags,
-    can_select: can_assign_tags?,
     label: "Tags",
     item_display_method: :name,
-    item_color_method: :color,
     chip_style: :colored %>
 
 # 2. Assigning users to a project
@@ -20,7 +18,6 @@
     field_name: :user_ids,
     available_items: User.active,
     selected_items: @project.users,
-    can_select: can_manage_project?,
     label: "Team Members",
     placeholder: "Search users by name or email...",
     item_display_method: :name,
@@ -37,9 +34,7 @@
     label: "Product Categories",
     item_display_method: :title,
     item_search_method: :full_path,  # Search by full category path
-    empty_message: "No categories available",
-    allow_create: true,
-    create_path: new_admin_category_path %>
+    empty_message: "No categories available" %>
 
 # 4. Simple plain style selection
 <%= render 'alto/shared/forms/multi_select',
@@ -58,11 +53,8 @@
     model: @ticket,
     field_name: :tag_ids,
     selected_items: @ticket.tags,
-    can_select: false,  # Read-only mode
     label: "Assigned Tags",
-    item_display_method: :name,
-    item_color_method: :color,
-    readonly_message: "Contact support to modify tags." %>
+    item_display_method: :name %>
 
 # 6. With custom help text
 <%= render 'alto/shared/forms/multi_select',

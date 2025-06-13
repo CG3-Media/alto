@@ -49,21 +49,21 @@
         <% end %>
       </div>
 
-            <!-- Tag Selection -->
-      <%= render 'alto/shared/forms/multi_select',
-          form: form,
-          model: @ticket,
-          field_name: :tag_ids,
-          available_items: @board.tags.ordered,
-          selected_items: @ticket.tags,
-          can_select: can_assign_tags?,
-          label: "Tags",
-          placeholder: "Search and select tags...",
-          item_display_method: :name,
-          item_color_method: :color,
-          chip_style: :colored,
-          create_path: can_access_admin? ? admin_board_tags_path(@board) : nil,
-          help_text: nil %>
+      <!-- Tag Selection -->
+      <% if can_assign_tags? %>
+        <%= render 'alto/shared/forms/multi_select',
+            form: form,
+            model: @ticket,
+            field_name: :tag_ids,
+            available_items: @board.tags.ordered,
+            selected_items: @ticket.tags,
+            label: "Tags",
+            placeholder: "Search and select tags...",
+            item_display_method: :name,
+            item_icon_method: nil,
+            chip_style: :colored,
+            help_text: nil %>
+      <% end %>
 
       <!-- Custom Fields -->
       <% if @board.fields.any? %>
@@ -104,10 +104,29 @@
             </div>
           </div>
 
-          <!-- Archive Controls -->
+
+        </div>
+      <% end %>
+
+      <div class="flex items-center justify-between pt-4">
+        <div class="flex space-x-3">
+          <%= link_to "Cancel", alto.board_ticket_path(@board, @ticket),
+              class: "text-gray-600 hover:text-gray-800 text-sm font-medium" %>
+          <%= link_to "View Ticket", alto.board_ticket_path(@board, @ticket),
+              class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+        </div>
+
+        <div class="flex space-x-3">
+          <%= form.submit "Update Ticket",
+              class: "bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+        </div>
+
+
+      </div>
+
+      <!-- Archive Controls -->
           <% if can_access_admin? && !@ticket.archived? %>
             <div class="mt-6 pt-4 border-t border-gray-200">
-              <h4 class="text-sm font-medium text-gray-900 mb-3">🗄️ Archive Controls</h4>
               <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
                 <div class="flex items-start space-x-3">
                   <svg class="h-5 w-5 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -130,22 +149,6 @@
               </div>
             </div>
           <% end %>
-        </div>
-      <% end %>
-
-      <div class="flex items-center justify-between pt-4">
-        <div class="flex space-x-3">
-          <%= link_to "Cancel", alto.board_ticket_path(@board, @ticket),
-              class: "text-gray-600 hover:text-gray-800 text-sm font-medium" %>
-          <%= link_to "View Ticket", alto.board_ticket_path(@board, @ticket),
-              class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
-        </div>
-
-        <div class="flex space-x-3">
-          <%= form.submit "Update Ticket",
-              class: "bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
-        </div>
-      </div>
     <% end %>
   </div>
 

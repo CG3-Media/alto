@@ -3,7 +3,6 @@
   item ||= nil
   chip_style ||= :colored
   item_display_method ||= :name
-  item_color_method ||= nil
   item_icon_method ||= nil
   is_template ||= false
   readonly ||= false
@@ -23,7 +22,6 @@
   # Get item attributes if not a template
   if !is_template && item
     display_text = item.send(item_display_method)
-    color = item_color_method && item.respond_to?(item_color_method) ? item.send(item_color_method) : nil
     icon = item_icon_method && item.respond_to?(item_icon_method) ? item.send(item_icon_method) : nil
   end
 %>
