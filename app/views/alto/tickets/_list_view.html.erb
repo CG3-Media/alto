@@ -13,7 +13,7 @@
           <!-- Main Content -->
           <div class="flex-1 min-w-0">
             <!-- Header with title and status -->
-            <div class="flex items-start justify-between mb-2">
+            <div class="flex items-start justify-between mb-2 gap-2">
               <div class="flex-1 min-w-0">
                 <h3 class="text-lg font-semibold text-gray-900 leading-tight">
                   <%= link_to ticket.title, alto.board_ticket_path(board, ticket), class: "hover:text-blue-600" %>
@@ -35,7 +35,7 @@
 
             <!-- Description -->
             <% if ticket.description.present? %>
-              <div class="border-b border-gray-100 pb-3 mb-3">
+              <div class="border-b-0 md:border-b border-gray-100 md:pb-3 md:mb-3">
                 <p class="text-gray-600 text-sm line-clamp-2">
                   <%= truncate(ticket.description, length: 120) %>
                 </p>
@@ -43,7 +43,7 @@
             <% end %>
 
             <!-- Footer with metadata and tags -->
-            <div class="flex items-center justify-between">
+            <div class="hidden md:flex items-center justify-between">
               <!-- Left side: User and metadata -->
               <div class="flex items-center space-x-4 text-sm text-gray-500">
                 <div class="flex items-center space-x-2">
