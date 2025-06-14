@@ -50,31 +50,10 @@
       </div>
 
       <!-- Image Upload -->
-      <% if ::Alto.configuration.image_uploads_enabled %>
-        <div>
-          <%= form.label :images, "Attach Image (optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
-
-          <!-- Show existing image if present -->
-          <% if @ticket.images.attached? %>
-            <div class="mb-3 p-3 bg-gray-50 rounded-lg">
-              <p class="text-sm text-gray-600 mb-2">Current image:</p>
-              <%= render 'alto/shared/attached_image', record: @ticket %>
-            </div>
-          <% end %>
-
-          <%= form.file_field :images,
-              direct_upload: true,
-              multiple: false,
-              accept: "image/jpeg,image/png,image/gif,image/webp",
-              class: "block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-blue-500" %>
-          <p class="mt-1 text-sm text-gray-500">
-            You can attach one image (JPEG, PNG, GIF, or WebP). Maximum file size: 5MB.
-            <% if @ticket.images.attached? %>
-              <br>Uploading a new image will replace the existing one.
-            <% end %>
-          </p>
-        </div>
-      <% end %>
+      <div>
+        <%= form.label :images, "Attach Image (optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= render 'alto/shared/image_upload', form: form, record: @ticket %>
+      </div>
 
       <!-- Tag Selection -->
       <% if can_assign_tags? %>

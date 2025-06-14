@@ -47,19 +47,10 @@
           required: true %>
 
       <!-- Image Upload -->
-      <% if ::Alto.configuration.image_uploads_enabled %>
-        <div>
-          <%= form.label :images, "Attach Image (optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
-          <%= form.file_field :images,
-              direct_upload: true,
-              multiple: false,
-              accept: "image/jpeg,image/png,image/gif,image/webp",
-              class: "block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-blue-500" %>
-          <p class="mt-1 text-sm text-gray-500">
-            You can attach one image (JPEG, PNG, GIF, or WebP). Maximum file size: 5MB.
-          </p>
-        </div>
-      <% end %>
+      <div>
+        <%= form.label :images, "Attach Image (optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= render 'alto/shared/image_upload', form: form, record: @ticket %>
+      </div>
 
       <!-- Status Selection (if board has status tracking) -->
       <% if @board.has_status_tracking? && can_access_admin? %>

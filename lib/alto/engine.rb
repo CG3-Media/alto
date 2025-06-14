@@ -39,14 +39,12 @@ module Alto
 
       # Precompile our assets for production (but serve directly in development)
       app.config.assets.precompile += %w[
-        alto/application.js
         alto/application.css
-      ]
 
-      # Add reactive_rails_form.js to the precompile list
-      app.config.assets.precompile += %w[
+        alto/application.js
         alto/reactive_rails_form.js
         alto/multi_select.js
+        alto/image_uploader.js
       ]
     end
 

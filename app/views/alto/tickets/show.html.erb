@@ -115,18 +115,7 @@
           </div>
 
           <!-- Image Upload for Comments -->
-          <% if ::Alto.configuration.image_uploads_enabled %>
-            <div>
-              <%= form.file_field :images,
-                  direct_upload: true,
-                  multiple: false,
-                  accept: "image/jpeg,image/png,image/gif,image/webp",
-                  class: "block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-blue-500" %>
-              <p class="mt-1 text-xs text-gray-500">
-                Attach an image (optional, max 5MB)
-              </p>
-            </div>
-          <% end %>
+          <%= render 'alto/shared/image_upload', form: form, record: @comment %>
 
           <div class="flex justify-end">
             <%= form.submit "Post Comment",
