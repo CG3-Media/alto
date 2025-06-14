@@ -36,12 +36,7 @@
     <% end %>
   <% end %>
 
-  <!-- Top Pagination (for multi-page results) -->
-  <% if @tickets.total_pages > 1 %>
-    <div class="flex items-center justify-center pb-6">
-      <%= paginate @tickets %>
-    </div>
-  <% end %>
+
 
   <!-- Grouped Results by Board -->
   <% if @tickets_by_board.any? %>
@@ -83,9 +78,7 @@
     <% end %>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-center mt-8 pt-6 border-t border-gray-200">
-      <%= paginate @tickets %>
-    </div>
+    <%= render 'shared/pagination', collection: @tickets %>
   <% else %>
     <div class="text-center py-12">
       <% if @search_query.present? %>

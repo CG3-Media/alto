@@ -48,6 +48,9 @@
 
   <!-- List View (Traditional List) -->
   <%= render 'list_view', tickets: @tickets, board: @board, search_query: @search_query, view_type: @view_type %>
+
+  <!-- Pagination -->
+  <%= render 'shared/pagination', collection: @tickets %>
 </div>
 
 <style>

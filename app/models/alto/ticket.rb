@@ -1,6 +1,7 @@
 module Alto
   class Ticket < ApplicationRecord
     include ::Alto::Subscribable
+    include ::Alto::Searchable
 
     belongs_to :board
     belongs_to :user, polymorphic: true
@@ -50,41 +51,9 @@ module Alto
       end
     }
 
-    # Search scopes
-    scope :search_by_content, ->(query) {
-      return all if query.blank?
 
-      sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
-      # Use ILIKE for PostgreSQL, LIKE for others (case-insensitive search)
-      if connection.adapter_name.downcase.include?("postgresql")
-        where("title ILIKE ? OR description ILIKE ?", sanitized_query, sanitized_query)
-      else
-        where("LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", sanitized_query, sanitized_query)
-      end
-    }
 
-    scope :search_by_comments, ->(query) {
-      return all if query.blank?
 
-      sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
-      if connection.adapter_name.downcase.include?("postgresql")
-        joins(:comments).where("alto_comments.content ILIKE ?", sanitized_query)
-      else
-        joins(:comments).where("LOWER(alto_comments.content) LIKE LOWER(?)", sanitized_query)
-      end
-    }
-
-    scope :search, ->(query) {
-      return all if query.blank?
-
-      sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
-      # Search only in ticket title and description
-      if connection.adapter_name.downcase.include?("postgresql")
-        where("title ILIKE ? OR description ILIKE ?", sanitized_query, sanitized_query)
-      else
-        where("LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", sanitized_query, sanitized_query)
-      end
-    }
 
     # Tagging scopes
     scope :tagged_with, ->(tag_names) {
@@ -111,6 +80,8 @@ module Alto
     scope :untagged, -> {
       left_joins(:taggings).where(alto_taggings: { id: nil })
     }
+
+
 
     def upvoted_by?(user)
       return false unless user

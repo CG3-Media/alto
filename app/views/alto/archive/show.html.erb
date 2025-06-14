@@ -114,11 +114,7 @@
       <% end %>
 
       <!-- Pagination -->
-      <% if @tickets.respond_to?(:current_page) %>
-        <div class="flex justify-center">
-          <%= paginate @tickets %>
-        </div>
-      <% end %>
+      <%= render 'shared/pagination', collection: @tickets %>
     <% else %>
       <!-- Empty state -->
       <div class="text-center py-12">
