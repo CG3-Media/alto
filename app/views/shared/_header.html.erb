@@ -1,5 +1,5 @@
 <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-20">
-  <div class="flex justify-between items-center py-3 px-4 sm:py-4 sm:px-6 lg:px-8">
+  <div class="flex items-center py-3 px-4 sm:py-4 sm:px-6 lg:px-8">
     <!-- Mobile: Only show Menu button -->
     <div class="flex items-center sm:hidden">
       <button onclick="toggleMobileSidebar()" class="flex items-center space-x-2 p-2 text-gray-700 hover:text-gray-900">
@@ -10,8 +10,9 @@
       </button>
     </div>
 
-    <!-- Desktop: Full header layout -->
-    <div class="hidden sm:flex items-center space-x-6 min-w-0 flex-1">
+    <!-- Desktop: Equal 3-column layout -->
+    <!-- Left section: Logo/Menu (1/3) -->
+    <div class="hidden sm:flex items-center flex-1 justify-start">
       <!-- Mobile menu button for lg breakpoint -->
       <button onclick="toggleMobileSidebar()" class="lg:hidden -ml-2 mr-1 p-2 text-gray-600 hover:text-gray-900 flex-shrink-0">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,9 +26,9 @@
       <% end %>
     </div>
 
-    <!-- Search Bar (desktop only) -->
-    <div class="hidden sm:flex flex-1 max-w-sm sm:max-w-md lg:max-w-lg mx-4 sm:mx-6">
-      <%= form_with url: alto.search_index_path, method: :get, local: true, class: "flex w-full" do |form| %>
+    <!-- Center section: Search Bar (1/3) -->
+    <div class="hidden sm:flex flex-1 justify-center px-4">
+      <%= form_with url: alto.search_index_path, method: :get, local: true, class: "flex w-full max-w-md" do |form| %>
         <div class="relative flex-1">
           <%= form.text_field :search,
               value: params[:search],
@@ -49,8 +50,8 @@
       <% end %>
     </div>
 
-    <!-- Right side: Actions (desktop only) -->
-    <div class="hidden sm:flex items-center space-x-2 flex-shrink-0">
+    <!-- Right section: Actions (1/3) -->
+    <div class="hidden sm:flex items-center space-x-2 flex-1 justify-end">
 
 
       <!-- Admin Actions -->
