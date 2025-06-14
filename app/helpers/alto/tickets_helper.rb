@@ -22,7 +22,7 @@ module Alto
       when :rounded
         "px-3 py-1 text-sm rounded-full border"
       when :toggle
-        "px-3 py-1 text-sm rounded-md transition-colors"
+        "whitespace-nowrap px-3 py-1 text-sm rounded-md transition-colors"
       when :sort
         "px-3 py-2 text-sm rounded-md"
       end
