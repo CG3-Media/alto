@@ -12,6 +12,9 @@
         <p class="text-gray-700 whitespace-pre-wrap"><%= comment.content %></p>
       </div>
 
+      <!-- Attached Image -->
+      <%= render 'alto/shared/attached_image', record: comment, size: :small %>
+
       <!-- Delete button for comment owner/admin -->
       <% if (defined?(current_user) && current_user&.id == comment.user_id) || (respond_to?(:can_moderate_comments?) && can_moderate_comments?) %>
         <div class="mt-2">

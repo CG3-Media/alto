@@ -40,4 +40,7 @@ Alto.configure do |config|
 
   # Board configuration
   config.allow_board_deletion_with_tickets = false
+
+  # Image uploads (requires ActiveStorage setup)
+  # config.image_uploads_enabled = true
 end

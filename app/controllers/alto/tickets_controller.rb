@@ -15,6 +15,11 @@ module Alto
 
       @tickets = @board.tickets.active.includes(:upvotes, :comments)
 
+      # Include image blobs if image uploads are enabled
+      if ::Alto.configuration.image_uploads_enabled
+        @tickets = @tickets.with_attached_images
+      end
+
       # Filter by viewable statuses for non-admin users
       @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
 
@@ -138,6 +143,12 @@ module Alto
 
       # Allow all field_values as a hash - more flexible approach
       permitted_params << { field_values: {} }
+
+      # Allow image uploads if enabled
+      if ::Alto.configuration.image_uploads_enabled
+        permitted_params << :images  # Single file (multiple: false)
+        permitted_params << { images: [] }  # Array format (if multiple: true)
+      end
 
       params.require(:ticket).permit(*permitted_params)
     end

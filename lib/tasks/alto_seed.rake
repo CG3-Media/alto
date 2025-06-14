@@ -249,7 +249,8 @@ private
         item_label_singular: "feedback",
         status_set: status_sets.find { |s| s.name == "Feature Workflow" },
         is_admin_only: false,
-        single_view: "list"
+        single_view: "list",
+        allow_voting: false
       },
       {
         name: "Internal Issues",
@@ -269,11 +270,17 @@ private
         b.status_set = data[:status_set]
         b.is_admin_only = data[:is_admin_only]
         b.single_view = data[:single_view] if data[:single_view].present?
+        b.allow_voting = data[:allow_voting] unless data[:allow_voting].nil?
       end
 
       # Ensure single_view is set correctly even for existing boards
       if data[:single_view].present?
         board.update!(single_view: data[:single_view])
+      end
+
+      # Ensure allow_voting is set correctly even for existing boards
+      unless data[:allow_voting].nil?
+        board.update!(allow_voting: data[:allow_voting])
       end
 
       boards << board

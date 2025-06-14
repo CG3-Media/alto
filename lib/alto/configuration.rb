@@ -1,7 +1,8 @@
 module Alto
   class Configuration
     attr_accessor :user_model, :default_board_name, :default_board_slug,
-                  :allow_board_deletion_with_tickets, :current_user_proc
+                  :allow_board_deletion_with_tickets, :current_user_proc,
+                  :image_uploads_enabled
 
     # Permission method blocks - much cleaner than delegation!
     attr_accessor :permission_methods
@@ -20,6 +21,9 @@ module Alto
       @default_board_name = "Feedback"
       @default_board_slug = "feedback"
       @allow_board_deletion_with_tickets = false
+
+      # Image upload configuration
+      @image_uploads_enabled = false
 
       # Initialize permission methods hash
       @permission_methods = {}

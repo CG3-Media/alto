@@ -2,6 +2,7 @@ module Alto
   class Ticket < ApplicationRecord
     include ::Alto::Subscribable
     include ::Alto::Searchable
+    include ::Alto::ImageAttachable
 
     belongs_to :board
     belongs_to :user, polymorphic: true

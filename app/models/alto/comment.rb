@@ -1,6 +1,7 @@
 module Alto
   class Comment < ApplicationRecord
     include ::Alto::Subscribable
+    include ::Alto::ImageAttachable
 
     belongs_to :ticket
     belongs_to :user, polymorphic: true
@@ -56,6 +57,11 @@ module Alto
     # Get all comments in a threaded structure for display
     def self.threaded_for_ticket(ticket)
       comments = ticket.comments.includes(:parent, :replies, :upvotes).threaded
+
+      # Include image attachments if enabled
+      if ::Alto.configuration.image_uploads_enabled && defined?(ActiveStorage)
+        comments = comments.with_attached_images
+      end
 
       # Build threaded structure: top-level comments with their nested replies
       top_level = comments.select { |c| c.parent_id.nil? }

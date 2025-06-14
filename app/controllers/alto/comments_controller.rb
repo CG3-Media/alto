@@ -110,7 +110,15 @@ module Alto
     end
 
     def comment_params
-      params.require(:comment).permit(:content, :parent_id)
+      permitted_params = [:content, :parent_id]
+
+      # Allow image uploads if enabled
+      if ::Alto.configuration.image_uploads_enabled
+        permitted_params << :images  # Single file (multiple: false)
+        permitted_params << { images: [] }  # Array format (if multiple: true)
+      end
+
+      params.require(:comment).permit(*permitted_params)
     end
 
     def check_comment_permission

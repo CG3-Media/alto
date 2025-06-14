@@ -16,6 +16,9 @@
           <p class="text-gray-700 whitespace-pre-wrap"><%= comment.content %></p>
         </div>
 
+        <!-- Attached Image -->
+        <%= render 'alto/shared/attached_image', record: comment, size: :small %>
+
         <!-- View Thread / Reply button -->
         <% reply_count = replies.sum { |r| 1 + count_nested_replies(r[:replies]) } %>
         <% if can_comment? && comment.can_be_replied_to? %>

@@ -1,5 +1,7 @@
 module Alto
   module ApplicationHelper
+    include Alto::ImageHelper
+
     def status_badge(status)
       color_class = case status
       when "open" then "bg-green-100 text-green-800"
