@@ -35,7 +35,7 @@ module Alto
                    @tickets.recent
       end
 
-      @tickets = @tickets.page(params[:page]) if respond_to?(:page)
+      @tickets = @tickets.page(params[:page]).per(25)
       @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
       @tags = @board.tags.used.ordered
       @search_query = params[:search]
@@ -44,6 +44,8 @@ module Alto
       # Determine view type based on board settings
       determine_view_type
     end
+
+
 
     def show
       # Set this as the current board in session

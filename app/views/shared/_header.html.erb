@@ -26,30 +26,28 @@
     </div>
 
     <!-- Search Bar (desktop only) -->
-    <% if defined?(current_board) && current_board %>
-      <div class="hidden sm:flex flex-1 max-w-sm sm:max-w-md lg:max-w-lg mx-4 sm:mx-6">
-        <%= form_with url: alto.board_tickets_path(current_board), method: :get, local: true, class: "flex w-full" do |form| %>
-          <div class="relative flex-1">
-            <%= form.text_field :search,
-                value: params[:search],
-                placeholder: "Search...",
-                class: "w-full pl-8 sm:pl-10 pr-3 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 text-sm" %>
-            <div class="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-              <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </div>
+    <div class="hidden sm:flex flex-1 max-w-sm sm:max-w-md lg:max-w-lg mx-4 sm:mx-6">
+      <%= form_with url: alto.search_index_path, method: :get, local: true, class: "flex w-full" do |form| %>
+        <div class="relative flex-1">
+          <%= form.text_field :search,
+              value: params[:search],
+              placeholder: "Search all tickets...",
+              class: "w-full pl-8 sm:pl-10 pr-3 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 text-sm" %>
+          <div class="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
           </div>
-          <%= form.hidden_field :status, value: params[:status] %>
-          <%= form.hidden_field :sort, value: params[:sort] %>
-          <%= render 'shared/buttons/secondary',
-              text: "Go",
-              type: "submit",
-              size: "small",
-              additional_classes: "rounded-r-md rounded-l-none border border-l-0 border-gray-300 px-3 sm:px-4" %>
-        <% end %>
-      </div>
-    <% end %>
+        </div>
+        <%= form.hidden_field :status, value: params[:status] %>
+        <%= form.hidden_field :sort, value: params[:sort] %>
+        <%= render 'shared/buttons/secondary',
+            text: "Go",
+            type: "submit",
+            size: "small",
+            additional_classes: "rounded-r-md rounded-l-none border border-l-0 border-gray-300 px-3 sm:px-4" %>
+      <% end %>
+    </div>
 
     <!-- Right side: Actions (desktop only) -->
     <div class="hidden sm:flex items-center space-x-2 flex-shrink-0">

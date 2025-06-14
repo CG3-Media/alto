@@ -5,6 +5,9 @@ Alto::Engine.routes.draw do
   # Global activity across all boards
   get "activity", to: "activity#index"
 
+      # Global search across all boards
+  get "search", to: "search#index", as: :search_index
+
   # Board routes
   resources :boards, param: :slug, path: "boards" do
     get "activity", to: "activity#index"

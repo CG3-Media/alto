@@ -74,22 +74,15 @@ module Alto
       end
     }
 
-        scope :search, ->(query) {
+    scope :search, ->(query) {
       return all if query.blank?
 
       sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
-
-      # Combined search in tickets OR comments with a single query
+      # Search only in ticket title and description
       if connection.adapter_name.downcase.include?("postgresql")
-        left_joins(:comments).where(
-          "(alto_tickets.title ILIKE ? OR alto_tickets.description ILIKE ?) OR alto_comments.content ILIKE ?",
-          sanitized_query, sanitized_query, sanitized_query
-        ).distinct
+        where("title ILIKE ? OR description ILIKE ?", sanitized_query, sanitized_query)
       else
-        left_joins(:comments).where(
-          "(LOWER(alto_tickets.title) LIKE LOWER(?) OR LOWER(alto_tickets.description) LIKE LOWER(?)) OR LOWER(alto_comments.content) LIKE LOWER(?)",
-          sanitized_query, sanitized_query, sanitized_query
-        ).distinct
+        where("LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", sanitized_query, sanitized_query)
       end
     }
 
