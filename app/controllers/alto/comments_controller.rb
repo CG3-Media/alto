@@ -116,6 +116,7 @@ module Alto
       if ::Alto.configuration.image_uploads_enabled
         permitted_params << :images  # Single file (multiple: false)
         permitted_params << { images: [] }  # Array format (if multiple: true)
+        permitted_params << :remove_images  # Allow image removal
       end
 
       params.require(:comment).permit(*permitted_params)

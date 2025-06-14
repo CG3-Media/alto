@@ -102,13 +102,15 @@ class AltoImageUpload {
     return { valid: true }
   }
 
-  showPreview(file) {
+    showPreview(file) {
     // Create preview image
     const reader = new FileReader()
     reader.onload = (e) => {
       if (this.previewImage) {
         this.previewImage.src = e.target.result
         this.previewImage.alt = file.name
+        // Show the image using Tailwind classes
+        this.previewImage.classList.remove('hidden')
       }
     }
     reader.readAsDataURL(file)
@@ -123,10 +125,16 @@ class AltoImageUpload {
     }
   }
 
-  removeImage() {
+    removeImage() {
     // Clear file input
     if (this.fileInput) {
       this.fileInput.value = ''
+    }
+
+    // Hide the preview image using Tailwind classes
+    if (this.previewImage) {
+      this.previewImage.classList.add('hidden')
+      this.previewImage.src = ''
     }
 
     // Mark for removal if this was an existing image
@@ -200,14 +208,23 @@ class AltoImageUpload {
 
 // Auto-initialize image upload components
 function initializeImageUploads() {
-  document.querySelectorAll('.image-upload-component:not([data-initialized])').forEach(container => {
+  console.log('🔍 Looking for image upload components...')
+  const components = document.querySelectorAll('.image-upload-component:not([data-initialized])')
+  console.log(`📦 Found ${components.length} image upload components`)
+
+  components.forEach(container => {
+    console.log('🚀 Initializing image upload component:', container)
     new AltoImageUpload(container)
     container.setAttribute('data-initialized', 'true')
   })
 }
 
 // Initialize on DOM ready (works with all Rails versions)
-document.addEventListener('DOMContentLoaded', initializeImageUploads)
+console.log('📜 Alto Image Upload script loaded')
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🎯 DOM ready, initializing image uploads...')
+  initializeImageUploads()
+})
 
 // Optional: Re-initialize if host app uses Turbo/Turbolinks
 if (typeof Turbo !== 'undefined') {

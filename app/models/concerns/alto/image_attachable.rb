@@ -67,5 +67,21 @@ module Alto
     def purge_attached_images
       images.purge if images.attached?
     end
+
+    # Handle image removal based on remove_images virtual attribute
+    # This is called by the before_save callback
+    def handle_image_removal
+      return unless remove_images.present?
+
+      # Handle both string "true" and boolean true values from forms
+      should_remove = (remove_images == "true" || remove_images == true)
+
+      if should_remove && images.attached?
+        Rails.logger.info "[Alto] Removing images for #{self.class.name} #{id || 'new record'}"
+        images.purge
+        # Reset the remove flag after processing
+        self.remove_images = false
+      end
+    end
   end
 end

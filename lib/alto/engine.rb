@@ -44,7 +44,7 @@ module Alto
         alto/application.js
         alto/reactive_rails_form.js
         alto/multi_select.js
-        alto/image_uploader.js
+        alto/image_upload.js
       ]
     end
 
