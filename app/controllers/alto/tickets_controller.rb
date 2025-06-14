@@ -85,12 +85,18 @@ module Alto
 
     def edit
       # Users can edit their own tickets, admins can edit any ticket
-      redirect_to [ @board, @ticket ] unless can_user_edit_ticket?(@ticket)
+      unless can_user_edit_ticket?(@ticket)
+        redirect_to [ @board, @ticket ]
+        return
+      end
     end
 
     def update
       # Users can edit their own tickets, admins can edit any ticket
-      redirect_to [ @board, @ticket ] unless can_user_edit_ticket?(@ticket)
+      unless can_user_edit_ticket?(@ticket)
+        redirect_to [ @board, @ticket ]
+        return
+      end
 
       @ticket.assign_attributes(ticket_params)
 
@@ -106,7 +112,7 @@ module Alto
 
     def destroy
       @ticket.destroy
-      redirect_to board_tickets_url(@board), notice: "Ticket was successfully deleted."
+      redirect_to [ @board, :tickets ], notice: "Ticket was successfully deleted."
     end
 
     private
@@ -156,13 +162,13 @@ module Alto
 
     def check_submit_permission
       unless can_submit_tickets?
-        redirect_to board_tickets_path(@board), alert: "You do not have permission to submit tickets"
+        redirect_to [ @board, :tickets ], alert: "You do not have permission to submit tickets"
       end
     end
 
     def check_board_access
       unless can_access_board?(@board)
-        redirect_to home_path, alert: "You do not have permission to access this board."
+        redirect_to "/", alert: "You do not have permission to access this board."
       end
     end
 

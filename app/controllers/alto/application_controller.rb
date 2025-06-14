@@ -128,7 +128,7 @@ module Alto
 
       # Default implementation - use the existing permission system
       unless can_access_admin?
-        redirect_to alto.home_path, alert: "You do not have permission to access the admin area"
+        redirect_to alto.alto_home_path, alert: "You do not have permission to access the admin area"
       end
     end
 
@@ -152,12 +152,12 @@ module Alto
       end
 
       # Default: redirect to Alto home
-      redirect_to home_path
+              redirect_to alto_home_path
     end
 
     def check_alto_access!
       unless can_access_alto?
-        redirect_to home_path, alert: "You do not have access to Alto"
+        redirect_to alto_home_path, alert: "You do not have access to Alto"
       end
     end
 

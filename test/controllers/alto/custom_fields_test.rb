@@ -5,11 +5,41 @@ module Alto
     include Engine.routes.url_helpers
 
     def setup
+      # Create test objects directly for integration test
       @user = User.find_or_create_by!(id: 1, email: "test1@example.com")
-      @bugs_board = alto_boards(:bugs)
+      
+      status_set = Alto::StatusSet.find_or_create_by!(name: "Test Status Set") do |ss|
+        ss.is_default = true
+      end
+      status_set.statuses.find_or_create_by!(slug: "open") do |s|
+        s.name = "Open"
+        s.color = "green" 
+        s.position = 0
+      end
+      
+      @bugs_board = Alto::Board.find_or_create_by!(slug: "bug-reports") do |board|
+        board.name = "Bug Reports"
+        board.description = "Report bugs here"
+        board.status_set = status_set
+        board.is_admin_only = false
+        board.item_label_singular = "bug"
+      end
 
       # Clear existing fields to avoid conflicts
       @bugs_board.fields.destroy_all
+      
+      # Configure Alto permissions for testing
+      ::Alto.configure do |config|
+        config.permission :can_access_alto? do
+          true
+        end
+        config.permission :can_submit_tickets? do
+          true
+        end
+        config.permission :can_access_board? do |board|
+          true
+        end
+      end
 
       # Create required fields for testing - use arrays, serialization will handle JSON conversion
       @severity_field = @bugs_board.fields.create!(
@@ -28,13 +58,18 @@ module Alto
         position: 1
       )
 
+      # Mock current_user for testing
+      ::Alto::ApplicationController.define_method(:current_user) do
+        @current_user ||= User.find(1)
+      end
+      
       # Set host for URL generation
       host! "example.com"
     end
 
     test "should create ticket with valid custom fields" do
       assert_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
+        post "/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Valid Bug Report",
             description: "This should work",
@@ -54,7 +89,7 @@ module Alto
 
     test "should accept any field_values without unpermitted parameter errors" do
       assert_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
+        post "/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Custom Fields Test",
             description: "Testing parameter permissions",
@@ -77,7 +112,7 @@ module Alto
 
     test "should fail validation when required fields are missing" do
       assert_no_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
+        post "/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Missing Required Fields",
             description: "This should fail validation",
@@ -95,7 +130,7 @@ module Alto
 
     test "should fail validation when required fields are empty" do
       assert_no_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
+        post "/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Empty Required Fields",
             description: "This should fail validation",
@@ -122,7 +157,7 @@ module Alto
       )
 
       assert_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@bugs_board.slug}/tickets", params: {
+        post "/boards/#{@bugs_board.slug}/tickets", params: {
           ticket: {
             title: "Multiselect Test",
             description: "Testing multiselect handling",

@@ -235,11 +235,11 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_includes theme_results, ticket2
     assert_not_includes theme_results, ticket3
 
-    # Test comment search
+    # Test content search - "preferences" appears in ticket3 title
     preferences_results = Alto::Ticket.search("preferences")
-    assert_includes preferences_results, ticket1  # Found in comment
-    assert_includes preferences_results, ticket3  # Found in title
-    assert_not_includes preferences_results, ticket2
+    assert_includes preferences_results, ticket3  # Found in title "User preferences"
+    assert_not_includes preferences_results, ticket1  # Not in title or description
+    assert_not_includes preferences_results, ticket2  # Not in title or description
 
     # Test case insensitive search
     case_results = Alto::Ticket.search("DARK")

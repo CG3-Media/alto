@@ -89,7 +89,7 @@ end
 
 ```erb
 <!-- Link to feedback board -->
-<%= link_to "Feedback", alto.home_path %>
+<%= link_to "Feedback", alto.alto_home_path %>
 
 <!-- Link to specific board -->
 <%= link_to "Bug Reports", alto.board_path("bugs") %>

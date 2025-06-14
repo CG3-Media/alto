@@ -16,17 +16,19 @@ module Alto
     end
 
     # Gets image data for display in views
-    # @param image [ActiveStorage::Attachment] The attachment object
+    # @param image [ActiveStorage::Attachment, ActiveStorage::Blob] The attachment or blob object
     # @param size [Symbol, Hash] Size specification
     # @return [Hash] Image data with URLs and metadata
     def image_display_data(image, size: :medium)
-      return nil unless image.blob.present?
+      # Handle both ActiveStorage::Attachment and ActiveStorage::Blob
+      blob = image.respond_to?(:blob) ? image.blob : image
+      return nil unless blob.present?
 
       {
         image_url: generate_image_url(image, size),
         full_size_url: generate_image_url(image, :original),
-        filename: image.filename.to_s,
-        file_size: image.byte_size,
+        filename: blob.filename.to_s,
+        file_size: blob.byte_size,
         size_class: size_to_css_class(size)
       }
     end
@@ -99,21 +101,19 @@ module Alto
     # Generates standard Rails URL (for local storage or fallback)
     def generate_rails_url(image, size)
       if size == :original || !image.variable?
-        Rails.application.routes.url_helpers.rails_blob_path(image, disposition: 'inline')
+        url_for(image)
       else
         dimensions = size.is_a?(Hash) ? size : DEFAULT_SIZES[size]
         if dimensions
-          Rails.application.routes.url_helpers.rails_representation_path(
-            image.variant(resize_to_limit: [dimensions[:width], dimensions[:height]]),
-            disposition: 'inline'
-          )
+          url_for(image.variant(resize_to_limit: [dimensions[:width], dimensions[:height]]))
         else
-          Rails.application.routes.url_helpers.rails_blob_path(image, disposition: 'inline')
+          url_for(image)
         end
       end
     rescue => e
       Rails.logger.warn "Alto::ImageHelper: Rails URL generation failed: #{e.message}"
-      Rails.application.routes.url_helpers.rails_blob_path(image, disposition: 'inline')
+      # Fallback to a simple URL if Rails URL helpers fail
+      "/rails/active_storage/blobs/#{image.key}/#{image.filename}"
     end
 
     # Converts size symbol to CSS class

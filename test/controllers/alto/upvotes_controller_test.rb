@@ -4,8 +4,9 @@ module Alto
   class UpvotesControllerTest < ActionDispatch::IntegrationTest
     include ::Alto::Engine.routes.url_helpers
     def setup
-      # Setup test database tables
-      ::Alto::DatabaseSetup.force_setup!
+      # Create test users
+      @user1 = User.create!(email: "user1@test.com", name: "User One")
+      @user2 = User.create!(email: "user2@test.com", name: "User Two")
 
       # Create a status set with statuses
       @status_set = ::Alto::StatusSet.create!(
@@ -23,12 +24,14 @@ module Alto
       @ticket = @board.tickets.create!(
         title: "Test Ticket",
         description: "Description",
-        user_id: 1
+        user_id: @user1.id,
+        user_type: "User"
       )
 
       @comment = @ticket.comments.create!(
         content: "Test comment",
-        user_id: 2
+        user_id: @user2.id,
+        user_type: "User"
       )
 
       # Configure Alto to allow all access for testing
@@ -64,7 +67,7 @@ module Alto
       initial_upvote_count = ::Alto::Upvote.count
 
       # Remove the upvote using DELETE request (like the UI would)
-      delete "/feedback/comments/#{@comment.id}/upvotes/#{upvote.id}"
+      delete "/comments/#{@comment.id}/upvotes/#{upvote.id}"
 
       # CRITICAL ASSERTIONS: Verify ticket and comment still exist!
       assert ::Alto::Ticket.exists?(@ticket.id), "🚨 BUG: Ticket was deleted when removing comment upvote!"
@@ -98,7 +101,7 @@ module Alto
       initial_comment_count = ::Alto::Comment.count
 
       # Toggle the upvote off using DELETE request to toggle endpoint
-      delete "/feedback/comments/#{@comment.id}/upvotes/toggle"
+      delete "/comments/#{@comment.id}/upvotes/toggle"
 
       # CRITICAL ASSERTIONS: Verify ticket and comment still exist!
       assert ::Alto::Ticket.exists?(@ticket.id), "🚨 BUG: Ticket was deleted when toggling comment upvote off!"
@@ -124,7 +127,7 @@ module Alto
       initial_comment_count = ::Alto::Comment.count
 
       # Make AJAX request to toggle endpoint
-      delete "/feedback/comments/#{@comment.id}/upvotes/toggle",
+      delete "/comments/#{@comment.id}/upvotes/toggle",
              headers: { "Accept" => "application/json" }
 
       # Should return JSON response
@@ -146,13 +149,13 @@ module Alto
     test "comment upvote URLs should be correctly generated" do
       # Test toggle path generation
       toggle_path = toggle_comment_upvotes_path(@comment)
-      expected_path = "/feedback/comments/#{@comment.id}/upvotes/toggle"
+      expected_path = "/comments/#{@comment.id}/upvotes/toggle"
       assert_equal expected_path, toggle_path, "Toggle path should be correct"
 
       # Test individual upvote path
       upvote = @comment.upvotes.create!(user_id: 1)
       delete_path = comment_upvote_path(@comment, upvote)
-      expected_delete_path = "/feedback/comments/#{@comment.id}/upvotes/#{upvote.id}"
+      expected_delete_path = "/comments/#{@comment.id}/upvotes/#{upvote.id}"
       assert_equal expected_delete_path, delete_path, "Delete path should be correct"
     end
 
@@ -169,7 +172,7 @@ module Alto
         upvotable_spy = @upvotable
       end
 
-      delete "/feedback/comments/#{@comment.id}/upvotes/toggle"
+      delete "/comments/#{@comment.id}/upvotes/toggle"
 
       # Restore original method
       ::Alto::UpvotesController.define_method(:set_board_and_upvotable, original_method)
@@ -185,7 +188,7 @@ module Alto
       upvote = @comment.upvotes.create!(user_id: 1)
 
       # Verify the route exists by attempting to generate the path
-      delete_path = "/feedback/comments/#{@comment.id}/upvotes/#{upvote.id}"
+      delete_path = "/comments/#{@comment.id}/upvotes/#{upvote.id}"
 
       # Make the request
       delete delete_path
@@ -195,7 +198,7 @@ module Alto
     end
 
     test "should handle comment upvote via POST request" do
-      post_path = "/feedback/comments/#{@comment.id}/upvotes"
+      post_path = "/comments/#{@comment.id}/upvotes"
 
       # Make the request
       post post_path, params: { user_id: 1 }
@@ -209,24 +212,24 @@ module Alto
       # Test POST route
       assert_recognizes(
         { controller: "alto/upvotes", action: "create", comment_id: "1" },
-        { path: "/feedback/comments/1/upvotes", method: :post }
+        { path: "/comments/1/upvotes", method: :post }
       )
 
       # Test DELETE route
       assert_recognizes(
         { controller: "alto/upvotes", action: "destroy", comment_id: "1", id: "1" },
-        { path: "/feedback/comments/1/upvotes/1", method: :delete }
+        { path: "/comments/1/upvotes/1", method: :delete }
       )
     end
 
     # Test that the original error route is fixed
-    test "DELETE without upvote ID should return 404" do
+    test "DELETE without upvote ID should raise routing error" do
       # DELETE "/comments/1/upvotes" without an ID should not have a matching route
       # This proves the original routing error is fixed
 
-      delete "/feedback/comments/#{@comment.id}/upvotes"
-      # Should get 404 because there's no DELETE route without an upvote ID
-      assert_response :not_found
+      assert_raises(ActionController::RoutingError) do
+        delete "/comments/#{@comment.id}/upvotes"
+      end
     end
 
     # Test upvote model functionality

@@ -3,7 +3,19 @@ require "test_helper"
 module Alto
   class FieldTest < ActiveSupport::TestCase
     def setup
-      @board = alto_boards(:bugs)
+      # Create required test data first  
+      @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
+      
+      @board = Alto::Board.create!(
+        name: "Test Board",
+        slug: "test-board",
+        description: "Test board for fields",
+        status_set: @status_set,
+        is_admin_only: false,
+        item_label_singular: "ticket"
+      )
+      
       @field_attributes = {
         board: @board,
         label: "Severity",
@@ -52,7 +64,7 @@ module Alto
 
     test "should auto-set position when not provided" do
       # Create a clean board for this test
-      clean_board = Alto::Board.create!(name: "Test Board", slug: "test-position", status_set: @board.status_set)
+      clean_board = Alto::Board.create!(name: "Test Board", slug: "test-position", status_set: @status_set)
 
       field = Field.create!(@field_attributes.merge(board: clean_board))
       assert_equal 0, field.position
@@ -105,7 +117,7 @@ module Alto
 
     test "should be ordered by position scope" do
       # Create a clean board for this test to avoid fixture interference
-      clean_board = Alto::Board.create!(name: "Test Board", slug: "test-ordering", status_set: @board.status_set)
+      clean_board = Alto::Board.create!(name: "Test Board", slug: "test-ordering", status_set: @status_set)
 
       field1 = Field.create!(@field_attributes.merge(board: clean_board, position: 2, label: "Second"))
       field2 = Field.create!(@field_attributes.merge(board: clean_board, position: 0, label: "First"))

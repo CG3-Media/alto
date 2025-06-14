@@ -28,7 +28,7 @@ module Alto
     end
 
     test "should redirect root to default board" do
-      get home_path
+      get "/"
       assert_response :redirect
     end
 

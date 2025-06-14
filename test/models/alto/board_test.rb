@@ -2,6 +2,8 @@ require "test_helper"
 
 module Alto
   class BoardTest < ActiveSupport::TestCase
+    # Use fixtures - no setup needed
+
     test "Board requires name" do
       board = Board.new
       assert_not board.valid?
@@ -9,8 +11,7 @@ module Alto
     end
 
     test "Board generates slug from name automatically" do
-      status_set = alto_status_sets(:default)
-      board = Board.new(name: "Test Board with Special Characters!!!", status_set: status_set, item_label_singular: "ticket")
+      board = Board.new(name: "Test Board with Special Characters!!!", status_set: alto_status_sets(:default), item_label_singular: "ticket")
       assert board.valid?
 
       board.save!
@@ -19,9 +20,8 @@ module Alto
     end
 
     test "Board handles duplicate slugs by adding counter" do
-      status_set = alto_status_sets(:default)
-      board1 = Board.create!(name: "Duplicate Name", status_set: status_set, item_label_singular: "ticket")
-      board2 = Board.new(name: "Duplicate Name", status_set: status_set, item_label_singular: "ticket")
+      board1 = Board.create!(name: "Duplicate Name", status_set: alto_status_sets(:default), item_label_singular: "ticket")
+      board2 = Board.new(name: "Duplicate Name", status_set: alto_status_sets(:default), item_label_singular: "ticket")
 
       assert board2.valid?
       board2.save!
@@ -205,7 +205,15 @@ module Alto
     end
 
     test "Board destroys fields when destroyed" do
-      board = alto_boards(:bugs)
+      # Create a new board without tickets to avoid restriction error
+      board = Board.create!(
+        name: "Test Board for Destruction",
+        slug: "test-destruction",
+        description: "Test board",
+        status_set: alto_status_sets(:default),
+        is_admin_only: false,
+        item_label_singular: "ticket"
+      )
       field = board.fields.create!(label: "Test Field", field_type: "text_input")
       field_id = field.id
 

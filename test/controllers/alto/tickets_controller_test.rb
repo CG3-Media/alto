@@ -5,37 +5,84 @@ module Alto
     include Engine.routes.url_helpers
 
     def setup
-      @user = User.find_or_create_by!(id: 1, email: "test1@example.com")
-      @user2 = User.find_or_create_by!(id: 2, email: "test2@example.com")
-      @general_board = alto_boards(:general)
-      @bugs_board = alto_boards(:bugs)
+      @user = User.create!(email: "test1@example.com", name: "Test User 1")
+      @user2 = User.create!(email: "test2@example.com", name: "Test User 2")
+      
+      # Create test status set
+      @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
+      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
+      @status_set.statuses.create!(name: "Closed", color: "red", position: 1, slug: "closed")
+      
+      @general_board = Alto::Board.create!(
+        name: "General Feedback",
+        slug: "general-feedback",
+        description: "General feedback and suggestions",
+        status_set: @status_set,
+        is_admin_only: false,
+        item_label_singular: "ticket"
+      )
+      
+      @bugs_board = Alto::Board.create!(
+        name: "Bug Reports",
+        slug: "bug-reports",
+        description: "Report bugs here",
+        status_set: @status_set,
+        is_admin_only: false,
+        item_label_singular: "bug"
+      )
 
       # Create test tickets
       @ticket = @general_board.tickets.create!(
         title: "Test Ticket",
         description: "Test description",
-        user_id: @user.id
+        user_id: @user.id,
+        user_type: "User"
       )
 
       @other_users_ticket = @general_board.tickets.create!(
         title: "Other User's Ticket",
         description: "Not my ticket",
-        user_id: @user2.id
+        user_id: @user2.id,
+        user_type: "User"
       )
 
       # Set host for URL generation
       host! "example.com"
+      
+      # Configure Alto permissions for testing
+      ::Alto.configure do |config|
+        config.permission :can_access_alto? do
+          true
+        end
+        config.permission :can_submit_tickets? do
+          true
+        end
+        config.permission :can_access_board? do |board|
+          true
+        end
+        config.permission :can_vote? do
+          true
+        end
+        config.permission :can_edit_tickets? do
+          true
+        end
+      end
+      
+      # Mock current_user for testing - use User.find to ensure it exists
+      ::Alto::ApplicationController.define_method(:current_user) do
+        @current_user ||= User.find(1)
+      end
     end
 
     # INDEX TESTS
     test "should get index" do
-      get "/feedback/boards/#{@general_board.slug}/tickets"
+      get "/boards/#{@general_board.slug}/tickets"
       assert_response :success
       assert_includes response.body, @ticket.title
     end
 
     test "should filter tickets by search" do
-      get "/feedback/boards/#{@general_board.slug}/tickets", params: { search: "Test Ticket" }
+      get "/boards/#{@general_board.slug}/tickets", params: { search: "Test Ticket" }
       assert_response :success
       assert_includes response.body, @ticket.title
       assert_not_includes response.body, @other_users_ticket.title
@@ -44,7 +91,7 @@ module Alto
     test "should filter tickets by status" do
       @ticket.update!(status_slug: "closed")
 
-      get "/feedback/boards/#{@general_board.slug}/tickets", params: { status: "closed" }
+      get "/boards/#{@general_board.slug}/tickets", params: { status: "closed" }
       assert_response :success
       assert_includes response.body, @ticket.title
     end
@@ -53,14 +100,14 @@ module Alto
       # Create an upvote to make ticket popular
       @ticket.upvotes.create!(user_id: @user.id)
 
-      get "/feedback/boards/#{@general_board.slug}/tickets", params: { sort: "popular" }
+      get "/boards/#{@general_board.slug}/tickets", params: { sort: "popular" }
       assert_response :success
       assert_includes response.body, @ticket.title
     end
 
     # SHOW TESTS
     test "should show ticket" do
-      get "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
+      get "/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
       assert_response :success
       assert_includes response.body, @ticket.title
       assert_includes response.body, @ticket.description
@@ -69,14 +116,14 @@ module Alto
     test "should show ticket with comments section" do
       comment = @ticket.comments.create!(content: "Test comment", user_id: @user.id)
 
-      get "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
+      get "/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
       assert_response :success
       assert_includes response.body, comment.content
     end
 
     # NEW TESTS
     test "should get new ticket form" do
-      get "/feedback/boards/#{@general_board.slug}/tickets/new"
+      get "/boards/#{@general_board.slug}/tickets/new"
       assert_response :success
       assert_includes response.body, "New Ticket"
       assert_select "form"
@@ -86,7 +133,7 @@ module Alto
       board = Alto::Board.create!(name: "Custom Field Board", item_label_singular: "ticket", status_set: @general_board.status_set)
       board.fields.create!(label: "Priority", field_type: "text_field", position: 0)
       board.fields.create!(label: "Category", field_type: "text_field", position: 1)
-      get "/feedback/boards/#{board.slug}/tickets/new"
+      get "/boards/#{board.slug}/tickets/new"
       assert_response :success
       assert_select 'input[name="ticket[field_values][priority]"]', 1
       assert_select 'input[name="ticket[field_values][category]"]', 1
@@ -94,7 +141,7 @@ module Alto
 
     test "new ticket form does not error if board has no fields" do
       board = Alto::Board.create!(name: "No Field Board", item_label_singular: "ticket", status_set: @general_board.status_set)
-      get "/feedback/boards/#{board.slug}/tickets/new"
+      get "/boards/#{board.slug}/tickets/new"
       assert_response :success
       # Should not render any custom field inputs
       assert_select 'input[name^="ticket[field_values]"]', 0
@@ -103,7 +150,7 @@ module Alto
     # CREATE TESTS
     test "should create ticket with valid params" do
       assert_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@general_board.slug}/tickets", params: {
+        post "/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "New Test Ticket",
             description: "New test description"
@@ -116,12 +163,12 @@ module Alto
       assert_equal "New test description", ticket.description
       assert_equal @general_board, ticket.board
       assert_response :redirect
-      assert_redirected_to "/feedback/boards/#{@general_board.slug}/tickets/#{ticket.id}"
+      assert_redirected_to "/boards/#{@general_board.slug}/tickets/#{ticket.id}"
     end
 
     test "should not create ticket with invalid params" do
       assert_no_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@general_board.slug}/tickets", params: {
+        post "/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "", # blank title should fail validation
             description: "Description without title"
@@ -135,7 +182,7 @@ module Alto
 
     test "should create ticket with field_values" do
       assert_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@general_board.slug}/tickets", params: {
+        post "/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "Ticket with Custom Fields",
             description: "Testing field values",
@@ -155,7 +202,7 @@ module Alto
     # EDIT TESTS
     test "should get edit form for own ticket" do
       # Simulate user being logged in as the ticket owner
-      get "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}/edit"
+      get "/boards/#{@general_board.slug}/tickets/#{@ticket.id}/edit"
       assert_response :success
       assert_includes response.body, @ticket.title
       assert_select "form"
@@ -163,7 +210,7 @@ module Alto
 
     test "should handle editing other users ticket based on permission system" do
       # Try to edit someone else's ticket
-      get "/feedback/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}/edit"
+      get "/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}/edit"
       # Response depends on permission system - could be success or redirect
       # We'll test that it doesn't crash and handles gracefully
       assert_includes [ 200, 302 ], response.status
@@ -171,7 +218,7 @@ module Alto
 
     # UPDATE TESTS
     test "should update own ticket" do
-      patch "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
+      patch "/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
         ticket: {
           title: "Updated Test Ticket",
           description: "Updated description"
@@ -182,13 +229,13 @@ module Alto
       assert_equal "Updated Test Ticket", @ticket.title
       assert_equal "Updated description", @ticket.description
       assert_response :redirect
-      assert_redirected_to "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
+      assert_redirected_to "/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
     end
 
     test "should not update with invalid params" do
       original_title = @ticket.title
 
-      patch "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
+      patch "/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
         ticket: {
           title: "", # blank title should fail
           description: "Valid description"
@@ -204,7 +251,7 @@ module Alto
     test "should handle updating other users ticket based on permission system" do
       original_title = @other_users_ticket.title
 
-      patch "/feedback/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}", params: {
+      patch "/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}", params: {
         ticket: {
           title: "Attempted Update",
           description: "Testing permission system"
@@ -219,7 +266,7 @@ module Alto
     end
 
     test "should update ticket field_values" do
-      patch "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
+      patch "/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
         ticket: {
           title: @ticket.title, # keep same title
           description: @ticket.description, # keep same description
@@ -238,16 +285,16 @@ module Alto
     # DESTROY TESTS
     test "should destroy own ticket" do
       assert_difference("Alto::Ticket.count", -1) do
-        delete "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
+        delete "/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
       end
 
       assert_response :redirect
-      assert_redirected_to "/feedback/boards/#{@general_board.slug}/tickets"
+      assert_redirected_to "/boards/#{@general_board.slug}/tickets"
     end
 
     test "should handle destroying other users ticket based on permission system" do
       # Test depends on permission system - might allow or deny
-      delete "/feedback/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}"
+      delete "/boards/#{@general_board.slug}/tickets/#{@other_users_ticket.id}"
 
       # Response should be either success redirect or permission redirect
       assert_includes [ 200, 302 ], response.status
@@ -271,34 +318,32 @@ module Alto
       )
 
       # Create a different board to test scoping
-      status_set = alto_status_sets(:default)
-      features_board = Alto::Board.create!(name: "Features", slug: "features", status_set: status_set)
+      features_board = Alto::Board.create!(name: "Features", slug: "features", status_set: @status_set)
 
       # Try to access general board ticket through features board URL
-      # This should return 404 because the ticket doesn't belong to the features board
-      get "/feedback/boards/#{features_board.slug}/tickets/#{general_ticket.id}"
-
-      # Should get 404 - this proves board scoping is working correctly!
-      assert_response :not_found
+      # This should raise RecordNotFound because the ticket doesn't belong to the features board
+      assert_raises(ActiveRecord::RecordNotFound) do
+        get "/boards/#{features_board.slug}/tickets/#{general_ticket.id}"
+      end
     end
 
     test "should handle non-existent board gracefully" do
-      get "/feedback/boards/non-existent/tickets"
-      # Should not raise error but handle gracefully
-      assert_response :not_found
+      assert_raises(ActiveRecord::RecordNotFound) do
+        get "/boards/non-existent/tickets"
+      end
     end
 
     test "should handle non-existent ticket gracefully" do
-      get "/feedback/boards/#{@general_board.slug}/tickets/99999"
-      # Should not raise error but handle gracefully
-      assert_response :not_found
+      assert_raises(ActiveRecord::RecordNotFound) do
+        get "/boards/#{@general_board.slug}/tickets/99999"
+      end
     end
 
     # ARCHIVED TICKET TESTS
     test "should not allow editing archived ticket" do
       @ticket.update!(archived: true)
 
-      get "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}/edit"
+      get "/boards/#{@general_board.slug}/tickets/#{@ticket.id}/edit"
       assert_response :redirect
       follow_redirect!
       assert_includes response.body, "Archived tickets cannot be modified"
@@ -308,7 +353,7 @@ module Alto
       @ticket.update!(archived: true)
       original_title = @ticket.title
 
-      patch "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
+      patch "/boards/#{@general_board.slug}/tickets/#{@ticket.id}", params: {
         ticket: { title: "Should not update" }
       }
 
@@ -321,7 +366,7 @@ module Alto
       @ticket.update!(archived: true)
 
       assert_no_difference("Alto::Ticket.count") do
-        delete "/feedback/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
+        delete "/boards/#{@general_board.slug}/tickets/#{@ticket.id}"
       end
 
       assert_response :redirect
@@ -340,7 +385,7 @@ module Alto
       )
 
       assert_difference("Alto::Ticket.count") do
-        post "/feedback/boards/#{@general_board.slug}/tickets", params: {
+        post "/boards/#{@general_board.slug}/tickets", params: {
           ticket: {
             title: "Multiselect Test",
             description: "Testing multiselect processing",

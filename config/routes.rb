@@ -1,12 +1,12 @@
 Alto::Engine.routes.draw do
-  # Home route - provides alto.home_path helper (avoids root_path conflicts)
-  get "", to: "boards#redirect_to_default", as: :home
+  # Home route - provides default path without named route to avoid conflicts
+  get "", to: "boards#redirect_to_default"
 
   # Global activity across all boards
   get "activity", to: "activity#index"
 
-      # Global search across all boards
-  get "search", to: "search#index", as: :search_index
+  # Global search across all boards
+  get "search", to: "search#index"
 
   # Board routes
   resources :boards, param: :slug, path: "boards" do
@@ -43,12 +43,12 @@ Alto::Engine.routes.draw do
   # Admin routes
   namespace :admin do
     # Admin dashboard with renamed route (avoids any "root" references)
-    get "", to: "dashboard#index", as: :dashboard
+    get "", to: "dashboard#index"
     get "dashboard", to: "dashboard#index"
     resource :settings, only: [ :show, :update ]
     resources :boards, param: :slug, except: [ :show ] do
       resources :tags, only: [:create, :new, :edit, :update, :destroy]
-      get :tags, to: "tags#index", as: :tags_index
+      get :tags, to: "tags#index"
     end
     resources :status_sets
   end

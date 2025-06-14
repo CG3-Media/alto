@@ -16,7 +16,7 @@ module Alto
         if can_manage_boards?
           redirect_to boards_path, notice: "No boards exist yet. Create your first board!"
         else
-          redirect_to home_path, alert: "No feedback boards are available to you."
+          redirect_to alto_home_path, alert: "No feedback boards are available to you."
         end
         return
       end
@@ -107,7 +107,7 @@ module Alto
 
     def ensure_can_manage_boards
       unless can_manage_boards?
-        redirect_to home_path, alert: "You do not have permission to manage boards."
+        redirect_to alto_home_path, alert: "You do not have permission to manage boards."
       end
     end
   end

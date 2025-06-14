@@ -54,9 +54,9 @@ module Alto
         sanitized_query = "%#{sanitize_sql_like(query.strip)}%"
 
         where(
-          "LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)",
+          "LOWER(#{table_name}.title) LIKE LOWER(?) OR LOWER(#{table_name}.description) LIKE LOWER(?)",
           sanitized_query, sanitized_query
-        ).order(created_at: :desc)
+        ).order("#{table_name}.created_at DESC")
       end
     end
   end

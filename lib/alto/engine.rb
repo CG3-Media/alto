@@ -33,19 +33,22 @@ module Alto
 
     # Configure assets to be served directly (nobuild)
     initializer "alto.assets" do |app|
-      # Add our asset paths so they can be served directly
-      app.config.assets.paths << root.join("app", "assets", "javascripts")
-      app.config.assets.paths << root.join("app", "assets", "stylesheets")
+      # Skip asset configuration if assets aren't available (e.g., in testing)
+      if app.config.respond_to?(:assets)
+        # Add our asset paths so they can be served directly
+        app.config.assets.paths << root.join("app", "assets", "javascripts")
+        app.config.assets.paths << root.join("app", "assets", "stylesheets")
 
-      # Precompile our assets for production (but serve directly in development)
-      app.config.assets.precompile += %w[
-        alto/application.css
+        # Precompile our assets for production (but serve directly in development)
+        app.config.assets.precompile += %w[
+          alto/application.css
 
-        alto/application.js
-        alto/reactive_rails_form.js
-        alto/multi_select.js
-        alto/image_upload.js
-      ]
+          alto/application.js
+          alto/reactive_rails_form.js
+          alto/multi_select.js
+          alto/image_upload.js
+        ]
+      end
     end
 
     # Load persistent settings from database after Rails initialization

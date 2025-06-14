@@ -76,7 +76,7 @@ module Alto
 
       def ensure_can_manage_boards
         unless can_manage_boards?
-          redirect_to home_path, alert: "You do not have permission to manage tags."
+          redirect_to alto_home_path, alert: "You do not have permission to manage tags."
         end
       end
     end

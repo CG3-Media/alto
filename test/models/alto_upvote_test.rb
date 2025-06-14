@@ -3,6 +3,10 @@ require "test_helper"
 module Alto
   class UpvoteTest < ActiveSupport::TestCase
     def setup
+      # Create test users first
+      @user1 = User.create!(email: "user1@example.com", name: "User One")
+      @user2 = User.create!(email: "user2@example.com", name: "User Two")
+
       # Create test data
       @status_set = ::Alto::StatusSet.create!(
         name: "Test Status Set",
@@ -14,18 +18,18 @@ module Alto
       @ticket = @board.tickets.create!(
         title: "Test Ticket",
         description: "Description",
-        user_id: 1
+        user: @user1
       )
       @comment = @ticket.comments.create!(
         content: "Test Comment",
-        user_id: 2
+        user: @user2
       )
     end
 
     test "should create upvote for ticket" do
       upvote = Upvote.new(
         upvotable: @ticket,
-        user_id: 1
+        user_id: @user1.id
       )
 
       assert upvote.valid?
@@ -37,7 +41,7 @@ module Alto
     test "should create upvote for comment" do
       upvote = Upvote.new(
         upvotable: @comment,
-        user_id: 1
+        user_id: @user1.id
       )
 
       assert upvote.valid?
@@ -55,18 +59,18 @@ module Alto
 
     test "should enforce uniqueness per user and upvotable" do
       # Create first upvote
-      Upvote.create!(upvotable: @ticket, user_id: 1)
+      Upvote.create!(upvotable: @ticket, user_id: @user1.id)
 
       # Try to create duplicate
-      duplicate = Upvote.new(upvotable: @ticket, user_id: 1)
+      duplicate = Upvote.new(upvotable: @ticket, user_id: @user1.id)
 
       assert_not duplicate.valid?
       assert_includes duplicate.errors[:user_id], "has already been taken"
     end
 
     test "should allow different users to upvote same item" do
-      upvote1 = Upvote.create!(upvotable: @ticket, user_id: 1)
-      upvote2 = Upvote.create!(upvotable: @ticket, user_id: 2)
+      upvote1 = Upvote.create!(upvotable: @ticket, user_id: @user1.id)
+      upvote2 = Upvote.create!(upvotable: @ticket, user_id: @user2.id)
 
       assert upvote1.valid?
       assert upvote2.valid?
@@ -74,16 +78,16 @@ module Alto
     end
 
     test "should allow same user to upvote different items" do
-      ticket_upvote = Upvote.create!(upvotable: @ticket, user_id: 1)
-      comment_upvote = Upvote.create!(upvotable: @comment, user_id: 1)
+      ticket_upvote = Upvote.create!(upvotable: @ticket, user_id: @user1.id)
+      comment_upvote = Upvote.create!(upvotable: @comment, user_id: @user1.id)
 
       assert ticket_upvote.valid?
       assert comment_upvote.valid?
     end
 
     test "should scope upvotes for tickets" do
-      ticket_upvote = Upvote.create!(upvotable: @ticket, user_id: 1)
-      comment_upvote = Upvote.create!(upvotable: @comment, user_id: 2)
+      ticket_upvote = Upvote.create!(upvotable: @ticket, user_id: @user1.id)
+      comment_upvote = Upvote.create!(upvotable: @comment, user_id: @user2.id)
 
       ticket_upvotes = Upvote.for_tickets
 
@@ -92,8 +96,8 @@ module Alto
     end
 
     test "should scope upvotes for comments" do
-      ticket_upvote = Upvote.create!(upvotable: @ticket, user_id: 1)
-      comment_upvote = Upvote.create!(upvotable: @comment, user_id: 2)
+      ticket_upvote = Upvote.create!(upvotable: @ticket, user_id: @user1.id)
+      comment_upvote = Upvote.create!(upvotable: @comment, user_id: @user2.id)
 
       comment_upvotes = Upvote.for_comments
 
@@ -103,8 +107,8 @@ module Alto
 
     test "should work with polymorphic queries" do
       # Create upvotes for different types
-      Upvote.create!(upvotable: @ticket, user_id: 1)
-      Upvote.create!(upvotable: @comment, user_id: 1)
+      Upvote.create!(upvotable: @ticket, user_id: @user1.id)
+      Upvote.create!(upvotable: @comment, user_id: @user1.id)
 
       # Query by upvotable
       ticket_upvotes = Upvote.where(upvotable: @ticket)
@@ -118,7 +122,7 @@ module Alto
     end
 
     test "should maintain referential integrity" do
-      upvote = Upvote.create!(upvotable: @ticket, user_id: 1)
+      upvote = Upvote.create!(upvotable: @ticket, user_id: @user1.id)
 
       # Delete the ticket
       @ticket.destroy
@@ -128,7 +132,7 @@ module Alto
     end
 
     test "should handle destruction of upvotable" do
-      comment_upvote = Upvote.create!(upvotable: @comment, user_id: 1)
+      comment_upvote = Upvote.create!(upvotable: @comment, user_id: @user1.id)
 
       # Delete the comment
       @comment.destroy

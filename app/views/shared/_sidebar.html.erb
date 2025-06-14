@@ -174,7 +174,7 @@
     <div class="flex-1 h-0 pt-4 pb-4 overflow-y-auto">
       <div class="space-y-1">
                 <!-- App Name -->
-        <%= link_to alto.home_path,
+        <%= link_to "/",
             class: "flex items-center px-4 py-3 text-base font-semibold text-gray-900 hover:bg-gray-50",
             onclick: "toggleMobileSidebar()" do %>
           <%= app_name %>
@@ -182,7 +182,7 @@
 
         <!-- Global Search -->
         <div class="px-4 py-3 border-b border-gray-100">
-          <%= form_with url: alto.search_index_path, method: :get, local: true, class: "w-full" do |form| %>
+          <%= form_with url: "/search", method: :get, local: true, class: "w-full" do |form| %>
             <div class="relative">
               <%= form.text_field :search,
                   value: params[:search],

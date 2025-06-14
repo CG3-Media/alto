@@ -2,7 +2,7 @@ require "test_helper"
 
 module Alto
   class ApplicationControllerAdminTest < ActionController::TestCase
-    class TestController < ApplicationController
+    class TestController < Alto::ApplicationController
       # Make can_access_board? method public for testing
       public :can_access_board?, :can_access_admin?
 

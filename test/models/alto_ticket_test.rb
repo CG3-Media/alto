@@ -494,7 +494,8 @@ module Alto
         created_at: 1.hour.ago
       )
 
-      recent_tickets = Ticket.recent
+      # Scope to only tickets created in this test
+      recent_tickets = @board.tickets.recent.where(id: [old_ticket.id, new_ticket.id])
 
       assert_equal new_ticket, recent_tickets.first
       assert_equal old_ticket, recent_tickets.last
