@@ -143,6 +143,20 @@ module Alto
       self.field_values[key] = value
     end
 
+    # Process multiselect fields (convert arrays to comma-separated strings)
+    def process_multiselect_fields!
+      return unless field_values.is_a?(Hash)
+
+      board.fields.where(field_type: "multiselect").each do |field|
+        field_key = field.label.parameterize.underscore
+
+        if field_values[field_key].is_a?(Array)
+          # Convert array to comma-separated string
+          field_values[field_key] = field_values[field_key].reject(&:blank?).join(",")
+        end
+      end
+    end
+
     def custom_fields
       board.fields.ordered
     end

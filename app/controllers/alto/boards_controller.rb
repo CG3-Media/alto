@@ -1,5 +1,7 @@
 module Alto
   class BoardsController < ::Alto::ApplicationController
+    include BoardScoped
+
     before_action :set_board, only: [ :show, :edit, :update, :destroy ]
     before_action :ensure_can_manage_boards, only: [ :new, :create, :edit, :update, :destroy ]
 
@@ -21,8 +23,8 @@ module Alto
         return
       end
 
-      # Set as current board
-      ensure_current_board_set(default_board)
+      # Set as current board (handled by BoardScoped concern)
+      session[:current_board_slug] = default_board.slug
 
       redirect_to board_path(default_board), status: :moved_permanently
     end
@@ -34,16 +36,11 @@ module Alto
 
       # Set first board as context for the sidebar to work properly
       if @boards.any? && current_board.nil?
-        ensure_current_board_set(@boards.first)
+        session[:current_board_slug] = @boards.first.slug
       end
     end
 
     def show
-      @board = ::Alto::Board.find(params[:slug])
-
-      # Set this as the current board in session
-      ensure_current_board_set(@board)
-
       # Redirect to tickets index for this board
       redirect_to board_tickets_path(@board)
     end
@@ -85,20 +82,10 @@ module Alto
 
     private
 
+    # Override BoardScoped concern method because this controller uses :slug instead of :board_slug
     def set_board
-      @board = Board.find(params[:slug])
-    end
-
-    # Defensive method to handle potential NoMethodError with set_current_board
-    def ensure_current_board_set(board)
-      if respond_to?(:set_current_board)
-        set_current_board(board)
-      else
-        # Fallback: set session directly if method is not available
-        Rails.logger.warn "[Alto] set_current_board method not found, setting session directly"
-        session[:current_board_slug] = board.slug
-        @current_board = board
-      end
+      @board = ::Alto::Board.find(params[:slug])
+      ensure_current_board_set
     end
 
     def board_params

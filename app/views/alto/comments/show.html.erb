@@ -43,72 +43,7 @@
 
     <!-- Reply Form -->
     <% if can_comment? && @ticket.can_be_commented_on? && @root_comment.can_be_replied_to? %>
-      <div class="p-6 border-b border-gray-200 bg-blue-50">
-                        <%= form_with url: alto.board_ticket_comments_path(@board, @ticket),
-                      method: :post,
-                      local: true, class: "space-y-4" do %>
-          <%= hidden_field_tag 'comment[parent_id]', @root_comment.id %>
-
-                    <div class="text-sm text-gray-600 mb-2 flex items-center space-x-2">
-            <%= render 'alto/shared/user_avatar', user_id: current_user.id, size: :sm %>
-            <span>Replying to this thread as <span class="font-medium text-gray-700"><%= user_display_name(current_user.id) %></span></span>
-          </div>
-          <div>
-            <%= text_area_tag 'comment[content]', '', placeholder: "Add your reply to this thread...", rows: 3,
-                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
-          </div>
-
-          <!-- Image Upload for Reply -->
-          <% if ::Alto.configuration.image_uploads_enabled %>
-            <div class="image-upload-component">
-              <%= file_field_tag 'comment[images][]',
-                  direct_upload: true,
-                  multiple: false,
-                  accept: "image/png,image/jpeg,image/jpg",
-                  class: "hidden image-file-input" %>
-
-              <div class="upload-button-container">
-                <button type="button"
-                        class="upload-trigger inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                  </svg>
-                  Attach image
-                </button>
-                <p class="mt-1 text-xs text-gray-500">Optional, max 10MB</p>
-              </div>
-
-              <div class="image-preview-container" style="display: none;">
-                <div class="relative inline-block">
-                  <div class="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-                    <img class="w-20 h-20 object-cover preview-image" src="" alt="">
-                  </div>
-                  <button type="button"
-                          class="remove-button absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
-                          title="Remove image">
-                    ×
-                  </button>
-                </div>
-              </div>
-
-              <div class="upload-loading flex items-center space-x-2 text-xs text-gray-600" style="display: none;">
-                <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Uploading...</span>
-              </div>
-
-              <div class="upload-error mt-1 text-xs text-red-600" style="display: none;"></div>
-            </div>
-          <% end %>
-
-          <div class="flex justify-end">
-            <%= submit_tag "Post Reply",
-                class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-          </div>
-        <% end %>
-      </div>
+      <%= render 'alto/comments/form', context: :reply, parent_comment: @root_comment %>
     <% elsif @ticket.locked? %>
       <div class="p-6 border-b border-gray-200 bg-red-50">
         <p class="text-red-600 text-sm">🔒 This ticket is locked. No new replies can be added.</p>

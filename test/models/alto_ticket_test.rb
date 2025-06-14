@@ -241,6 +241,105 @@ module Alto
       assert_equal({ "priority" => "High", "browser" => "Firefox" }, ticket.field_values)
     end
 
+    # Test for process_multiselect_fields! method
+    test "should process multiselect field arrays to comma-separated strings" do
+      # Create multiselect field
+      multiselect_field = @board.fields.create!(
+        label: "Tags",
+        field_type: "multiselect",
+        field_options: ["Bug", "Feature", "Enhancement"],
+        position: 0
+      )
+
+      ticket = Ticket.new(
+        title: "Multiselect Test",
+        description: "Testing multiselect processing",
+        user_id: 1,
+        board: @board,
+        field_values: {
+          "tags" => ["Bug", "Feature"]  # array format
+        }
+      )
+
+      # Process multiselect fields
+      ticket.process_multiselect_fields!
+
+      # Should be converted to comma-separated string
+      assert_equal "Bug,Feature", ticket.field_values["tags"]
+    end
+
+    test "should handle empty multiselect arrays" do
+      multiselect_field = @board.fields.create!(
+        label: "Categories",
+        field_type: "multiselect",
+        field_options: ["A", "B", "C"],
+        position: 0
+      )
+
+      ticket = Ticket.new(
+        title: "Empty Multiselect Test",
+        description: "Testing empty multiselect",
+        user_id: 1,
+        board: @board,
+        field_values: {
+          "categories" => []  # empty array
+        }
+      )
+
+      ticket.process_multiselect_fields!
+
+      # Empty array should become empty string
+      assert_equal "", ticket.field_values["categories"]
+    end
+
+    test "should filter blank values from multiselect arrays" do
+      multiselect_field = @board.fields.create!(
+        label: "Features",
+        field_type: "multiselect",
+        field_options: ["A", "B", "C"],
+        position: 0
+      )
+
+      ticket = Ticket.new(
+        title: "Blank Filter Test",
+        description: "Testing blank value filtering",
+        user_id: 1,
+        board: @board,
+        field_values: {
+          "features" => ["A", "", "B", nil, "C"]  # mixed with blanks
+        }
+      )
+
+      ticket.process_multiselect_fields!
+
+      # Should filter out blank values
+      assert_equal "A,B,C", ticket.field_values["features"]
+    end
+
+    test "should skip non-multiselect fields in process_multiselect_fields" do
+      # Create non-multiselect field
+      text_field = @board.fields.create!(
+        label: "Description",
+        field_type: "text_field",
+        position: 0
+      )
+
+      ticket = Ticket.new(
+        title: "Non-multiselect Test",
+        description: "Testing non-multiselect fields",
+        user_id: 1,
+        board: @board,
+        field_values: {
+          "description" => ["This", "Should", "Stay", "Array"]  # should remain unchanged
+        }
+      )
+
+      ticket.process_multiselect_fields!
+
+      # Non-multiselect field should remain as array
+      assert_equal ["This", "Should", "Stay", "Array"], ticket.field_values["description"]
+    end
+
     test "should get custom_fields from board" do
       bugs_board = alto_boards(:bugs)
 

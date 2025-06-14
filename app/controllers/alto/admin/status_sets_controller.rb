@@ -25,10 +25,7 @@ module Alto
           redirect_to alto.admin_status_set_path(@status_set),
                       notice: "Status set was successfully created."
         else
-          # Ensure positions are set for validation errors
-          @status_set.statuses.each_with_index do |status, index|
-            status.position = index if status.position.blank?
-          end
+          @status_set.ensure_status_positions!
           render :new, status: :unprocessable_entity
         end
       end
@@ -37,15 +34,11 @@ module Alto
       end
 
       def update
-        Rails.logger.info "Status Set Params: #{status_set_params.inspect}"
         if @status_set.update(status_set_params)
           redirect_to alto.admin_status_set_path(@status_set),
                       notice: "Status set was successfully updated."
         else
-          # Ensure positions are set for validation errors
-          @status_set.statuses.each_with_index do |status, index|
-            status.position = index if status.position.blank?
-          end
+          @status_set.ensure_status_positions!
           render :edit, status: :unprocessable_entity
         end
       end

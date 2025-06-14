@@ -241,7 +241,12 @@ module Alto
         all
       else
         public_boards
-              end
       end
+    end
+
+    # Ensure at least one field is present for form rendering
+    def ensure_minimum_fields!
+      fields.build(position: 0) if fields.empty?
+    end
   end
 end

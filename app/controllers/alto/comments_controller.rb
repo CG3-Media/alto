@@ -1,5 +1,7 @@
 module Alto
   class CommentsController < ::Alto::ApplicationController
+    include BoardScoped
+
     before_action :set_board
     before_action :set_ticket
     before_action :check_comment_permission, only: [ :create ]
@@ -74,10 +76,6 @@ module Alto
     end
 
     private
-
-    def set_board
-      @board = Board.find(params[:board_slug])
-    end
 
     def set_ticket
       @ticket = @board.tickets.find(params[:ticket_id])

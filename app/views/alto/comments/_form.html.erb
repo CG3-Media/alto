@@ -1,0 +1,74 @@
+<%
+  # Set defaults
+  context ||= :comment
+  parent_comment ||= nil
+  placeholder_text = case context
+    when :reply
+      "Add your reply to this thread..."
+    else
+      "Add a comment..."
+    end
+
+  bg_class = context == :reply ? "bg-blue-50" : "bg-gray-50"
+  button_text = context == :reply ? "Post Reply" : "Post Comment"
+
+  # Determine user context text
+  user_context_text = case context
+    when :reply
+      "Replying to this thread as"
+    else
+      "Commenting as"
+    end
+%>
+
+<div class="p-6 border-b border-gray-200 <%= bg_class %>">
+  <% if context == :reply %>
+    <% reply_comment = Alto::Comment.new.tap { |c| c.parent = parent_comment } %>
+    <%= form_with model: [@board, @ticket, reply_comment],
+                  local: true,
+                  class: "space-y-4" do |form| %>
+
+      <div class="text-sm text-gray-600 mb-2 flex items-center space-x-2">
+        <%= render 'alto/shared/user_avatar', user_id: current_user.id, size: :sm %>
+        <span><%= user_context_text %> <span class="font-medium text-gray-700"><%= user_display_name(current_user.id) %></span></span>
+      </div>
+
+      <div>
+        <%= form.text_area :content,
+            placeholder: placeholder_text,
+            rows: 3,
+            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <!-- Image Upload for Reply -->
+        <%= render 'alto/shared/image_upload', form: form, record: form.object %>
+
+        <%= form.submit button_text,
+            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+      </div>
+    <% end %>
+  <% else %>
+    <%= form_with model: [@board, @ticket, @comment], local: true, class: "space-y-4" do |form| %>
+      <div class="text-sm text-gray-600 mb-2 flex items-center space-x-2">
+        <%= render 'alto/shared/user_avatar', user_id: current_user.id, size: :sm %>
+        <span><%= user_context_text %> <span class="font-medium text-gray-700"><%= user_display_name(current_user.id) %></span></span>
+      </div>
+
+      <div>
+        <%= form.text_area :content,
+            placeholder: placeholder_text,
+            rows: 3,
+            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <!-- Image Upload for Comments -->
+        <%= render 'alto/shared/image_upload', form: form, record: @comment %>
+
+        <%= form.submit button_text,
+            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
