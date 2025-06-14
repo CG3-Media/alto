@@ -56,8 +56,9 @@ module Alto
 
     # Ensure all statuses have proper positions set
     def ensure_status_positions!
-      statuses.each_with_index do |status, index|
-        status.position = index if status.position.blank?
+      unpositioned_statuses = statuses.where(position: nil)
+      unpositioned_statuses.each_with_index do |status, index|
+        status.update!(position: index)
       end
     end
   end

@@ -496,7 +496,7 @@ module Alto
       board.ensure_minimum_fields!
 
       # Should now have one field built (but not saved)
-      assert_equal 1, board.fields.count
+      assert_equal 1, board.fields.size  # Use size for in-memory collection
       assert_equal 0, board.fields.first.position
       assert board.fields.first.new_record? # Should be unsaved
     end

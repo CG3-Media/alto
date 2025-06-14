@@ -1,6 +1,7 @@
 module Alto
   class TicketsController < ::Alto::ApplicationController
     include BoardScoped
+    include Ticketable
 
     before_action :set_board
     before_action :set_ticket, only: [ :show, :edit, :update, :destroy ]
@@ -12,49 +13,14 @@ module Alto
     helper_method :can_assign_tags?
 
     def index
-      # Apply status filtering
-      @tickets = @board.tickets.active.includes(:user, :board, :upvotes, :tags)
+      base_tickets = @board.tickets.active.includes(:user, :board, :upvotes, :tags)
+      @tickets = apply_ticket_filters(base_tickets).page(params[:page]).per(25)
 
-      # Filter by status if provided
-      if params[:status].present?
-        @tickets = @tickets.by_status(params[:status])
-      end
+      view_result = determine_view_type(@board)
+      @view_type = view_result.view_type
+      @show_toggle = view_result.show_toggle
 
-      # Filter tickets by viewable statuses for non-admin users
-      @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
-
-      # Filter by tag if provided
-      if params[:tag].present?
-        @tickets = @tickets.tagged_with(params[:tag])
-      end
-
-      # Apply search if provided
-      if params[:search].present?
-        @tickets = @tickets.search(params[:search])
-      end
-
-      # Apply sorting
-      case params[:sort]
-      when "popular"
-        @tickets = @tickets.popular
-      else
-        @tickets = @tickets.recent
-      end
-
-      # Paginate
-      @tickets = @tickets.page(params[:page]).per(25)
-
-      # Determine view type (card or list) based on URL param, user preference, or board setting
-      determine_view_type
-
-      # Get available statuses for filtering dropdown
-      @available_statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
-
-      # Get available tags for filtering
-      @available_tags = @board.tags.used.ordered.limit(20)
-
-      # Get available statuses for card view
-      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
+      setup_filter_data
     end
 
     def show
@@ -171,27 +137,10 @@ module Alto
       end
     end
 
-    def determine_view_type
-      # If board enforces a single view, use that
-      if @board.single_view.present?
-        @view_type = @board.single_view
-        @show_toggle = false
-        return
-      end
-
-      # If user explicitly chose a view via URL parameter, use it and store preference
-      if params[:view].present?
-        @view_type = params[:view] == "list" ? "list" : "card"
-        # Store user's view preference in session for this board
-        session[:view_preferences] ||= {}
-        session[:view_preferences][@board.slug] = @view_type
-      else
-        # No URL parameter - check for stored preference, fallback to default
-        stored_preferences = session[:view_preferences] || {}
-        @view_type = stored_preferences[@board.slug] || "list"
-      end
-
-      @show_toggle = true
+    def setup_filter_data
+      @available_statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
+      @available_tags = @board.tags.used.ordered.limit(20)
+      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
     end
 
     def can_assign_tags?

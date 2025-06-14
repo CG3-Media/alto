@@ -144,6 +144,9 @@ class ActiveSupport::TestCase
   # Use transactional rollback for test isolation instead of manual cleanup
   self.use_transactional_tests = true
 
+  # Note: Parallelization disabled for Rails engine with custom test setup
+  # The complex migration setup conflicts with parallel workers
+
   # Create test data that tests expect
   def setup
     super
