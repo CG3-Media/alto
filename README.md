@@ -19,6 +19,7 @@ Alto is a mountable Rails engine for collecting user feedback with multiple boar
 - Customizable item labels per board ("tickets", "posts", "bugs", "requests", etc.)
 - Custom fields per board (dropdowns, text inputs, multiselect, etc.)
 - Ticket creation with 3-level threaded comments and upvoting
+- **Image upload support** for tickets and comments with automatic cloud storage optimization
 - Configurable status sets with custom statuses and colors
 - Admin dashboard with status management and analytics
 - Full-text search across tickets and comments
@@ -94,6 +95,18 @@ end
 <%= link_to "Bug Reports", alto.board_path("bugs") %>
 ```
 
+## Image Support
+
+Alto supports image uploads for tickets and comments. Works with Cloudinary, S3, or local storage.
+
+```ruby
+# config/initializers/alto.rb
+Alto.configure do |config|
+  config.image_uploads_enabled = true
+end
+```
+
+Requires ActiveStorage to be configured in your Rails app. Images are automatically optimized and cleaned up when records are deleted.
 
 ## 🎣 Callback Hooks
 
@@ -216,6 +229,9 @@ Alto.configure do |config|
   config.permission :can_access_admin? do
     current_user&.admin?  # Your admin logic here
   end
+
+  # Image uploads (requires ActiveStorage)
+  config.image_uploads_enabled = true
 
   # Board configuration
   config.allow_board_deletion_with_tickets = false
