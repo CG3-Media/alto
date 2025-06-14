@@ -1,6 +1,4 @@
 <div class="flex items-center gap-2">
-  <span class="hidden lg:block text-sm text-gray-500">Filter by tag:</span>
-
   <%= render 'alto/shared/filter_dropdown',
       field_name: :tag,
       options: [['All tags', '']] + @tags.map { |tag| ["#{tag.name} (#{tag.tickets.count})", tag.name] },
