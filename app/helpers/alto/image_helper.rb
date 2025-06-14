@@ -42,7 +42,7 @@ module Alto
 
     # Checks if record has images attached
     def record_has_images?(record)
-      record.respond_to?(:images) && record.images.attached?
+      record&.persisted? && record.respond_to?(:images) && record.images.attached?
     end
 
         # Generates appropriate image URL based on host app's ActiveStorage configuration

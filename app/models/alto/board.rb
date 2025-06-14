@@ -220,6 +220,12 @@ module Alto
       allow_public_tagging
     end
 
+    def tags_assignable_by?(user, can_edit_any_ticket: false)
+      return false unless user
+      # Admins can always assign tags, or if board allows public tagging
+      can_edit_any_ticket || allow_public_tagging?
+    end
+
     # Voting methods
     def allow_voting?
       allow_voting

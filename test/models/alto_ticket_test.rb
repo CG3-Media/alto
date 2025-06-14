@@ -973,7 +973,7 @@ module Alto
 
       tag1 = Tag.create!(name: "alpha", board: @board)
       tag2 = Tag.create!(name: "beta", board: @board)
-      
+
       ticket.tags << tag1
       ticket.tags << tag2
 
@@ -1017,6 +1017,32 @@ module Alto
       # Should only assign the existing tag
       assert_equal 1, ticket.tags.count
       assert_equal ["existing"], ticket.tag_list
+    end
+
+    test "should check if user is subscribed to ticket" do
+      # Create a ticket for this test
+      ticket = Ticket.create!(
+        title: "Subscription Test Ticket",
+        description: "Testing user subscription",
+        user_id: 1,
+        board: @board
+      )
+
+      # Create a user with email
+      user = User.create!(id: 999, email: "subscriber@example.com")
+
+      # Create subscription for this user
+      subscription = ticket.subscriptions.create!(email: "subscriber@example.com")
+
+      # Test the method
+      assert ticket.user_subscribed?(user), "User should be subscribed"
+
+      # Test with user who is not subscribed
+      non_subscriber = User.create!(id: 998, email: "notsubscribed@example.com")
+      assert_not ticket.user_subscribed?(non_subscriber), "User should not be subscribed"
+
+      # Test with nil user
+      assert_not ticket.user_subscribed?(nil), "Nil user should not be subscribed"
     end
   end
 end

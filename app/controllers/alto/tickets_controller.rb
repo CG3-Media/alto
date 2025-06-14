@@ -7,50 +7,56 @@ module Alto
     before_action :ensure_not_archived, only: [ :edit, :update, :destroy ]
 
     # Make helper methods available to views
-    helper_method :can_user_edit_ticket?, :current_user_subscribed?, :can_assign_tags?
+    helper_method :can_assign_tags?
 
     def index
       # Set this as the current board in session
       ensure_current_board_set(@board)
 
-      @tickets = @board.tickets.active.includes(:upvotes, :comments)
+      # Apply status filtering
+      @tickets = @board.tickets.active.includes(:user, :board, :upvotes, :tags)
 
-      # Include image blobs if image uploads are enabled
-      if ::Alto.configuration.image_uploads_enabled
-        @tickets = @tickets.with_attached_images
+      # Filter by status if provided
+      if params[:status].present?
+        @tickets = @tickets.by_status(params[:status])
       end
 
-      # Filter by viewable statuses for non-admin users
+      # Filter tickets by viewable statuses for non-admin users
       @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
 
-      # Apply search filter
-      @tickets = @tickets.search(params[:search]) if params[:search].present?
-
-      # Apply status filter
-      @tickets = @tickets.by_status(params[:status]) if params[:status].present?
-
-      # Apply tag filter
-      @tickets = @tickets.tagged_with(params[:tag]) if params[:tag].present?
-
-      # Apply sorting
-      @tickets = case params[:sort]
-      when "popular"
-                   @tickets.popular
-      else
-                   @tickets.recent
+      # Filter by tag if provided
+      if params[:tag].present?
+        @tickets = @tickets.tagged_with(params[:tag])
       end
 
+      # Apply search if provided
+      if params[:search].present?
+        @tickets = @tickets.search(params[:search])
+      end
+
+      # Apply sorting
+      case params[:sort]
+      when "popular"
+        @tickets = @tickets.popular
+      else
+        @tickets = @tickets.recent
+      end
+
+      # Paginate
       @tickets = @tickets.page(params[:page]).per(25)
-      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
-      @tags = @board.tags.used.ordered
-      @search_query = params[:search]
-      @selected_tag = params[:tag]
 
-      # Determine view type based on board settings
+      # Determine view type (card or list) based on URL param, user preference, or board setting
       determine_view_type
+
+      # Get available statuses for filtering dropdown
+      @available_statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
+
+      # Get available tags for filtering
+      @available_tags = @board.tags.used.ordered.limit(20)
+
+      # Get available statuses for card view
+      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
     end
-
-
 
     def show
       # Set this as the current board in session
@@ -85,7 +91,7 @@ module Alto
 
     def edit
       # Users can edit their own tickets, admins can edit any ticket
-      unless can_user_edit_ticket?(@ticket)
+      unless @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?)
         redirect_to [ @board, @ticket ]
         return
       end
@@ -93,7 +99,7 @@ module Alto
 
     def update
       # Users can edit their own tickets, admins can edit any ticket
-      unless can_user_edit_ticket?(@ticket)
+      unless @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?)
         redirect_to [ @board, @ticket ]
         return
       end
@@ -172,26 +178,6 @@ module Alto
       end
     end
 
-    def can_user_edit_ticket?(ticket)
-      return false unless current_user
-      # Users can edit their own tickets, or admins can edit any ticket
-      ticket.user_id == current_user.id || can_access_admin?
-    end
-
-    def current_user_subscribed?(ticket = @ticket)
-      return false unless current_user
-
-      begin
-        user_email = ::Alto.configuration.user_email.call(current_user.id)
-        return false unless user_email.present?
-
-        ticket.subscriptions.exists?(email: user_email)
-      rescue => e
-        Rails.logger.warn "[Alto] Failed to check subscription status: #{e.message}"
-        false
-      end
-    end
-
     def track_ticket_view
       return unless current_user
 
@@ -242,11 +228,7 @@ module Alto
     end
 
     def can_assign_tags?
-      # Admins can always assign tags
-      return true if can_access_admin?
-
-      # Regular users can assign tags if board allows public tagging
-      @board.allow_public_tagging?
+      @board.tags_assignable_by?(current_user, can_edit_any_ticket: can_edit_tickets?)
     end
 
     def process_multiselect_fields(ticket)

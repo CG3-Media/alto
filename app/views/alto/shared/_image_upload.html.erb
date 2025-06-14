@@ -2,7 +2,7 @@
   <div class="image-upload-component">
     <% form_field_name = local_assigns[:field_name] || :images %>
     <% record = local_assigns[:record] %>
-    <% has_existing_image = record&.images&.attached? %>
+    <% has_existing_image = record&.persisted? && record&.images&.attached? %>
 
     <!-- Hidden file input -->
     <%= form.file_field form_field_name,

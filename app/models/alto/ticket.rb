@@ -156,6 +156,26 @@ module Alto
       ::Alto.configuration.user_email.call(user_id)
     end
 
+    def user_subscribed?(user)
+      return false unless user
+
+      begin
+        user_email = ::Alto.configuration.user_email.call(user.id)
+        return false unless user_email.present?
+
+        subscriptions.exists?(email: user_email)
+      rescue => e
+        Rails.logger.warn "[Alto] Failed to check subscription status: #{e.message}"
+        false
+      end
+    end
+
+    def editable_by?(user, can_edit_any_ticket: false)
+      return false unless user
+      # Users can edit their own tickets, or if they have permission to edit any ticket
+      user_id == user.id || can_edit_any_ticket
+    end
+
     # Tagging methods
     def tag_with(tag_objects_or_names)
       tag_objects_or_names = Array(tag_objects_or_names)
