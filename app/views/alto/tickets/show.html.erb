@@ -56,10 +56,12 @@
         <%= render 'custom_fields_display', ticket: @ticket, board: @board %>
       </div>
 
-      <!-- Upvote Button -->
-      <div class="flex flex-col items-center ml-6">
-        <%= upvote_button(@ticket, current_user, large: true) %>
-      </div>
+      <!-- Upvote Button - only show if voting is enabled -->
+      <% if @board.allow_voting? %>
+        <div class="flex flex-col items-center ml-6">
+          <%= upvote_button(@ticket, current_user, large: true) %>
+        </div>
+      <% end %>
     </div>
 
     <!-- Tags -->

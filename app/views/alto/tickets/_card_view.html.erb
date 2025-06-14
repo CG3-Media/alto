@@ -44,7 +44,9 @@
                 <div class="border-t border-gray-100 pt-3 mt-3">
                   <div class="flex items-center justify-between text-xs">
                     <div class="flex items-center gap-3">
-                      <%= upvote_button(ticket, current_user, size: :small) %>
+                      <% if board.allow_voting? %>
+                        <%= upvote_button(ticket, current_user, size: :small) %>
+                      <% end %>
                       <% if ticket.comments.count > 0 %>
                         <%= link_to pluralize(ticket.comments.count, 'comment'),
                             alto.board_ticket_path(board, ticket, anchor: 'comments'),

@@ -128,6 +128,24 @@
             <p class="text-sm text-red-600"><%= error %></p>
           <% end %>
         <% end %>
+
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <%= form.check_box :allow_voting,
+                class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <div class="-mt-1 ml-3">
+            <%= form.label :allow_voting, "Allow Upvoting", class: "text-sm font-medium text-gray-700" %>
+            <p class="text-sm text-gray-500">
+              👍 Allow users to upvote items on this board. When disabled, vote buttons are hidden and no new votes can be cast.
+            </p>
+          </div>
+        </div>
+        <% if @board.errors[:allow_voting].any? %>
+          <% @board.errors[:allow_voting].each do |error| %>
+            <p class="text-sm text-red-600"><%= error %></p>
+          <% end %>
+        <% end %>
       </div>
     </div>
   </div>

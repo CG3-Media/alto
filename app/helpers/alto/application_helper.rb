@@ -33,6 +33,10 @@ module Alto
     end
 
     def upvote_button(upvotable, current_user, options = {})
+      # Hide upvote button completely if board doesn't allow voting
+      return nil unless board_allows_voting?(upvotable)
+
+      # Show disabled button if user can't vote or item can't be voted on
       return disabled_upvote_button(upvotable) unless can_vote? && upvotable.can_be_voted_on?
 
       ajax_upvote_button(upvotable, current_user, options)
@@ -277,6 +281,20 @@ module Alto
       when ::Alto::Comment
         # For comments, use the toggle action
         alto.toggle_comment_upvotes_path(upvotable)
+      end
+    end
+
+    def board_allows_voting?(upvotable)
+      case upvotable
+      when ::Alto::Ticket
+        # For tickets, check the board's voting setting
+        upvotable.board&.allow_voting? != false
+      when ::Alto::Comment
+        # Comments are always upvotable regardless of board setting
+        true
+      else
+        # Default to true for other types
+        true
       end
     end
   end

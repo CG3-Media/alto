@@ -220,6 +220,15 @@ module Alto
       allow_public_tagging
     end
 
+    # Voting methods
+    def allow_voting?
+      allow_voting
+    end
+
+    def voting_enabled?
+      allow_voting?
+    end
+
     # Scope boards based on user's admin status
     def self.accessible_to_user(user, current_user_is_admin: false)
       if current_user_is_admin

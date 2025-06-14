@@ -3,10 +3,12 @@
     <% tickets.each do |ticket| %>
       <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-all">
         <div class="flex items-start gap-4">
-          <!-- Upvote Section -->
-          <div class="flex flex-col items-center flex-shrink-0 pt-1">
-            <%= upvote_button(ticket, current_user, size: :compact) %>
-          </div>
+          <!-- Upvote Section - only show if voting is enabled -->
+          <% if board.allow_voting? %>
+            <div class="flex flex-col items-center flex-shrink-0 pt-1">
+              <%= upvote_button(ticket, current_user, size: :compact) %>
+            </div>
+          <% end %>
 
           <!-- Main Content -->
           <div class="flex-1 min-w-0">

@@ -66,7 +66,7 @@ module Alto
       def board_params
         params.require(:board).permit(
           :name, :description, :item_label_singular, :status_set_id,
-          :is_admin_only, :single_view, :fields_data, :allow_public_tagging,
+          :is_admin_only, :single_view, :fields_data, :allow_public_tagging, :allow_voting,
           fields_attributes: [
             :id, :label, :field_type, :required, :placeholder,
             :position, :_destroy, field_options: []
