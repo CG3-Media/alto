@@ -113,11 +113,11 @@ module Alto
     end
 
     def recent_tickets(limit = 5)
-      tickets.recent.limit(limit)
+      tickets.active.recent.limit(limit)
     end
 
     def popular_tickets(limit = 5)
-      tickets.popular.limit(limit)
+      tickets.active.popular.limit(limit)
     end
 
     # Search tickets within this board

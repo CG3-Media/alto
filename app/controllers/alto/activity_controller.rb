@@ -24,20 +24,21 @@ module Alto
 
     def load_board_activity
       @recent_tickets = @board.tickets
+                              .active
                               .includes(:comments, :upvotes)
                               .recent
                               .limit(10)
 
       @recent_comments = ::Alto::Comment
                           .joins(:ticket)
-                          .where(ticket: { board: @board })
+                          .where(ticket: { board: @board, archived: false })
                           .includes(:ticket, :upvotes)
                           .recent
                           .limit(10)
 
       @recent_upvotes = ::Alto::Upvote
                          .joins("JOIN alto_tickets ON alto_upvotes.upvotable_type = 'Alto::Ticket' AND alto_upvotes.upvotable_id = alto_tickets.id")
-                         .where(alto_tickets: { board_id: @board.id })
+                         .where(alto_tickets: { board_id: @board.id, archived: false })
                          .includes(:upvotable)
                          .order(created_at: :desc)
                          .limit(10)
@@ -45,17 +46,21 @@ module Alto
 
     def load_global_activity
       @recent_tickets = ::Alto::Ticket
+                         .active
                          .includes(:board, :comments, :upvotes)
                          .recent
                          .limit(15)
 
       @recent_comments = ::Alto::Comment
+                          .joins(:ticket)
+                          .where(ticket: { archived: false })
                           .includes(ticket: :board, upvotes: [])
                           .recent
                           .limit(15)
 
       @recent_upvotes = ::Alto::Upvote
                          .joins("JOIN alto_tickets ON alto_upvotes.upvotable_type = 'Alto::Ticket' AND alto_upvotes.upvotable_id = alto_tickets.id")
+                         .where(alto_tickets: { archived: false })
                          .includes(upvotable: :board)
                          .order(created_at: :desc)
                          .limit(15)

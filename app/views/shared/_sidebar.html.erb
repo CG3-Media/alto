@@ -12,9 +12,9 @@
       <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if activity_collapsed %>>
         <div class="space-y-3">
           <% if defined?(current_board) && current_board %>
-            <% recent_tickets = current_board.tickets.includes(:comments).recent.limit(5) %>
+            <% recent_tickets = current_board.tickets.active.includes(:comments).recent.limit(5) %>
           <% else %>
-            <% recent_tickets = ::Alto::Ticket.includes(:board, :comments).recent.limit(5) %>
+            <% recent_tickets = ::Alto::Ticket.active.includes(:board, :comments).recent.limit(5) %>
           <% end %>
           <% recent_tickets.each do |ticket| %>
             <div class="group">

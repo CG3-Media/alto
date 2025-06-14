@@ -7,8 +7,8 @@ module Alto
         @total_boards = Board.count
         @total_tickets = Ticket.count
         @open_tickets = Ticket.by_status("open").count
-        @recent_tickets = Ticket.includes(:upvotes, :comments, :board).recent.limit(5)
-        @recent_comments = Comment.includes(:ticket, :upvotes).recent.limit(5)
+        @recent_tickets = Ticket.active.includes(:upvotes, :comments, :board).recent.limit(5)
+        @recent_comments = Comment.joins(:ticket).where(ticket: { archived: false }).includes(:ticket, :upvotes).recent.limit(5)
 
         # Stats for the last 30 days
         @tickets_this_month = Ticket.where(created_at: 30.days.ago..Time.current).count
