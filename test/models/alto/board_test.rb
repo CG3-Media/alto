@@ -483,5 +483,45 @@ module Alto
       board.update!(single_view: "card")
       assert board.card_single_view?
     end
+
+    # Test for ensure_minimum_fields! method
+    test "ensure_minimum_fields! should build field when none exist" do
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Empty Fields Board", status_set: status_set, item_label_singular: "ticket")
+
+      # Ensure board starts with no fields
+      assert_equal 0, board.fields.count
+
+      # Call ensure_minimum_fields!
+      board.ensure_minimum_fields!
+
+      # Should now have one field built (but not saved)
+      assert_equal 1, board.fields.size  # Use size for in-memory collection
+      assert_equal 0, board.fields.first.position
+      assert board.fields.first.new_record? # Should be unsaved
+    end
+
+    test "ensure_minimum_fields! should not add field when fields already exist" do
+      status_set = alto_status_sets(:default)
+      board = Board.create!(name: "Has Fields Board", status_set: status_set, item_label_singular: "ticket")
+
+      # Add an existing field
+      existing_field = board.fields.create!(
+        label: "Existing Field",
+        field_type: "text_field",
+        position: 0
+      )
+
+      # Track field count before
+      original_count = board.fields.count
+      assert_equal 1, original_count
+
+      # Call ensure_minimum_fields!
+      board.ensure_minimum_fields!
+
+      # Should not have added another field
+      assert_equal original_count, board.fields.count
+      assert_includes board.fields, existing_field
+    end
   end
 end

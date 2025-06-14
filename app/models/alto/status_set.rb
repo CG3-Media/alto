@@ -53,5 +53,13 @@ module Alto
       filtered_statuses = is_admin ? statuses : public_statuses
       filtered_statuses.map { |status| [ status.name, status.slug ] }
     end
+
+    # Ensure all statuses have proper positions set
+    def ensure_status_positions!
+      unpositioned_statuses = statuses.where(position: nil)
+      unpositioned_statuses.each_with_index do |status, index|
+        status.update!(position: index)
+      end
+    end
   end
 end

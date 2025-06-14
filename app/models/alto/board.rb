@@ -241,7 +241,17 @@ module Alto
         all
       else
         public_boards
-              end
       end
+    end
+
+    def self.find_default_for_user(user, current_user_is_admin: false)
+      accessible_boards = accessible_to_user(user, current_user_is_admin: current_user_is_admin)
+      accessible_boards.find_by(slug: "feedback") || accessible_boards.first
+    end
+
+    # Ensure at least one field is present for form rendering
+    def ensure_minimum_fields!
+      fields.build(position: 0) if fields.empty?
+    end
   end
 end

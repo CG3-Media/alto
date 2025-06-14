@@ -1,86 +1,42 @@
 module Alto
   class TicketsController < ::Alto::ApplicationController
+    include BoardScoped
+    include Ticketable
+    include TicketPermissionChecker
+
     before_action :set_board
     before_action :set_ticket, only: [ :show, :edit, :update, :destroy ]
     before_action :check_submit_permission, only: [ :new, :create ]
-    before_action :check_board_access
+    before_action :check_board_access_with_redirect
     before_action :ensure_not_archived, only: [ :edit, :update, :destroy ]
 
-    # Make helper methods available to views
-    helper_method :can_assign_tags?
-
     def index
-      # Set this as the current board in session
-      ensure_current_board_set(@board)
+      base_tickets = @board.tickets.active.includes(:user, :board, :upvotes, :tags)
+      @tickets = apply_ticket_filters(base_tickets).page(params[:page]).per(25)
 
-      # Apply status filtering
-      @tickets = @board.tickets.active.includes(:user, :board, :upvotes, :tags)
+      view_result = determine_view_type(@board)
+      @view_type = view_result.view_type
+      @show_toggle = view_result.show_toggle
 
-      # Filter by status if provided
-      if params[:status].present?
-        @tickets = @tickets.by_status(params[:status])
-      end
-
-      # Filter tickets by viewable statuses for non-admin users
-      @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
-
-      # Filter by tag if provided
-      if params[:tag].present?
-        @tickets = @tickets.tagged_with(params[:tag])
-      end
-
-      # Apply search if provided
-      if params[:search].present?
-        @tickets = @tickets.search(params[:search])
-      end
-
-      # Apply sorting
-      case params[:sort]
-      when "popular"
-        @tickets = @tickets.popular
-      else
-        @tickets = @tickets.recent
-      end
-
-      # Paginate
-      @tickets = @tickets.page(params[:page]).per(25)
-
-      # Determine view type (card or list) based on URL param, user preference, or board setting
-      determine_view_type
-
-      # Get available statuses for filtering dropdown
-      @available_statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
-
-      # Get available tags for filtering
-      @available_tags = @board.tags.used.ordered.limit(20)
-
-      # Get available statuses for card view
-      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
+      setup_filter_data
     end
 
     def show
-      # Set this as the current board in session
-      ensure_current_board_set(@board)
-
       # Track view for subscribed users
-      track_ticket_view if current_user
+      ::Alto::TicketViewTracker.new(@ticket, current_user).track if current_user
 
       @comment = ::Alto::Comment.new
       @threaded_comments = ::Alto::Comment.threaded_for_ticket(@ticket)
     end
 
     def new
-      # Ensure current board is set
-      ensure_current_board_set(@board)
       @ticket = @board.tickets.build
     end
 
     def create
       @ticket = @board.tickets.build(ticket_params)
       @ticket.user_id = current_user.id
-
-      # Process multiselect fields (convert arrays to comma-separated strings)
-      process_multiselect_fields(@ticket)
+      @ticket.process_multiselect_fields!
 
       if @ticket.save
         redirect_to [ @board, @ticket ], notice: "Ticket was successfully created."
@@ -90,24 +46,14 @@ module Alto
     end
 
     def edit
-      # Users can edit their own tickets, admins can edit any ticket
-      unless @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?)
-        redirect_to [ @board, @ticket ]
-        return
-      end
+      return unless check_edit_permission(@ticket)
     end
 
     def update
-      # Users can edit their own tickets, admins can edit any ticket
-      unless @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?)
-        redirect_to [ @board, @ticket ]
-        return
-      end
+      return unless check_edit_permission(@ticket)
 
       @ticket.assign_attributes(ticket_params)
-
-      # Process multiselect fields (convert arrays to comma-separated strings)
-      process_multiselect_fields(@ticket)
+      @ticket.process_multiselect_fields!
 
       if @ticket.save
         redirect_to [ @board, @ticket ], notice: "Ticket was successfully updated."
@@ -123,125 +69,23 @@ module Alto
 
     private
 
-    def set_board
-      @board = ::Alto::Board.find(params[:board_slug])
-    end
-
     def set_ticket
       @ticket = @board.tickets.find(params[:id])
     end
 
-    # Defensive method to handle potential NoMethodError with set_current_board
-    def ensure_current_board_set(board)
-      if respond_to?(:set_current_board)
-        set_current_board(board)
-      else
-        # Fallback: set session directly if method is not available
-        Rails.logger.warn "[Alto] set_current_board method not found, setting session directly"
-        session[:current_board_slug] = board.slug
-        @current_board = board
-      end
-    end
-
     def ticket_params
-      permitted_params = [ :title, :description ]
-      # Only admins can edit status and locked fields
-      permitted_params += [ :status_slug, :locked ] if can_access_admin?
+      permissions = {
+        can_access_admin: can_access_admin?,
+        can_edit_tickets: can_edit_tickets?
+      }
 
-      # Allow tag assignment based on permissions
-      if can_assign_tags?
-        permitted_params << { tag_ids: [] }
-      end
-
-      # Allow all field_values as a hash - more flexible approach
-      permitted_params << { field_values: {} }
-
-      # Allow image uploads if enabled
-      if ::Alto.configuration.image_uploads_enabled
-        permitted_params << :images  # Single file (multiple: false)
-        permitted_params << { images: [] }  # Array format (if multiple: true)
-        permitted_params << :remove_images  # Allow image removal
-      end
-
-      params.require(:ticket).permit(*permitted_params)
+      ::Alto::TicketParameterBuilder.new(params, current_user, @board, permissions).build
     end
 
-    def check_submit_permission
-      unless can_submit_tickets?
-        redirect_to [ @board, :tickets ], alert: "You do not have permission to submit tickets"
-      end
-    end
-
-    def check_board_access
-      unless can_access_board?(@board)
-        redirect_to "/", alert: "You do not have permission to access this board."
-      end
-    end
-
-    def track_ticket_view
-      return unless current_user
-
-      begin
-        # Get user email using the configuration system
-        user_email = ::Alto.configuration.user_email.call(current_user.id)
-        return unless user_email.present?
-
-        # Find and update subscription if it exists
-        subscription = @ticket.subscriptions.find_by(email: user_email)
-        subscription&.update_column(:last_viewed_at, Time.current)
-      rescue => e
-        # Log error but don't break the page load
-        Rails.logger.warn "[Alto] Failed to track ticket view: #{e.message}"
-      end
-    end
-
-    def ensure_not_archived
-      if @ticket.archived?
-        redirect_to [ @board, @ticket ], alert: "Archived tickets cannot be modified."
-      end
-    end
-
-    def determine_view_type
-      # If board enforces a single view, use that
-      if @board.single_view.present?
-        @view_type = @board.single_view
-        @show_toggle = false
-        return
-      end
-
-      # If user explicitly chose a view via URL parameter, use it and store preference
-      if params[:view].present?
-        @view_type = params[:view] == "list" ? "list" : "card"
-        # Store user's view preference in session for this board
-        session[:view_preferences] ||= {}
-        session[:view_preferences][@board.slug] = @view_type
-      else
-        # No URL parameter - check for stored preference, fallback to default
-        stored_preferences = session[:view_preferences] || {}
-        @view_type = stored_preferences[@board.slug] || "list"
-      end
-
-      @show_toggle = true
-
-      # Debug logging to understand what's happening
-      Rails.logger.info "[ALTO DEBUG] Board: #{@board.name}, single_view: #{@board.single_view.inspect}, params[:view]: #{params[:view].inspect}, stored_preference: #{session.dig(:view_preferences, @board.slug).inspect}, @view_type: #{@view_type.inspect}, @show_toggle: #{@show_toggle.inspect}"
-    end
-
-    def can_assign_tags?
-      @board.tags_assignable_by?(current_user, can_edit_any_ticket: can_edit_tickets?)
-    end
-
-    def process_multiselect_fields(ticket)
-      return unless ticket.field_values.is_a?(Hash)
-
-      @board.fields.where(field_type: "multiselect").each do |field|
-        field_key = field.label.parameterize.underscore
-
-        if ticket.field_values[field_key].is_a?(Array)
-          # Convert array to comma-separated string
-          ticket.field_values[field_key] = ticket.field_values[field_key].reject(&:blank?).join(",")
-        end
-      end
+    def setup_filter_data
+      @available_statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
+      @available_tags = @board.tags.used.ordered.limit(20)
+      @statuses = @board.available_statuses_for_user(is_admin: can_access_admin?)
     end
   end
 end

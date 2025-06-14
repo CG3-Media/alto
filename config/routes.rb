@@ -20,7 +20,7 @@ Alto::Engine.routes.draw do
       resources :comments, only: [ :create, :destroy, :show ]
       resources :subscribers, only: [ :index, :create, :destroy ] do
         collection do
-          delete :unsubscribe_me  # DELETE /boards/:board_slug/tickets/:ticket_id/subscribers/unsubscribe_me
+          delete :unsubscribe  # DELETE /boards/:board_slug/tickets/:ticket_id/subscribers/unsubscribe
         end
       end
       resources :upvotes, only: [ :create ] do

@@ -1,83 +1,48 @@
 module Alto
   class CommentsController < ::Alto::ApplicationController
+    include BoardScoped
+    include CommentPermissions
+
     before_action :set_board
     before_action :set_ticket
-    before_action :check_comment_permission, only: [ :create ]
-    before_action :set_comment, only: [ :show, :destroy ]
-    before_action :set_parent_comment, only: [ :create ], if: -> { params[:comment] && params[:comment][:parent_id].present? }
-    before_action :ensure_not_archived, only: [ :create, :destroy ]
+    before_action :check_comment_permission, only: [:create]
+    before_action :set_comment, only: [:show, :destroy]
+    before_action :validate_parent_comment, only: [:create], if: -> { params[:comment]&.dig(:parent_id).present? }
+    before_action :ensure_not_archived, only: [:create, :destroy]
 
     def create
       @comment = @ticket.comments.build(comment_params)
       @comment.user_id = current_user.id
+      thread_builder = CommentThreadBuilder.new(@ticket)
 
       if @comment.save
-        if @comment.is_reply?
-          # Redirect to the thread view of the root comment
-          root_comment = @comment.thread_root
-          redirect_to alto.board_ticket_comment_path(@board, @ticket, root_comment),
-                      notice: "Reply was successfully added."
-        else
-          redirect_to alto.board_ticket_path(@board, @ticket, anchor: "comment-#{@comment.id}"),
-                      notice: "Comment was successfully added."
-        end
+        redirect_path = thread_builder.redirect_path_for_reply(@comment, @board, @ticket)
+        redirect_to alto.url_for(redirect_path), notice: success_message_for(@comment)
       else
-        # Handle validation errors
-        if @comment.parent_id.present?
-          # This is a reply that failed validation - redirect back to thread
-          root_comment = @ticket.comments.find(@comment.parent_id).thread_root
-          error_message = "Reply failed: #{@comment.errors.full_messages.join(', ')}"
-          redirect_to alto.board_ticket_comment_path(@board, @ticket, root_comment),
-                      alert: error_message
-        else
-          # This is a top-level comment that failed validation
-          @threaded_comments = ::Alto::Comment.threaded_for_ticket(@ticket)
-          render "alto/tickets/show"
-        end
+        handle_failed_comment_creation(thread_builder)
       end
     end
 
     def show
-      # Get the root comment of this thread
       @root_comment = @comment.thread_root
-
-      # Build threaded structure for this specific comment thread
-      @thread_comments = build_thread_for_comment(@root_comment)
-
-      # Create a new comment for the reply form
-      @new_comment = ::Alto::Comment.new
+      thread_builder = CommentThreadBuilder.new(@ticket)
+      @thread_comments = thread_builder.build_thread_for_comment(@root_comment)
+      @new_comment = Comment.new
     end
 
     def destroy
       if can_delete_comment?(@comment)
-        # Check if we're in a thread view (has referrer to comment show page)
-        if request.referer&.include?("/comments/")
-          # Get the root comment for redirection
-          root_comment = @comment.thread_root
+        thread_builder = CommentThreadBuilder.new(@ticket)
+        redirect_path = thread_builder.redirect_path_for_delete(@comment, @board, @ticket, request.referer)
 
-          # If deleting the root comment, redirect to ticket
-          if @comment.id == root_comment.id
-            @comment.destroy
-            redirect_to [ @board, @ticket ], notice: "Comment thread was successfully deleted."
-          else
-            @comment.destroy
-            redirect_to alto.board_ticket_comment_path(@board, @ticket, root_comment),
-                        notice: "Reply was successfully deleted."
-          end
-        else
-          @comment.destroy
-          redirect_to [ @board, @ticket ], notice: "Comment was successfully deleted."
-        end
+        @comment.destroy
+        redirect_to alto.url_for(redirect_path), notice: delete_success_message(@comment)
       else
-        redirect_to [ @board, @ticket ], alert: "You do not have permission to delete this comment."
+        redirect_to [@board, @ticket], alert: "You do not have permission to delete this comment."
       end
     end
 
     private
-
-    def set_board
-      @board = Board.find(params[:board_slug])
-    end
 
     def set_ticket
       @ticket = @board.tickets.find(params[:ticket_id])
@@ -87,33 +52,11 @@ module Alto
       @comment = @ticket.comments.find(params[:id])
     end
 
-                def set_parent_comment
-      return unless params[:comment][:parent_id].present?
-
-      @parent_comment = @ticket.comments.find(params[:comment][:parent_id])
-
-      unless @parent_comment.can_be_replied_to?
-        redirect_to [ @board, @ticket ], alert: "Cannot reply to this comment."
-        nil
-      end
-    end
-
-            def build_thread_for_comment(root_comment)
-      # Simple approach: get all comments and let build_reply_tree handle the filtering
-      all_comments = @ticket.comments.includes(:parent, :replies, :upvotes).order(:created_at)
-
-      # Build the threaded structure
-      {
-        comment: root_comment,
-        replies: ::Alto::Comment.build_reply_tree(root_comment, all_comments)
-      }
-    end
-
     def comment_params
       permitted_params = [:content, :parent_id]
 
       # Allow image uploads if enabled
-      if ::Alto.configuration.image_uploads_enabled
+      if Alto.configuration.image_uploads_enabled
         permitted_params << :images  # Single file (multiple: false)
         permitted_params << { images: [] }  # Array format (if multiple: true)
         permitted_params << :remove_images  # Allow image removal
@@ -122,26 +65,28 @@ module Alto
       params.require(:comment).permit(*permitted_params)
     end
 
-    def check_comment_permission
-      unless can_comment? && @ticket.can_be_commented_on?
-        redirect_to [ @board, @ticket ], alert: "You cannot comment on this ticket."
+    def handle_failed_comment_creation(thread_builder)
+      redirect_path = thread_builder.redirect_path_for_failed_reply(comment_params, @ticket, @board)
+
+      if redirect_path
+        error_message = "Reply failed: #{@comment.errors.full_messages.join(', ')}"
+        redirect_to alto.url_for(redirect_path), alert: error_message
+      else
+        @threaded_comments = Comment.threaded_for_ticket(@ticket)
+        render "alto/tickets/show"
       end
     end
 
-    def can_delete_comment?(comment)
-      # Users can delete their own comments, or admins can delete any comment
-      comment.user_id == current_user.id || can_moderate_comments?
+    def success_message_for(comment)
+      comment.is_reply? ? "Reply was successfully added." : "Comment was successfully added."
     end
 
-    def can_moderate_comments?
-      # This should be overridden by the host application
-      # Example: current_user.admin? || current_user.can?(:moderate_feedback_comments)
-      false
-    end
-
-    def ensure_not_archived
-      if @ticket.archived?
-        redirect_to [ @board, @ticket ], alert: "Archived tickets cannot be modified."
+    def delete_success_message(comment)
+      root_comment = comment.thread_root
+      if comment.id == root_comment.id
+        "Comment thread was successfully deleted."
+      else
+        "Reply was successfully deleted."
       end
     end
   end

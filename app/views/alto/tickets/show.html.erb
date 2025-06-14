@@ -103,26 +103,7 @@
 
     <!-- Comment Form -->
     <% if can_comment? && @ticket.can_be_commented_on? && !@ticket.archived? %>
-      <div class="p-6 border-b border-gray-200 bg-gray-50">
-        <%= form_with model: [@board, @ticket, @comment], local: true, class: "space-y-4" do |form| %>
-          <div class="text-sm text-gray-600 mb-2 flex items-center space-x-2">
-            <%= render 'alto/shared/user_avatar', user_id: current_user.id, size: :sm %>
-            <span>Commenting as <span class="font-medium text-gray-700"><%= user_display_name(current_user.id) %></span></span>
-          </div>
-          <div>
-            <%= form.text_area :content, placeholder: "Add a comment...", rows: 3,
-                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
-          </div>
-
-          <!-- Image Upload for Comments -->
-          <%= render 'alto/shared/image_upload', form: form, record: @comment %>
-
-          <div class="flex justify-end">
-            <%= form.submit "Post Comment",
-                class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
-          </div>
-        <% end %>
-      </div>
+      <%= render 'alto/comments/form', context: :comment %>
     <% elsif @ticket.archived? %>
       <div class="p-6 border-b border-gray-200 bg-amber-50">
         <p class="text-amber-700 text-sm">📦 This ticket is archived. No new comments can be added.</p>
@@ -155,7 +136,7 @@
     <% if @ticket.user_subscribed?(current_user) %>
       <%= render 'shared/button',
           text: "Unsubscribe",
-          url: alto.unsubscribe_me_board_ticket_subscribers_path(@board, @ticket),
+                          url: alto.unsubscribe_board_ticket_subscribers_path(@board, @ticket),
           method: :delete,
           button_type: :secondary,
           html_options: {

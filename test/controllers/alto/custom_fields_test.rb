@@ -6,17 +6,17 @@ module Alto
 
     def setup
       # Create test objects directly for integration test
-      @user = User.find_or_create_by!(id: 1, email: "test1@example.com")
-      
+      @user = User.find_or_create_by!(email: "test1@example.com")
+
       status_set = Alto::StatusSet.find_or_create_by!(name: "Test Status Set") do |ss|
         ss.is_default = true
       end
       status_set.statuses.find_or_create_by!(slug: "open") do |s|
         s.name = "Open"
-        s.color = "green" 
+        s.color = "green"
         s.position = 0
       end
-      
+
       @bugs_board = Alto::Board.find_or_create_by!(slug: "bug-reports") do |board|
         board.name = "Bug Reports"
         board.description = "Report bugs here"
@@ -27,7 +27,7 @@ module Alto
 
       # Clear existing fields to avoid conflicts
       @bugs_board.fields.destroy_all
-      
+
       # Configure Alto permissions for testing
       ::Alto.configure do |config|
         config.permission :can_access_alto? do
@@ -59,10 +59,11 @@ module Alto
       )
 
       # Mock current_user for testing
+      user = @user
       ::Alto::ApplicationController.define_method(:current_user) do
-        @current_user ||= User.find(1)
+        user
       end
-      
+
       # Set host for URL generation
       host! "example.com"
     end

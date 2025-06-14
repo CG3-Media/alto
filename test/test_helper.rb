@@ -1,3 +1,25 @@
+# Start SimpleCov before any code is loaded
+require 'simplecov'
+SimpleCov.start 'rails' do
+  add_filter '/test/'
+  add_filter '/config/'
+  add_filter '/db/'
+  add_filter '/bin/'
+  add_filter '/log/'
+  add_filter '/tmp/'
+  add_filter '/vendor/'
+
+  # Focus on the main Alto code
+  add_group 'Controllers', 'app/controllers'
+  add_group 'Models', 'app/models'
+  add_group 'Services', 'app/services'
+  add_group 'Views', 'app/views'
+  add_group 'Libraries', 'lib'
+
+  # Set minimum coverage threshold
+  minimum_coverage 50
+end
+
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"
 
@@ -143,6 +165,9 @@ end
 class ActiveSupport::TestCase
   # Use transactional rollback for test isolation instead of manual cleanup
   self.use_transactional_tests = true
+
+  # Note: Parallelization disabled for Rails engine with custom test setup
+  # The complex migration setup conflicts with parallel workers
 
   # Create test data that tests expect
   def setup

@@ -7,12 +7,12 @@ module Alto
     def setup
       @user = User.create!(email: "test1@example.com", name: "Test User 1")
       @user2 = User.create!(email: "test2@example.com", name: "Test User 2")
-      
+
       # Create test status set
       @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
       @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
       @status_set.statuses.create!(name: "Closed", color: "red", position: 1, slug: "closed")
-      
+
       @general_board = Alto::Board.create!(
         name: "General Feedback",
         slug: "general-feedback",
@@ -21,7 +21,7 @@ module Alto
         is_admin_only: false,
         item_label_singular: "ticket"
       )
-      
+
       @bugs_board = Alto::Board.create!(
         name: "Bug Reports",
         slug: "bug-reports",
@@ -48,7 +48,7 @@ module Alto
 
       # Set host for URL generation
       host! "example.com"
-      
+
       # Configure Alto permissions for testing
       ::Alto.configure do |config|
         config.permission :can_access_alto? do
@@ -67,10 +67,11 @@ module Alto
           true
         end
       end
-      
+
       # Mock current_user for testing - use User.find to ensure it exists
+      user = @user
       ::Alto::ApplicationController.define_method(:current_user) do
-        @current_user ||= User.find(1)
+        user
       end
     end
 
