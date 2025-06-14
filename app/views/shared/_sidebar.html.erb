@@ -160,9 +160,9 @@
 </div>
 
 <!-- Mobile Sidebar -->
-<div id="mobile-sidebar-overlay" class="fixed inset-0 z-40 lg:hidden hidden">
+<div id="mobile-sidebar-overlay" class="fixed inset-0 z-40 sm:hidden hidden">
   <div class="fixed inset-0 bg-gray-600 bg-opacity-75" onclick="toggleMobileSidebar()"></div>
-  <div class="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+  <div class="relative flex-1 flex flex-col w-full bg-white">
     <div class="absolute top-0 right-0 -mr-12 pt-2">
       <button type="button" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" onclick="toggleMobileSidebar()">
         <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -171,22 +171,68 @@
       </button>
     </div>
 
-    <div class="flex-shrink-0 flex items-center px-4 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-medium text-gray-900">Navigation</h2>
-    </div>
+    <div class="flex-1 h-0 pt-4 pb-4 overflow-y-auto">
+      <div class="space-y-1">
+                <!-- App Name -->
+        <%= link_to alto.home_path,
+            class: "flex items-center px-4 py-3 text-base font-semibold text-gray-900 hover:bg-gray-50",
+            onclick: "toggleMobileSidebar()" do %>
+          <%= app_name %>
+        <% end %>
 
-    <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto sleek-scrollbar">
-      <div class="px-4 space-y-6">
-        <!-- Mobile version uses simplified content for performance -->
-        <div>
-          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Boards</h3>
-          <nav class="space-y-1">
-            <% Alto::Board.ordered.each do |board| %>
-              <%= link_to board.name, alto.board_tickets_path(board),
-                  class: "block px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900",
-                  onclick: "toggleMobileSidebar()" %>
+        <!-- Search (if board present) -->
+        <% if defined?(current_board) && current_board %>
+          <div class="px-4 py-3 border-b border-gray-100">
+            <%= form_with url: alto.board_tickets_path(current_board), method: :get, local: true, class: "w-full" do |form| %>
+              <div class="relative">
+                <%= form.text_field :search,
+                    value: params[:search],
+                    placeholder: "Search #{current_board_item_name.pluralize rescue 'items'}...",
+                    class: "w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm" %>
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <%= form.hidden_field :status, value: params[:status] %>
+              <%= form.hidden_field :sort, value: params[:sort] %>
             <% end %>
-          </nav>
+          </div>
+        <% end %>
+
+        <!-- Admin Section (if admin) -->
+        <% if can_access_admin? %>
+          <%= link_to alto.admin_dashboard_path,
+              class: "flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50",
+              onclick: "toggleMobileSidebar()" do %>
+            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Admin
+          <% end %>
+        <% end %>
+
+        <!-- Board List -->
+        <div class="border-t border-gray-200 pt-2 mt-2">
+          <% accessible_boards = Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered %>
+          <% accessible_boards.each do |board| %>
+            <%= link_to alto.board_tickets_path(board),
+                class: "flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50",
+                onclick: "toggleMobileSidebar()" do %>
+              <div class="flex items-center">
+                <span class="truncate">
+                  <%= board.name %>
+                  <% if board.admin_only? %>
+                    <span class="ml-1 text-xs">🔒</span>
+                  <% end %>
+                </span>
+              </div>
+              <span class="ml-2 inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                <%= board.tickets_count %>
+              </span>
+            <% end %>
+          <% end %>
         </div>
       </div>
     </div>
