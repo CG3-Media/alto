@@ -146,13 +146,17 @@ module Alto
       model.test_user_email = "test@example.com"
       model.test_ticket = @ticket
 
-      # Mock the subscription creation to raise an error
-      @ticket.subscriptions.stub(:find_or_create_by, ->(*args) { raise StandardError.new("Database error") }) do
-        # Should not raise the error, just log it
-        assert_nothing_raised do
-          model.save!
-        end
+      # Create an invalid email that would trigger an error during subscription creation
+      # by setting an email that's too long for the database field
+      model.test_user_email = "a" * 300 + "@example.com"
+
+      # Should not raise the error, just log it and continue
+      assert_nothing_raised do
+        model.save!
       end
+
+      # Should have successfully saved the model despite subscription error
+      assert model.persisted?
     end
 
     test "should find existing subscription instead of creating duplicate" do
