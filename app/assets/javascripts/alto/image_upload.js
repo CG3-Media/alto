@@ -19,7 +19,6 @@ class AltoImageUpload {
   }
 
   init() {
-    console.log('AltoImageUpload init')
     this.setupEventListeners()
     this.setupDirectUploadListeners()
   }
@@ -157,7 +156,7 @@ class AltoImageUpload {
 
   uploadProgress(event) {
     // Could add progress bar here if needed
-    console.log('Upload progress:', event.detail.progress)
+    // Progress tracking available at event.detail.progress
   }
 
   uploadEnd() {
@@ -208,21 +207,16 @@ class AltoImageUpload {
 
 // Auto-initialize image upload components
 function initializeImageUploads() {
-  console.log('🔍 Looking for image upload components...')
   const components = document.querySelectorAll('.image-upload-component:not([data-initialized])')
-  console.log(`📦 Found ${components.length} image upload components`)
 
   components.forEach(container => {
-    console.log('🚀 Initializing image upload component:', container)
     new AltoImageUpload(container)
     container.setAttribute('data-initialized', 'true')
   })
 }
 
 // Initialize on DOM ready (works with all Rails versions)
-console.log('📜 Alto Image Upload script loaded')
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🎯 DOM ready, initializing image uploads...')
   initializeImageUploads()
 })
 

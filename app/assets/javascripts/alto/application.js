@@ -20,7 +20,6 @@ function initializeUpvoteButtons() {
     e.stopPropagation();
     e.stopImmediatePropagation();
 
-    console.log('🎯 Upvote button clicked, handling with AJAX');
     handleUpvoteClick(upvoteButton);
   }, true); // Use capture phase to run before Rails UJS
 }
@@ -30,15 +29,6 @@ function handleUpvoteClick(button) {
   const method = button.dataset.method || 'POST';
   const upvotableId = button.dataset.upvotableId;
   const upvotableType = button.dataset.upvotableType;
-
-  // Debug logging for troubleshooting
-  console.log('🎯 Upvote click detected:', {
-    url: url,
-    method: method,
-    upvotableId: upvotableId,
-    upvotableType: upvotableType,
-    buttonElement: button
-  });
 
   // Disable button during request with better visual feedback
   button.style.pointerEvents = 'none';
@@ -54,13 +44,6 @@ function handleUpvoteClick(button) {
     }
   })
     .then(response => {
-    // Debug logging for troubleshooting
-    console.log('🌐 Response received:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
-    });
-
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -68,18 +51,12 @@ function handleUpvoteClick(button) {
     return response.json();
   })
   .then(data => {
-    // Debug logging for troubleshooting
-    console.log('📦 Response data:', data);
-
     if (data.error) {
       throw new Error(data.error);
     }
 
     updateUpvoteButton(button, data.upvoted, data.upvotes_count);
     updateUpvoteUrl(button, data.upvoted);
-
-    // Debug logging for troubleshooting
-    console.log('✅ Upvote update completed successfully');
   })
   .catch(error => {
     console.error('🚨 Upvote error:', error);
@@ -135,14 +112,7 @@ function updateUpvoteUrl(button, isUpvoted) {
   // The URL stays the same - it's always the toggle endpoint
   button.dataset.method = 'DELETE';
 
-  // Debug logging (uncomment for troubleshooting)
-  // console.log('Updated upvote button:', {
-  //   url: button.href,
-  //   method: button.dataset.method,
-  //   upvotableId: button.dataset.upvotableId,
-  //   upvotableType: button.dataset.upvotableType,
-  //   isUpvoted: isUpvoted
-  // });
+
 }
 
 function getCSRFToken() {

@@ -172,9 +172,7 @@ class RFSignals {
 
   // Debug helper
   debug() {
-    console.log('🎯 RF Signals State:', Object.fromEntries(
-      Array.from(this.signals.entries()).map(([key, signal]) => [key, signal.value])
-    ))
+    // Debug method available for manual debugging if needed
   }
 }
 
@@ -635,10 +633,7 @@ class RFInstance {
       preview[groupName] = this.serializeNestedGroup(groupName, nestedContainer)
     })
 
-    console.group(`🔥 RRF Live Preview - ${this.modelName}`)
-    console.log('📦 Current form data:', preview)
-    console.log('📤 JSON for backend:', JSON.stringify(preview, null, 2))
-    console.groupEnd()
+    // Preview data available for debugging if needed
 
     return preview
   }

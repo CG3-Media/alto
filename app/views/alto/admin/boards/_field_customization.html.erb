@@ -109,39 +109,33 @@ document.addEventListener('DOMContentLoaded', function() {
   if (container) {
     // General update event - fires on ANY change
     container.addEventListener('rf:updated', (e) => {
-      console.log(`🔥 Form Updated [${e.detail.action}]:`, e.detail.serializedData)
+      // Form updated - data available in e.detail.serializedData
     })
 
     // Specific events for detailed handling
     container.addEventListener('rf:field:add', (e) => {
-      console.log('➕ Field added:', e.detail)
+      // Field added - details available in e.detail
     })
 
     container.addEventListener('rf:field:remove', (e) => {
-      console.log('🗑️ Field removed:', e.detail)
+      // Field removed - details available in e.detail
     })
 
     container.addEventListener('rf:field:change', (e) => {
-      console.log(`🔄 Reactive field '${e.detail.key}' changed:`, e.detail.value)
-      console.log(`📊 Current RRF state:`, e.detail.instance.signals.signals)
-
       // Update preview when field type changes
       if (e.detail.key.startsWith('field-type-')) {
         updateFieldPreview(e.detail.key, e.detail.value)
-
-        // Signals system handles visibility updates automatically - no manual intervention needed
-        console.log(`🎯 Signals will handle visibility for ${e.detail.key}`)
+        // Signals system handles visibility updates automatically
       }
     })
 
     container.addEventListener('rf:serialize', (e) => {
-      console.log('📤 Final serialization for form submission')
+      // Form serialization complete
     })
   }
 
   function updateFieldPreview(fieldTypeKey, newType) {
     // Could add logic here to update preview labels/placeholders dynamically
-    console.log(`🎭 Preview updated for ${fieldTypeKey}: ${newType}`)
   }
 })
 </script>

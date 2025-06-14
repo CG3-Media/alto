@@ -232,5 +232,5 @@ function initializeMultiSelect(container) {
     });
   }
 
-  console.log('Multi-select initialized for', modelName, 'with', selectedValues.size, 'selected items');
+      // Multi-select initialized
 }
