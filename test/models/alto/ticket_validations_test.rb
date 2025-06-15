@@ -3,18 +3,22 @@ require "test_helper"
 module Alto
   class TicketValidationsTest < ActiveSupport::TestCase
     def setup
-      @user1 = User.find_or_create_by!(id: 1, email: "test1@example.com")
-      @user2 = User.find_or_create_by!(id: 2, email: "test2@example.com")
+      @user1 = users(:one)
+      @user2 = users(:two)
       @status_set = alto_status_sets(:default)
-      @board = alto_boards(:general)
+      @board = alto_boards(:bugs)
     end
 
     test "should create ticket with valid attributes" do
       ticket = Ticket.new(
         title: "Test Ticket",
         description: "A test ticket description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Medium",
+          "steps_to_reproduce" => "1. Open browser\n2. Navigate to page\n3. Observe issue"
+        }
       )
 
       assert ticket.valid?
@@ -25,7 +29,7 @@ module Alto
     test "should require title" do
       ticket = Ticket.new(
         description: "No title",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board
       )
 
@@ -36,7 +40,7 @@ module Alto
     test "should require description" do
       ticket = Ticket.new(
         title: "Title Only",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board
       )
 
@@ -59,8 +63,12 @@ module Alto
       ticket = Ticket.create!(
         title: "Board Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Low",
+          "steps_to_reproduce" => "Basic reproduction steps"
+        }
       )
 
       assert_equal @board, ticket.board
@@ -70,12 +78,16 @@ module Alto
       ticket = Ticket.create!(
         title: "Ticket with Comments",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "High",
+          "steps_to_reproduce" => "Steps for commenting test"
+        }
       )
 
-      comment1 = ticket.comments.create!(content: "First comment", user_id: 1)
-      comment2 = ticket.comments.create!(content: "Second comment", user_id: 2)
+      comment1 = ticket.comments.create!(content: "First comment", user_id: @user1.id)
+      comment2 = ticket.comments.create!(content: "Second comment", user_id: @user2.id)
 
       assert_equal 2, ticket.comments.count
       assert_includes ticket.comments, comment1
@@ -86,12 +98,16 @@ module Alto
       ticket = Ticket.create!(
         title: "Upvoted Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Critical",
+          "steps_to_reproduce" => "Steps for upvoting test"
+        }
       )
 
-      upvote1 = ticket.upvotes.create!(user_id: 1)
-      upvote2 = ticket.upvotes.create!(user_id: 2)
+      upvote1 = ticket.upvotes.create!(user_id: @user1.id)
+      upvote2 = ticket.upvotes.create!(user_id: @user2.id)
 
       assert_equal 2, ticket.upvotes.count
       assert_includes ticket.upvotes, upvote1
@@ -102,14 +118,18 @@ module Alto
       ticket = Ticket.create!(
         title: "Vote Counter",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Medium",
+          "steps_to_reproduce" => "Steps for vote counting"
+        }
       )
 
       assert_equal 0, ticket.upvotes_count
 
-      ticket.upvotes.create!(user_id: 1)
-      ticket.upvotes.create!(user_id: 2)
+      ticket.upvotes.create!(user_id: @user1.id)
+      ticket.upvotes.create!(user_id: @user2.id)
 
       assert_equal 2, ticket.upvotes_count
     end
@@ -118,13 +138,17 @@ module Alto
       ticket = Ticket.create!(
         title: "User Vote Check",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Low",
+          "steps_to_reproduce" => "Steps for user vote check"
+        }
       )
 
-      # Mock user object
-      user = Struct.new(:id).new(1)
-      other_user = Struct.new(:id).new(2)
+      # Use fixture users instead of mocks
+      user = @user1
+      other_user = @user2
 
       assert_not ticket.upvoted_by?(user)
 
@@ -138,8 +162,12 @@ module Alto
       ticket = Ticket.create!(
         title: "Unlocked Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Medium",
+          "steps_to_reproduce" => "Steps for lock test"
+        }
       )
 
       assert_not ticket.locked?
@@ -151,9 +179,13 @@ module Alto
       ticket = Ticket.create!(
         title: "Locked Ticket",
         description: "Description",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
-        locked: true
+        locked: true,
+        field_values: {
+          "severity" => "High",
+          "steps_to_reproduce" => "Steps for locked ticket test"
+        }
       )
 
       assert ticket.locked?
