@@ -8,7 +8,7 @@ module Alto
       @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
 
       # Filter by accessible boards
-      @tickets = @tickets.joins(:board).where(boards: { is_admin_only: false }) unless can_access_admin?
+      @tickets = @tickets.joins(:board).where(alto_boards: { is_admin_only: false }) unless can_access_admin?
 
       # Apply search filter
       @tickets = @tickets.search(params[:search]) if params[:search].present?

@@ -89,6 +89,7 @@ Rails.application.config.active_storage.service_configurations = {
 
 # Load Rails test framework
 require "rails/test_help"
+require "rails-controller-testing"
 
 # Load ApplicationController first
 require_relative "../app/controllers/alto/application_controller"

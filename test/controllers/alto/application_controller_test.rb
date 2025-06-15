@@ -2,6 +2,7 @@ require "test_helper"
 
 module Alto
   class ApplicationControllerTest < ActionController::TestCase
+    include AltoAuthTestHelper
     class MockUser
       attr_accessor :id, :email, :admin
 
@@ -43,10 +44,16 @@ module Alto
       end
     end
 
-        def setup
+    def setup
+      # Clean slate - no special permissions configured
+      teardown_alto_permissions
       @controller = TestController.new
       @user = MockUser.new
       @board = Board.new(id: 1, name: "Test Board", slug: "test")
+    end
+
+    def teardown
+      teardown_alto_permissions
     end
 
     test "permission methods exist and are callable" do
