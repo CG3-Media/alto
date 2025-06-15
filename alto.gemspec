@@ -26,5 +26,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "kaminari", "~> 1.2"
 
   spec.add_development_dependency "simplecov", "~> 0.22"
-  spec.add_development_dependency "rails-controller-testing", "~> 1.0"
 end
