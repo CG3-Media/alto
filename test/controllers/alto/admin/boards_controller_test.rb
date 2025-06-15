@@ -70,8 +70,12 @@ module Alto
       end
 
       test "non-admin user cannot access admin area" do
-        # Use regular user permissions
-        setup_alto_permissions(can_access_admin: false)
+        # Clear the admin permissions set in setup and configure non-admin user
+        ::Alto.configure do |config|
+          config.permission :can_access_admin? do
+            false
+          end
+        end
 
         get admin_boards_path
         # Should redirect or return 403/401
