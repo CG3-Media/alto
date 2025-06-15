@@ -6,21 +6,13 @@ module Alto
       include ::Alto::Engine.routes.url_helpers
 
       def setup
-        # Create test user with email method to prevent configuration conflicts
-        @user = User.create!(email: "test@example.com", name: "Test User")
-        @admin = User.create!(email: "admin@example.com", name: "Admin User")
+        # Use fixtures instead of manual creation
+        @user = users(:one)
+        @admin = users(:admin)
 
-        # Create test status set
-        @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
-        @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
-
-        # Create test board
-        @board = Board.create!(
-          name: "Test Board",
-          is_admin_only: false,
-          item_label_singular: "ticket",
-          status_set: @status_set
-        )
+        # Use existing fixture status set and board
+        @status_set = alto_status_sets(:default)
+        @board = alto_boards(:bugs)
 
         # Set up clean Alto configuration for admin tests
         ::Alto.configure do |config|
@@ -28,7 +20,7 @@ module Alto
             true
           end
           config.permission :can_access_admin? do
-            current_user&.email == "admin@example.com" # Only admin user can access admin
+            current_user&.email == "admin@example.com" # Use fixture admin email directly
           end
         end
 
@@ -46,7 +38,7 @@ module Alto
       test "admin routes exist" do
         # Set current user to admin for this test
         ::Alto::ApplicationController.define_method(:current_user) do
-          User.find_by(email: "admin@example.com")
+          @admin
         end
 
         # Just verify the routes exist - any response is fine
@@ -62,7 +54,7 @@ module Alto
       test "new board form renders at least one field input" do
         # Set current user to admin for this test
         ::Alto::ApplicationController.define_method(:current_user) do
-          User.find_by(email: "admin@example.com")
+          @admin
         end
 
         get new_admin_board_path
@@ -73,7 +65,7 @@ module Alto
       test "create board with empty field does not persist field" do
         # Set current user to admin for this test
         ::Alto::ApplicationController.define_method(:current_user) do
-          User.find_by(email: "admin@example.com")
+          @admin
         end
 
         assert_difference("Alto::Board.count") do
@@ -108,7 +100,7 @@ module Alto
       test "non-admin user cannot access admin area" do
         # Use regular user (not admin)
         ::Alto::ApplicationController.define_method(:current_user) do
-          User.find_by(email: "test@example.com") # Regular user
+          @user # Regular user
         end
 
         get admin_boards_path
@@ -119,7 +111,7 @@ module Alto
       test "admin user can access admin area" do
         # Set current user to admin
         ::Alto::ApplicationController.define_method(:current_user) do
-          User.find_by(email: "admin@example.com")
+          @admin
         end
 
         get admin_boards_path
@@ -130,7 +122,7 @@ module Alto
       test "admin can create board successfully" do
         # Set current user to admin
         ::Alto::ApplicationController.define_method(:current_user) do
-          User.find_by(email: "admin@example.com")
+          @admin
         end
 
         assert_difference("Alto::Board.count") do
