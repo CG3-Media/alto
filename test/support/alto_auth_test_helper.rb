@@ -1,8 +1,5 @@
 module AltoAuthTestHelper
   def setup_alto_permissions(can_manage_boards: false, can_access_admin: false)
-    # Always start with a clean slate
-    teardown_alto_permissions
-
     # Only stub unavoidable I/O - the permission configuration
     ::Alto.configure do |config|
       config.permission :can_access_alto? do
@@ -36,28 +33,7 @@ module AltoAuthTestHelper
   end
 
   def teardown_alto_permissions
-    # Clean up configuration completely
+    # Clean up between tests
     ::Alto.instance_variable_set(:@configuration, nil)
-
-    # Remove any dynamically defined methods - be more aggressive
-    begin
-      if ::Alto::ApplicationController.method_defined?(:current_user)
-        ::Alto::ApplicationController.remove_method(:current_user)
-      end
-    rescue NameError
-      # Method wasn't defined, that's fine
-    end
-
-    # Also check for private method
-    begin
-      if ::Alto::ApplicationController.private_method_defined?(:current_user)
-        ::Alto::ApplicationController.remove_method(:current_user)
-      end
-    rescue NameError
-      # Method wasn't defined, that's fine
-    end
-
-    # Reset to fresh configuration - this creates a new clean instance
-    ::Alto.configure { }
   end
 end
