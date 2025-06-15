@@ -28,7 +28,11 @@ require 'rails'
 require 'active_record/railtie'
 require 'action_controller/railtie'
 require 'action_view/railtie'
+require 'action_mailer/railtie'
+# require 'action_cable/railtie' # Not used in this engine
+require 'active_job/railtie'
 require 'active_storage/engine'
+require 'rails/test_unit/railtie'
 require 'sqlite3'
 
 # Load the engine BEFORE creating the Rails app
@@ -88,6 +92,9 @@ require "rails/test_help"
 
 # Load ApplicationController first
 require_relative "../app/controllers/alto/application_controller"
+
+# Load test support helpers
+require_relative "support/alto_auth_test_helper"
 
 # Run migrations directly
 require_relative "../db/migrate/20250115000000_add_alto_trigram_search"
@@ -161,205 +168,33 @@ ActiveRecord::Base.connection.create_table :active_storage_variant_records, if_n
   t.foreign_key :active_storage_blobs, column: :blob_id
 end
 
-# Configure proper test isolation strategy
+# Configure proper Rails fixture loading
 class ActiveSupport::TestCase
-  # Use transactional rollback for test isolation instead of manual cleanup
+  # Use transactional rollback for test isolation
   self.use_transactional_tests = true
 
-  # Note: Parallelization disabled for Rails engine with custom test setup
-  # The complex migration setup conflicts with parallel workers
+  # Set fixture path for the engine
+  self.fixture_path = File.expand_path("../fixtures", __FILE__)
 
-  # Create test data that tests expect
-  def setup
-    super
-    create_test_data unless @test_data_created
-    @test_data_created = true
-  end
+  # Load all fixtures (Rails convention)
+  fixtures :all
 
-  private
+  # Map namespaced models to fixture files
+  set_fixture_class alto_status_sets: Alto::StatusSet,
+                    alto_statuses: Alto::Status,
+                    alto_boards: Alto::Board,
+                    alto_tags: Alto::Tag,
+                    alto_tickets: Alto::Ticket,
+                    alto_taggings: Alto::Tagging,
+                    alto_fields: Alto::Field
 
-  def create_test_data
-    # Create test users first
-    @user_one = User.find_or_create_by(email: "user1@example.com") do |user|
-      user.name = "Test User One"
-    end
-
-    @user_two = User.find_or_create_by(email: "user2@example.com") do |user|
-      user.name = "Test User Two"
-    end
-
-    @user_three = User.find_or_create_by(email: "user3@example.com") do |user|
-      user.name = "Test User Three"
-    end
-
-    # Create user without email for specific tests
-    @user_no_email = User.create!(name: "User Without Email")
-
-    # Create default status set that tests expect
-    @default_status_set = Alto::StatusSet.find_or_create_by(name: "Default Status Set") do |status_set|
-      status_set.is_default = true
-      status_set.description = "Default status set for testing"
-    end
-
-    # Create default statuses (tests expect 3 statuses)
-    @open_status = @default_status_set.statuses.find_or_create_by(slug: "open") do |status|
-      status.name = "Open"
-      status.color = "green"
-      status.position = 0
-    end
-
-    @in_progress_status = @default_status_set.statuses.find_or_create_by(slug: "in_progress") do |status|
-      status.name = "In Progress"
-      status.color = "yellow"
-      status.position = 1
-    end
-
-    @closed_status = @default_status_set.statuses.find_or_create_by(slug: "closed") do |status|
-      status.name = "Closed"
-      status.color = "red"
-      status.position = 2
-    end
-
-    # Create test boards that tests expect
-    @bugs_board = Alto::Board.find_or_create_by(slug: "bugs") do |board|
-      board.name = "Bug Reports"
-      board.description = "Report bugs here"
-      board.status_set = @default_status_set
-      board.is_admin_only = false
-      board.item_label_singular = "bug"
-    end
-
-    # Create required fields for bugs board (expected by tests)
-    @bugs_board.fields.find_or_create_by(label: "Severity") do |field|
-      field.field_type = "select"
-      field.field_options = ["Low", "Medium", "High", "Critical"]
-      field.required = true
-      field.position = 0
-    end
-
-    @bugs_board.fields.find_or_create_by(label: "Steps to Reproduce") do |field|
-      field.field_type = "textarea"
-      field.required = true
-      field.position = 1
-    end
-
-    @general_board = Alto::Board.find_or_create_by(slug: "general") do |board|
-      board.name = "General Feedback"
-      board.description = "General feedback and suggestions"
-      board.status_set = @default_status_set
-      board.is_admin_only = false
-      board.item_label_singular = "ticket"
-    end
-
-    # Create test tickets that tests expect
-    @ticket_one = Alto::Ticket.find_or_create_by(title: "Dark mode implementation") do |ticket|
-      ticket.description = "Add dark theme support to the application"
-      ticket.status_slug = "open"
-      ticket.board = @bugs_board
-      ticket.user_id = @user_one.id
-      ticket.user_type = "User"
-    end
-
-    @ticket_two = Alto::Ticket.find_or_create_by(title: "Bug in user login") do |ticket|
-      ticket.description = "Users cannot log in with special characters in password"
-      ticket.status_slug = "in_progress"
-      ticket.board = @bugs_board
-      ticket.user_id = @user_two.id
-      ticket.user_type = "User"
-    end
-
-    @ticket_three = Alto::Ticket.find_or_create_by(title: "User preferences") do |ticket|
-      ticket.description = "Allow users to save their preferred settings"
-      ticket.status_slug = "open"
-      ticket.board = @general_board
-      ticket.user_id = @user_three.id
-      ticket.user_type = "User"
-    end
-
-    # Create test comments that tests expect (only if tickets exist)
-    if @ticket_one&.persisted?
-      @comment_one = Alto::Comment.find_or_create_by(
-        content: "This is a great idea!",
-        ticket: @ticket_one,
-        user_id: @user_two.id,
-        user_type: "User"
-      )
-
-      @comment_two = Alto::Comment.find_or_create_by(
-        content: "I agree, this would be very useful",
-        ticket: @ticket_one,
-        user_id: @user_three.id,
-        user_type: "User"
-      )
-    end
-  end
-
-  # Helper method to access status set like fixtures
-  def alto_status_sets(name)
-    case name
-    when :default
-      @default_status_set || create_test_data && @default_status_set
-    else
-      nil
-    end
-  end
-
-  # Helper method to access boards like fixtures
-  def alto_boards(name)
-    case name
-    when :bugs
-      @bugs_board || create_test_data && @bugs_board
-    when :general
-      @general_board || create_test_data && @general_board
-    else
-      nil
-    end
-  end
-
-  # Helper method to access tickets like fixtures
-  def alto_tickets(name)
-    case name
-    when :one
-      @ticket_one || create_test_data && @ticket_one
-    when :two
-      @ticket_two || create_test_data && @ticket_two
-    when :three
-      @ticket_three || create_test_data && @ticket_three
-    else
-      nil
-    end
-  end
-
-  # Helper method to access comments like fixtures
-  def alto_comments(name)
-    case name
-    when :one
-      @comment_one || create_test_data && @comment_one
-    when :two
-      @comment_two || create_test_data && @comment_two
-    else
-      nil
-    end
-  end
-
-  # Helper method to access users like fixtures
-  def users(name)
-    case name
-    when :one
-      @user_one || create_test_data && @user_one
-    when :two
-      @user_two || create_test_data && @user_two
-    when :three
-      @user_three || create_test_data && @user_three
-    when :no_email
-      @user_no_email || create_test_data && @user_no_email
-    else
-      nil
-    end
-  end
+  # Enable parallel testing (Rule #5) - Disabled for in-memory SQLite
+  # parallelize(workers: :number_of_processors)
 end
 
 class ActionDispatch::IntegrationTest
   # Use transactional rollback for integration tests too
   self.use_transactional_tests = true
+
+  include AltoAuthTestHelper
 end

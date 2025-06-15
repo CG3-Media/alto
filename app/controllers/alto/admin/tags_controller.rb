@@ -67,16 +67,16 @@ module Alto
       end
 
       def set_tag
-        @tag = @board.tags.find(params[:id])
+        @tag = @board.tags.find_by!(slug: params[:slug])
       end
 
       def tag_params
-        params.require(:tag).permit(:name, :color)
+        params.require(:tag).permit(:name, :slug, :color)
       end
 
       def ensure_can_manage_boards
         unless can_manage_boards?
-          redirect_to alto_home_path, alert: "You do not have permission to manage tags."
+          redirect_to boards_path, alert: "You do not have permission to manage tags."
         end
       end
     end

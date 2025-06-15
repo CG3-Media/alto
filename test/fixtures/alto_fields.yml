@@ -1,7 +1,7 @@
 # Severity field for bug reports
 severity:
   id: 1
-  board_id: 4  # bugs board
+  board_id: 1  # alto_boards(:bugs)
   label: "Severity"
   field_type: "select"
   field_options: ["Low", "Medium", "High", "Critical"]
@@ -13,7 +13,7 @@ severity:
 # Browser field for bug reports
 browser:
   id: 2
-  board_id: 4  # bugs board
+  board_id: 1  # alto_boards(:bugs)
   label: "Browser/Platform"
   field_type: "text_input"
   placeholder: "e.g., Chrome 120, iOS 17.2"
@@ -25,7 +25,7 @@ browser:
 # Steps to reproduce for bug reports
 steps:
   id: 3
-  board_id: 4  # bugs board
+  board_id: 1  # alto_boards(:bugs)
   label: "Steps to Reproduce"
   field_type: "textarea"
   placeholder: "Please list the steps to reproduce this issue..."
@@ -37,7 +37,7 @@ steps:
 # Priority field for features
 priority:
   id: 4
-  board_id: 2  # features board
+  board_id: 2  # alto_boards(:features)
   label: "Priority Level"
   field_type: "select"
   field_options: ["Nice to have", "Important", "Critical", "Urgent"]
@@ -49,7 +49,7 @@ priority:
 # User types for features (multiselect)
 user_types:
   id: 5
-  board_id: 2  # features board
+  board_id: 2  # alto_boards(:features)
   label: "Affected User Types"
   field_type: "multiselect"
   field_options: ["End Users", "Administrators", "Developers", "Content Creators"]

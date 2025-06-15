@@ -29,6 +29,16 @@
             helper_text: "Tag names should be lowercase, and can contain letters, numbers, hyphens, underscores, and dots.",
             html_options: { 'rf-key': 'tag-name' } %>
 
+        <!-- Tag Slug -->
+        <%= render 'shared/forms/input',
+            form: f,
+            field_name: :slug,
+            placeholder: "e.g., bug, feature, urgent",
+            model: @tag,
+            required: false,
+            helper_text: "Leave blank to auto-generate from name. Only lowercase letters, numbers, and hyphens allowed.",
+            html_options: { 'rf-key': 'tag-slug' } %>
+
         <!-- Tag Color -->
         <div>
           <%= f.label :color, class: "block text-sm font-medium text-gray-700" %>

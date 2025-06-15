@@ -1,0 +1,53 @@
+# Model class: Alto::Tag
+
+# Tags for the bugs board
+feature:
+  id: 1
+  name: "feature"
+  slug: "feature"
+  color: "#007bff"
+  board_id: 1  # alto_boards(:bugs)
+  usage_count: 2
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+bug:
+  id: 2
+  name: "bug"
+  slug: "bug"
+  color: "#dc3545"
+  board_id: 1  # alto_boards(:bugs)
+  usage_count: 1
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+enhancement:
+  id: 3
+  name: "enhancement"
+  slug: "enhancement"
+  color: "#28a745"
+  board_id: 1  # alto_boards(:bugs)
+  usage_count: 0
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+# Tags for the features board
+ui:
+  id: 4
+  name: "ui"
+  slug: "ui"
+  color: "#6610f2"
+  board_id: 2  # alto_boards(:features)
+  usage_count: 1
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+api:
+  id: 5
+  name: "api"
+  slug: "api"
+  color: "#fd7e14"
+  board_id: 2  # alto_boards(:features)
+  usage_count: 0
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

@@ -1,0 +1,23 @@
+# Model class: Alto::Ticket
+
+test_ticket:
+  id: 1
+  title: "Test Ticket"
+  description: "Test Description"
+  board_id: 1  # alto_boards(:bugs)
+  status_slug: "open"
+  user_type: "User"
+  user_id: 1  # users(:one)
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+feature_ticket:
+  id: 2
+  title: "Feature Request"
+  description: "Add new feature"
+  board_id: 1  # alto_boards(:bugs)
+  status_slug: "open"
+  user_type: "User"
+  user_id: 2  # users(:two)
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
