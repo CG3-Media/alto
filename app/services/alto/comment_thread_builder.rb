@@ -57,7 +57,7 @@ module Alto
     attr_reader :ticket, :comment
 
     def in_thread_view?(referrer)
-      referrer&.include?("/comments/")
+      referrer&.include?("/comments/") || false
     end
   end
 end
