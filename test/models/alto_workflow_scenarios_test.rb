@@ -4,20 +4,12 @@ module Alto
   class WorkflowScenariosTest < ActiveSupport::TestCase
     # Rule 2: Prefer fixtures over factories
     def setup
-      @status_set = StatusSet.create!(name: "Default", is_default: true)
-      @open_status = @status_set.statuses.create!(name: "Open", color: "green", position: 1, slug: "open")
-      @closed_status = @status_set.statuses.create!(name: "Closed", color: "red", position: 2, slug: "closed")
-
-      @board = Board.create!(
-        name: "Feature Requests",
-        slug: "feature-requests",
-        description: "Board for feature requests",
-        status_set: @status_set,
-        item_label_singular: "feature"
-      )
-
-      @user1 = User.create!(email: "user1@example.com")
-      @user2 = User.create!(email: "user2@example.com")
+      @status_set = alto_status_sets(:default)
+      @open_status = alto_statuses(:open)
+      @closed_status = alto_statuses(:closed)
+      @board = alto_boards(:features)  # Use features board from fixtures
+      @user1 = users(:one)
+      @user2 = users(:two)
     end
 
     # Test ticket lifecycle scenarios
@@ -28,11 +20,14 @@ module Alto
           title: "Add dark mode",
           description: "Users want dark mode support",
           user_id: @user1.id,
-          board: @board
+          board: @board,
+          field_values: {
+            "priority_level" => "Important"
+          }
         )
 
         assert ticket.persisted?
-        assert_equal "open", ticket.status_slug
+        assert_equal "requested", ticket.status_slug
       end
     end
 
@@ -41,7 +36,10 @@ module Alto
         title: "API Documentation",
         description: "Need better API docs",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Critical"
+        }
       )
 
       # Rule 7: Assert DB side-effects
@@ -70,7 +68,10 @@ module Alto
         title: "Mobile App",
         description: "Build a mobile app",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Urgent"
+        }
       )
 
       # Rule 7: Assert DB side-effects
@@ -113,7 +114,10 @@ module Alto
         title: "New Feature Request",
         description: "Description here",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Nice to have"
+        }
       )
 
       # Verify ticket was created
@@ -130,7 +134,10 @@ module Alto
         title: "Fix login issue",
         description: "Login form is broken",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Critical"
+        }
       )
 
       # Rule 7: Assert DB side-effects
@@ -155,15 +162,18 @@ module Alto
         title: "Status Test",
         description: "Testing status changes",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Important"
+        }
       )
 
-      # Should start as open
-      assert_equal "open", ticket.status_slug
+      # Should start as requested
+      assert_equal "requested", ticket.status_slug
 
-      # Change to closed
-      ticket.update!(status_slug: "closed")
-      assert_equal "closed", ticket.status_slug
+      # Change to implemented
+      ticket.update!(status_slug: "implemented")
+      assert_equal "implemented", ticket.status_slug
     end
 
     test "board with multiple tickets workflow" do
@@ -176,21 +186,30 @@ module Alto
           title: "First Feature",
           description: "First description",
           user_id: @user1.id,
-          board: @board
+          board: @board,
+          field_values: {
+            "priority_level" => "Important"
+          }
         )
 
         tickets << Ticket.create!(
           title: "Second Feature",
           description: "Second description",
           user_id: @user2.id,
-          board: @board
+          board: @board,
+          field_values: {
+            "priority_level" => "Nice to have"
+          }
         )
 
         tickets << Ticket.create!(
           title: "Third Feature",
           description: "Third description",
           user_id: @user1.id,
-          board: @board
+          board: @board,
+          field_values: {
+            "priority_level" => "Urgent"
+          }
         )
       end
 
@@ -207,7 +226,10 @@ module Alto
         title: "Subscription Test",
         description: "Testing subscriptions",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Important"
+        }
       )
 
       # Rule 7: Assert DB side-effects
@@ -226,7 +248,10 @@ module Alto
         title: "Archive Test",
         description: "Testing archive functionality",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Nice to have"
+        }
       )
 
       # Should not be archived by default
@@ -247,7 +272,10 @@ module Alto
         title: "Complex Comments",
         description: "Testing complex comment threads",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Critical"
+        }
       )
 
       # Create nested comment structure
@@ -283,7 +311,10 @@ module Alto
         title: "Feature Request",
         description: "A feature",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Important"
+        }
       )
 
       bug_ticket = Ticket.create!(
@@ -291,6 +322,7 @@ module Alto
         description: "A bug",
         user_id: @user1.id,
         board: other_board
+        # other_board likely doesn't have required fields
       )
 
       # Verify isolation
@@ -306,7 +338,10 @@ module Alto
         title: "Integration Test",
         description: "Testing upvotes and comments together",
         user_id: @user1.id,
-        board: @board
+        board: @board,
+        field_values: {
+          "priority_level" => "Urgent"
+        }
       )
 
       comment = ticket.comments.create!(
