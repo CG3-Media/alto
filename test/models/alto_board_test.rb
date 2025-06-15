@@ -86,7 +86,7 @@ module Alto
       statuses = board.available_statuses
 
       assert_equal 3, statuses.count
-      assert_equal [ "open", "in-progress", "closed" ], statuses.map(&:slug)
+      assert_equal [ "open", "in_progress", "closed" ], statuses.map(&:slug)
     end
 
     test "should find status by slug" do

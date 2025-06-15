@@ -6,7 +6,7 @@ module Alto
       # Create status set first
       @status_set = StatusSet.create!(name: "Default", is_default: true)
       @status_set.statuses.create!(name: "Open", color: "green", position: 1, slug: "open")
-      
+
       # Create boards
       @board = Board.create!(
         name: "General Feedback",
@@ -15,9 +15,9 @@ module Alto
         status_set: @status_set,
         item_label_singular: "ticket"
       )
-      
+
       @other_board = Board.create!(
-        name: "Bug Reports", 
+        name: "Bug Reports",
         slug: "bug-reports",
         description: "Report bugs and issues",
         status_set: @status_set,
@@ -71,7 +71,7 @@ module Alto
 
     test "should validate name uniqueness within board scope" do
       Tag.create!(name: "duplicate", board: @board)
-      
+
       duplicate_tag = Tag.new(name: "duplicate", board: @board)
       assert_not duplicate_tag.valid?
       assert_includes duplicate_tag.errors[:name], "has already been taken"
@@ -126,7 +126,7 @@ module Alto
 
     test "should have usage_count counter cache" do
       tag = Tag.create!(name: "counted", board: @board)
-      
+
       assert_respond_to tag, :usage_count
       assert_equal 0, tag.usage_count
     end
@@ -136,7 +136,7 @@ module Alto
       tag_a = Tag.create!(name: "alpha", board: @board)
       tag_b = Tag.create!(name: "bravo", board: @board)
 
-      ordered_tags = Tag.ordered
+      ordered_tags = @board.tags.ordered
       assert_equal [tag_a, tag_b, tag_c], ordered_tags.to_a
     end
 
@@ -160,7 +160,7 @@ module Alto
 
       assert_respond_to tag_with_color, :color_classes
       assert_respond_to tag_without_color, :color_classes
-      
+
       # Should return some reasonable default classes
       assert_includes tag_without_color.color_classes, "bg-"
       assert_includes tag_without_color.color_classes, "text-"
@@ -169,7 +169,7 @@ module Alto
     test "should prevent deletion when tags are in use" do
       # Create a user first
       user = User.create!(email: "test@example.com")
-      
+
       tag = Tag.create!(name: "in-use", board: @board)
       ticket = Ticket.create!(
         title: "Tagged Ticket",
@@ -177,7 +177,7 @@ module Alto
         user_id: user.id,
         board: @board
       )
-      
+
       # This will be implemented when we create the Tagging model
       # For now, just test the tag exists
       assert tag.persisted?
@@ -185,13 +185,13 @@ module Alto
 
     test "should normalize name to lowercase" do
       tag = Tag.create!(name: "MiXeD-CaSe", board: @board)
-      
+
       assert_equal "mixed-case", tag.name
     end
 
     test "should strip whitespace from name" do
       tag = Tag.create!(name: "  spaced  ", board: @board)
-      
+
       assert_equal "spaced", tag.name
     end
   end

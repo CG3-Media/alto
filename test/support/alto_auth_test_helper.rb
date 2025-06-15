@@ -17,6 +17,12 @@ module AltoAuthTestHelper
       config.permission :can_access_board? do |board|
         true # Allow access to all boards in tests
       end
+
+      # Configure user_email lookup for Subscribable concern
+      config.user_email do |user_id|
+        user = User.find_by(id: user_id)
+        user&.email
+      end
     end
 
     # Use real user from fixtures

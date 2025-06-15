@@ -3,8 +3,11 @@ require "test_helper"
 module Alto
   class CommentsControllerTest < ActionDispatch::IntegrationTest
     include Engine.routes.url_helpers
+    include AltoAuthTestHelper
 
     def setup
+      setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
+
       # Use fixtures instead of manual creation
       @user = users(:one)
       @admin = users(:admin)
@@ -29,39 +32,10 @@ module Alto
 
       # Set host for URL generation
       host! "example.com"
-
-      # Configure Alto permissions for testing
-      ::Alto.configure do |config|
-        config.permission :can_access_alto? do
-          true
-        end
-        config.permission :can_submit_tickets? do
-          true
-        end
-        config.permission :can_access_board? do |board|
-          true
-        end
-        config.permission :can_comment? do |board|
-          true
-        end
-        config.permission :can_delete_comment? do |comment|
-          comment.user_id == current_user&.id || can_access_admin?
-        end
-        config.permission :can_access_admin? do
-          current_user&.email == "admin@example.com"
-        end
-      end
-
-      # Mock current_user for testing
-      user = @user
-      ::Alto::ApplicationController.define_method(:current_user) do
-        user
-      end
     end
 
     def teardown
-      # Reset Alto configuration to avoid bleeding into other tests
-      ::Alto.instance_variable_set(:@configuration, nil)
+      teardown_alto_permissions
     end
 
     test "should create comment successfully" do
@@ -206,15 +180,14 @@ module Alto
     end
 
     test "should validate parent comment exists for replies" do
-      # This should raise an error due to validation
-      assert_raises(ActiveRecord::RecordNotFound) do
-        post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments", params: {
-          comment: {
-            content: "Reply to non-existent parent",
-            parent_id: 99999  # Non-existent parent
-          }
+      # This should return 404 for non-existent parent
+      post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments", params: {
+        comment: {
+          content: "Reply to non-existent parent",
+          parent_id: 99999  # Non-existent parent
         }
-      end
+      }
+      assert_response :not_found
     end
   end
 end

@@ -2,9 +2,15 @@ require "test_helper"
 
 class PageAccessibilityTest < ActionDispatch::IntegrationTest
   include ::Alto::Engine.routes.url_helpers
+  include AltoAuthTestHelper
 
   def setup
+    setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
     create_test_data
+  end
+
+  def teardown
+    teardown_alto_permissions
   end
 
   # ==========================================
@@ -123,15 +129,13 @@ class PageAccessibilityTest < ActionDispatch::IntegrationTest
   # ==========================================
 
   test "non-existent board raises 404" do
-    assert_raises(ActiveRecord::RecordNotFound) do
-      get board_tickets_path("non-existent-board")
-    end
+    get board_tickets_path("non-existent-board")
+    assert_response :not_found
   end
 
   test "non-existent ticket raises 404" do
-    assert_raises(ActiveRecord::RecordNotFound) do
-      get board_ticket_path(@board, 99999)
-    end
+    get board_ticket_path(@board, 99999)
+    assert_response :not_found
   end
 
   # ==========================================
@@ -174,7 +178,7 @@ class PageAccessibilityTest < ActionDispatch::IntegrationTest
   # ==========================================
 
   def create_test_data
-    @user = User.create!(email: "test@example.com")
+    @user = users(:one)
 
     @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
     @status_set.statuses.create!([

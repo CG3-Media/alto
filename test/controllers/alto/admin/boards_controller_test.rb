@@ -4,8 +4,11 @@ module Alto
   module Admin
     class BoardsControllerTest < ActionDispatch::IntegrationTest
       include ::Alto::Engine.routes.url_helpers
+      include AltoAuthTestHelper
 
       def setup
+        setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
+
         # Use fixtures instead of manual creation
         @user = users(:one)
         @admin = users(:admin)
@@ -13,34 +16,13 @@ module Alto
         # Use existing fixture status set and board
         @status_set = alto_status_sets(:default)
         @board = alto_boards(:bugs)
-
-        # Set up clean Alto configuration for admin tests
-        ::Alto.configure do |config|
-          config.permission :can_access_alto? do
-            true
-          end
-          config.permission :can_access_admin? do
-            current_user&.email == "admin@example.com" # Use fixture admin email directly
-          end
-        end
-
-        # Mock current_user for testing - default to regular user
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @user
-        end
       end
 
       def teardown
-        # Reset Alto configuration to avoid bleeding into other tests
-        ::Alto.instance_variable_set(:@configuration, nil)
+        teardown_alto_permissions
       end
 
       test "admin routes exist" do
-        # Set current user to admin for this test
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @admin
-        end
-
         # Just verify the routes exist - any response is fine
         get admin_boards_path
         # Any response (200, 404, 401, 403) means the route exists
@@ -52,22 +34,12 @@ module Alto
       end
 
       test "new board form renders at least one field input" do
-        # Set current user to admin for this test
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @admin
-        end
-
         get new_admin_board_path
         assert_response :success
         assert_select 'input.field-label', 1, "Should render one field label input by default"
       end
 
       test "create board with empty field does not persist field" do
-        # Set current user to admin for this test
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @admin
-        end
-
         assert_difference("Alto::Board.count") do
           post admin_boards_path, params: {
             board: {
@@ -98,10 +70,8 @@ module Alto
       end
 
       test "non-admin user cannot access admin area" do
-        # Use regular user (not admin)
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @user # Regular user
-        end
+        # Use regular user permissions
+        setup_alto_permissions(can_access_admin: false)
 
         get admin_boards_path
         # Should redirect or return 403/401
@@ -109,22 +79,12 @@ module Alto
       end
 
       test "admin user can access admin area" do
-        # Set current user to admin
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @admin
-        end
-
         get admin_boards_path
-        # Should allow access
+        # Should allow access (using admin permissions from setup)
         assert_response :success
       end
 
       test "admin can create board successfully" do
-        # Set current user to admin
-        ::Alto::ApplicationController.define_method(:current_user) do
-          @admin
-        end
-
         assert_difference("Alto::Board.count") do
           post admin_boards_path, params: {
             board: {

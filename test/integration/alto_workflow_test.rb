@@ -1,16 +1,21 @@
 require "test_helper"
 
 class AltoWorkflowTest < ActionDispatch::IntegrationTest
+  include AltoAuthTestHelper
+
   def setup
+    setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
+
     # Setup test database tables
     ::Alto::DatabaseSetup.force_setup!
 
-    # Create test users since fixtures aren't loaded after force_setup
-    @user1 = User.find_or_create_by!(id: 1) { |u| u.email = "test1@example.com" }
-    @user2 = User.find_or_create_by!(id: 2) { |u| u.email = "test2@example.com" }
-    @user3 = User.find_or_create_by!(id: 3) { |u| u.email = "test3@example.com" }
-    @user4 = User.find_or_create_by!(id: 4) { |u| u.email = "test4@example.com" }
-    @user5 = User.find_or_create_by!(id: 5) { |u| u.email = "test5@example.com" }
+    # Use fixtures directly - avoiding user without email
+    @user1 = users(:one)
+    @user2 = users(:two)
+    @user3 = users(:three)
+    @user4 = users(:admin)
+    # Create a new user with email for user5 to avoid subscription issues
+    @user5 = User.create!(name: "User Five", email: "user5@example.com")
 
     # Create a status set with statuses
     @status_set = ::Alto::StatusSet.create!(
@@ -24,6 +29,10 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
       { name: "In Progress", color: "yellow", position: 1, slug: "in_progress" },
       { name: "Closed", color: "gray", position: 2, slug: "closed" }
     ])
+  end
+
+  def teardown
+    teardown_alto_permissions
   end
 
   test "complete feedback board workflow" do
@@ -43,7 +52,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     ticket = board.tickets.create!(
       title: "Add dark mode",
       description: "It would be great to have a dark mode option for better accessibility.",
-      user_id: 1
+      user_id: @user1.id
     )
 
     assert ticket.persisted?
@@ -52,17 +61,17 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_not ticket.locked?
 
     # 3. Add some upvotes to the ticket
-    upvote1 = ticket.upvotes.create!(user_id: 2)
-    upvote2 = ticket.upvotes.create!(user_id: 3)
+    upvote1 = ticket.upvotes.create!(user_id: @user2.id)
+    upvote2 = ticket.upvotes.create!(user_id: @user3.id)
 
     assert_equal 2, ticket.upvotes_count
-    assert ticket.upvoted_by?(Struct.new(:id).new(2))
-    assert_not ticket.upvoted_by?(Struct.new(:id).new(4))
+    assert ticket.upvoted_by?(Struct.new(:id).new(@user2.id))
+    assert_not ticket.upvoted_by?(Struct.new(:id).new(@user4.id))
 
     # 4. Add a comment to the ticket
     comment = ticket.comments.create!(
       content: "Great idea! I would definitely use this feature.",
-      user_id: 2
+      user_id: @user2.id
     )
 
     assert comment.persisted?
@@ -71,15 +80,15 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert comment.can_be_replied_to?
 
     # 5. Add upvotes to the comment
-    comment_upvote = comment.upvotes.create!(user_id: 3)
+    comment_upvote = comment.upvotes.create!(user_id: @user3.id)
 
     assert_equal 1, comment.upvotes_count
-    assert comment.upvoted_by?(Struct.new(:id).new(3))
+    assert comment.upvoted_by?(Struct.new(:id).new(@user3.id))
 
     # 6. Add a reply to the comment
     reply = ticket.comments.create!(
       content: "I agree! This would be very helpful for night-time usage.",
-      user_id: 4,
+      user_id: @user4.id,
       parent: comment
     )
 
@@ -92,7 +101,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     # 7. Add a nested reply
     nested_reply = ticket.comments.create!(
       content: "Yes, and it should also reduce eye strain.",
-      user_id: 5,
+      user_id: @user5.id,
       parent: reply
     )
 
@@ -169,7 +178,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     ticket = simple_board.tickets.create!(
       title: "General question",
       description: "How do I use this feature?",
-      user_id: 1,
+      user_id: @user1.id,
       status_slug: nil
     )
 
@@ -181,10 +190,10 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     # Comments and upvotes should still work
     comment = ticket.comments.create!(
       content: "Here's how to do it...",
-      user_id: 2
+      user_id: @user2.id
     )
 
-    upvote = ticket.upvotes.create!(user_id: 3)
+    upvote = ticket.upvotes.create!(user_id: @user3.id)
 
     assert comment.persisted?
     assert upvote.persisted?
@@ -203,25 +212,25 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     ticket1 = board.tickets.create!(
       title: "Dark mode implementation",
       description: "Add dark theme support to the application",
-      user_id: 1
+      user_id: @user1.id
     )
 
     ticket2 = board.tickets.create!(
       title: "Light theme improvements",
       description: "Enhance the existing light theme colors",
-      user_id: 2
+      user_id: @user2.id
     )
 
     ticket3 = board.tickets.create!(
       title: "User preferences",
       description: "Allow users to save their preferred settings",
-      user_id: 3
+      user_id: @user3.id
     )
 
     # Add comment with searchable content
     ticket1.comments.create!(
       content: "This should include automatic dark mode based on system preferences",
-      user_id: 4
+      user_id: @user4.id
     )
 
     # Test title search
@@ -252,14 +261,14 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
       status_set: @status_set,
       item_label_singular: "feature"
     )
-    ticket = board.tickets.create!(title: "Vote Test", description: "Test", user_id: 1)
+    ticket = board.tickets.create!(title: "Vote Test", description: "Test", user_id: @user1.id)
 
     # Create upvote
-    upvote = ticket.upvotes.create!(user_id: 2)
+    upvote = ticket.upvotes.create!(user_id: @user2.id)
     assert_equal 1, ticket.upvotes.count
 
     # Try to create duplicate - should fail
-    duplicate = ticket.upvotes.build(user_id: 2)
+    duplicate = ticket.upvotes.build(user_id: @user2.id)
     assert_not duplicate.valid?
 
     # Delete upvote
@@ -267,7 +276,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal 0, ticket.upvotes.count
 
     # Should be able to upvote again after deletion
-    new_upvote = ticket.upvotes.create!(user_id: 2)
+    new_upvote = ticket.upvotes.create!(user_id: @user2.id)
     assert new_upvote.persisted?
     assert_equal 1, ticket.upvotes.count
   end
