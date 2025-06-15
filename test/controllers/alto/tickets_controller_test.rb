@@ -3,10 +3,13 @@ require "test_helper"
 module Alto
   class TicketsControllerTest < ActionDispatch::IntegrationTest
     include Engine.routes.url_helpers
+    include AltoAuthTestHelper
 
     def setup
-      @user = User.create!(email: "test1@example.com", name: "Test User 1")
-      @user2 = User.create!(email: "test2@example.com", name: "Test User 2")
+      setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
+
+      @user = users(:one)
+      @user2 = users(:two)
 
       # Create test status set
       @status_set = Alto::StatusSet.create!(name: "Test Status Set", is_default: true)
@@ -48,31 +51,10 @@ module Alto
 
       # Set host for URL generation
       host! "example.com"
+    end
 
-      # Configure Alto permissions for testing
-      ::Alto.configure do |config|
-        config.permission :can_access_alto? do
-          true
-        end
-        config.permission :can_submit_tickets? do
-          true
-        end
-        config.permission :can_access_board? do |board|
-          true
-        end
-        config.permission :can_vote? do
-          true
-        end
-        config.permission :can_edit_tickets? do
-          true
-        end
-      end
-
-      # Mock current_user for testing - use User.find to ensure it exists
-      user = @user
-      ::Alto::ApplicationController.define_method(:current_user) do
-        user
-      end
+    def teardown
+      teardown_alto_permissions
     end
 
     # INDEX TESTS
@@ -309,8 +291,8 @@ module Alto
       end
     end
 
-        # BOARD SCOPING TESTS
-        test "should properly scope tickets to their boards" do
+            # BOARD SCOPING TESTS
+    test "should properly scope tickets to their boards" do
       # Create a ticket in the general board
       general_ticket = @general_board.tickets.create!(
         title: "General Board Ticket",
@@ -322,22 +304,19 @@ module Alto
       features_board = Alto::Board.create!(name: "Features", slug: "features", status_set: @status_set)
 
       # Try to access general board ticket through features board URL
-      # This should raise RecordNotFound because the ticket doesn't belong to the features board
-      assert_raises(ActiveRecord::RecordNotFound) do
-        get "/boards/#{features_board.slug}/tickets/#{general_ticket.id}"
-      end
+      # This should return 404 because the ticket doesn't belong to the features board
+      get "/boards/#{features_board.slug}/tickets/#{general_ticket.id}"
+      assert_response :not_found
     end
 
     test "should handle non-existent board gracefully" do
-      assert_raises(ActiveRecord::RecordNotFound) do
-        get "/boards/non-existent/tickets"
-      end
+      get "/boards/non-existent/tickets"
+      assert_response :not_found
     end
 
     test "should handle non-existent ticket gracefully" do
-      assert_raises(ActiveRecord::RecordNotFound) do
-        get "/boards/#{@general_board.slug}/tickets/99999"
-      end
+      get "/boards/#{@general_board.slug}/tickets/99999"
+      assert_response :not_found
     end
 
     # ARCHIVED TICKET TESTS

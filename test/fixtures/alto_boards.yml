@@ -1,0 +1,40 @@
+# Model class: Alto::Board
+
+bugs:
+  id: 1
+  name: "Bug Reports"
+  slug: "bugs"
+  description: "Report bugs here"
+  status_set_id: 1  # alto_status_sets(:default)
+  is_admin_only: false
+  item_label_singular: "bug"
+  allow_public_tagging: true
+  allow_voting: true
+  created_at: <%= 3.days.ago %>
+  updated_at: <%= 3.days.ago %>
+
+features:
+  id: 2
+  name: "Feature Requests"
+  slug: "features"
+  description: "Request new features"
+  status_set_id: 2  # alto_status_sets(:feature_tracking)
+  is_admin_only: false
+  item_label_singular: "feature"
+  allow_public_tagging: true
+  allow_voting: true
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+admin_board:
+  id: 3
+  name: "Admin Only Board"
+  slug: "admin-only"
+  description: "Admin only discussions"
+  status_set_id: 1  # alto_status_sets(:default)
+  is_admin_only: true
+  item_label_singular: "item"
+  allow_public_tagging: false
+  allow_voting: false
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

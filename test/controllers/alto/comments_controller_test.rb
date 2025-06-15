@@ -3,72 +3,39 @@ require "test_helper"
 module Alto
   class CommentsControllerTest < ActionDispatch::IntegrationTest
     include Engine.routes.url_helpers
+    include AltoAuthTestHelper
 
     def setup
-      @user = User.create!(email: "commenter@example.com", name: "Comment User")
-      @admin = User.create!(email: "admin@example.com", name: "Admin User")
+      setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
 
-      # Create test status set
-      @status_set = Alto::StatusSet.create!(name: "Comment Test Status Set", is_default: true)
-      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
-      @status_set.statuses.create!(name: "Closed", color: "red", position: 1, slug: "closed")
+      # Use fixtures instead of manual creation
+      @user = users(:one)
+      @admin = users(:admin)
 
-      @board = Alto::Board.create!(
-        name: "Comment Test Board",
-        slug: "comment-test-board",
-        description: "Board for testing comments",
-        status_set: @status_set,
-        is_admin_only: false,
-        item_label_singular: "ticket"
-      )
+      # Use existing fixture board with proper custom field setup
+      @board = alto_boards(:bugs)
 
       @ticket = @board.tickets.create!(
         title: "Test Ticket for Comments",
         description: "A ticket to test commenting on",
-        user_id: @user.id,
-        user_type: "User"
+        user: @user,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test steps for commenting"
+        }
       )
 
       @comment = @ticket.comments.create!(
         content: "Existing comment for testing",
-        user_id: @user.id
+        user: @user
       )
 
       # Set host for URL generation
       host! "example.com"
-
-      # Configure Alto permissions for testing
-      ::Alto.configure do |config|
-        config.permission :can_access_alto? do
-          true
-        end
-        config.permission :can_submit_tickets? do
-          true
-        end
-        config.permission :can_access_board? do |board|
-          true
-        end
-        config.permission :can_comment? do |board|
-          true
-        end
-        config.permission :can_delete_comment? do |comment|
-          comment.user_id == current_user&.id || can_access_admin?
-        end
-        config.permission :can_access_admin? do
-          current_user&.email == "admin@example.com"
-        end
-      end
-
-      # Mock current_user for testing
-      user = @user
-      ::Alto::ApplicationController.define_method(:current_user) do
-        user
-      end
     end
 
     def teardown
-      # Reset Alto configuration to avoid bleeding into other tests
-      ::Alto.instance_variable_set(:@configuration, nil)
+      teardown_alto_permissions
     end
 
     test "should create comment successfully" do
@@ -146,11 +113,11 @@ module Alto
     end
 
     test "should not destroy other users comments without admin permission" do
-      # Create comment by different user
-      other_user = User.create!(email: "other@example.com", name: "Other User")
+      # Use fixture user instead of manual creation
+      other_user = users(:two)
       comment = @ticket.comments.create!(
         content: "Other user's comment",
-        user_id: other_user.id
+        user: other_user
       )
 
       assert_no_difference('Alto::Comment.count') do
@@ -213,15 +180,14 @@ module Alto
     end
 
     test "should validate parent comment exists for replies" do
-      # This should raise an error due to validation
-      assert_raises(ActiveRecord::RecordNotFound) do
-        post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments", params: {
-          comment: {
-            content: "Reply to non-existent parent",
-            parent_id: 99999  # Non-existent parent
-          }
+      # This should return 404 for non-existent parent
+      post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments", params: {
+        comment: {
+          content: "Reply to non-existent parent",
+          parent_id: 99999  # Non-existent parent
         }
-      end
+      }
+      assert_response :not_found
     end
   end
 end

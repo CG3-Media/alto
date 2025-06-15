@@ -9,6 +9,7 @@ Alto::Engine.routes.draw do
   get "search", to: "search#index"
 
   # Board routes
+  # boards_path is essentially home/root
   resources :boards, param: :slug, path: "boards" do
     get "activity", to: "activity#index"
     get "archive", to: "archive#show"
@@ -47,8 +48,7 @@ Alto::Engine.routes.draw do
     get "dashboard", to: "dashboard#index"
     resource :settings, only: [ :show, :update ]
     resources :boards, param: :slug, except: [ :show ] do
-      resources :tags, only: [:create, :new, :edit, :update, :destroy]
-      get :tags, to: "tags#index"
+      resources :tags, param: :slug, except: [:show]
     end
     resources :status_sets
   end

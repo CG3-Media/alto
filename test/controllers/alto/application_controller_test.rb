@@ -43,7 +43,7 @@ module Alto
       end
     end
 
-    def setup
+        def setup
       @controller = TestController.new
       @user = MockUser.new
       @board = Board.new(id: 1, name: "Test Board", slug: "test")

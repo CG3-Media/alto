@@ -15,5 +15,13 @@ module Alto
 
     before_action :authenticate_user!, unless: -> { Rails.env.test? }
     before_action :check_alto_access!, unless: -> { Rails.env.test? }
+
+    rescue_from ActiveRecord::RecordNotFound, with: :not_found
+
+    private
+
+    def not_found
+      render plain: "Not Found", status: :not_found
+    end
   end
 end

@@ -2,31 +2,20 @@ require "test_helper"
 
 class Alto::CommentThreadBuilderTest < ActiveSupport::TestCase
   def setup
-    # Create status_set first (following Rule #3: real objects)
-    @status_set = Alto::StatusSet.find_or_create_by(id: 1) do |ss|
-      ss.name = "Test Status Set"
-      ss.is_default = true
-    end
-    @status_set.statuses.find_or_create_by(slug: "open", name: "Open", color: "green", position: 0)
+    # Use fixtures instead of manual creation
+    @user = users(:one)
+    @board = alto_boards(:bugs)
 
-    # Create user, board, and ticket for testing
-    @user = User.find_or_create_by(id: 1) do |u|
-      u.email = "test@example.com"
-      u.name = "Test User"
-    end
-
-    @board = Alto::Board.find_or_create_by(id: 1) do |b|
-      b.name = "General Feedback"
-      b.slug = "general-feedback"
-      b.description = "Test board"
-      b.status_set = @status_set
-    end
     @ticket = Alto::Ticket.create!(
       title: "Test Ticket",
       description: "Test description",
       board: @board,
       status_slug: "open",
-      user: @user
+      user: @user,
+      field_values: {
+        "severity" => "high",
+        "steps_to_reproduce" => "Test comment thread builder steps"
+      }
     )
     @builder = Alto::CommentThreadBuilder.new(@ticket)
   end
