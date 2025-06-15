@@ -191,6 +191,13 @@ class ActiveSupport::TestCase
 
   # Enable parallel testing (Rule #5) - Disabled for in-memory SQLite
   # parallelize(workers: :number_of_processors)
+
+  # Global test isolation: Clear Alto configuration before each test
+  # This prevents test pollution where one test's permission configuration
+  # affects subsequent tests
+  setup do
+    Alto.configuration.permission_methods.clear
+  end
 end
 
 class ActionDispatch::IntegrationTest
