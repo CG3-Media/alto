@@ -2,9 +2,6 @@ require "test_helper"
 
 module Alto
   class TagTest < ActiveSupport::TestCase
-    # Simple test to isolate fixture loading issues
-    fixtures :users, 'alto/status_sets', 'alto/statuses', 'alto/boards'
-
     test "fixtures load without foreign key violations" do
       # Just try to access fixtures - will fail if FK violations exist
       assert_not_nil alto_status_sets(:default)
