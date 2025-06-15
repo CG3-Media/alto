@@ -3,17 +3,21 @@ require "test_helper"
 module Alto
   class TicketArchiveTest < ActiveSupport::TestCase
     def setup
-      @user1 = User.find_or_create_by!(id: 1, email: "test1@example.com")
+      @user1 = users(:one)
       @status_set = alto_status_sets(:default)
-      @board = alto_boards(:general)
+      @board = alto_boards(:bugs)
     end
 
     test "should not be archived by default" do
       ticket = Ticket.create!(
         title: "Regular Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user: @user1,
+        board: @board,
+        field_values: {
+          "severity" => "medium",
+          "steps_to_reproduce" => "Test archive default steps"
+        }
       )
 
       assert_not ticket.archived?
@@ -24,9 +28,13 @@ module Alto
       ticket = Ticket.create!(
         title: "Archived Ticket",
         description: "Description",
-        user_id: 1,
+        user: @user1,
         board: @board,
-        archived: true
+        archived: true,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test archive flag steps"
+        }
       )
 
       assert ticket.archived?
@@ -36,9 +44,13 @@ module Alto
       ticket = Ticket.create!(
         title: "Archived Ticket",
         description: "Description",
-        user_id: 1,
+        user: @user1,
         board: @board,
-        archived: true
+        archived: true,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test archive locked steps"
+        }
       )
 
       # Archived tickets should automatically be locked
@@ -51,16 +63,24 @@ module Alto
       active_ticket = Ticket.create!(
         title: "Active Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user: @user1,
+        board: @board,
+        field_values: {
+          "severity" => "medium",
+          "steps_to_reproduce" => "Test active ticket steps"
+        }
       )
 
       archived_ticket = Ticket.create!(
         title: "Archived Ticket",
         description: "Description",
-        user_id: 1,
+        user: @user1,
         board: @board,
-        archived: true
+        archived: true,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test archived ticket steps"
+        }
       )
 
       active_tickets = Ticket.active
@@ -72,16 +92,24 @@ module Alto
       active_ticket = Ticket.create!(
         title: "Active Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user: @user1,
+        board: @board,
+        field_values: {
+          "severity" => "medium",
+          "steps_to_reproduce" => "Test filter active steps"
+        }
       )
 
       archived_ticket = Ticket.create!(
         title: "Archived Ticket",
         description: "Description",
-        user_id: 1,
+        user: @user1,
         board: @board,
-        archived: true
+        archived: true,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test filter archived steps"
+        }
       )
 
       archived_tickets = Ticket.archived
@@ -93,8 +121,12 @@ module Alto
       ticket = Ticket.create!(
         title: "Toggle Archive Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user: @user1,
+        board: @board,
+        field_values: {
+          "severity" => "medium",
+          "steps_to_reproduce" => "Test toggle archive steps"
+        }
       )
 
       # Initially not archived
@@ -115,10 +147,14 @@ module Alto
       ticket = Ticket.create!(
         title: "Locked and Archived Ticket",
         description: "Description",
-        user_id: 1,
+        user: @user1,
         board: @board,
         locked: true,
-        archived: true
+        archived: true,
+        field_values: {
+          "severity" => "critical",
+          "steps_to_reproduce" => "Test locked and archived steps"
+        }
       )
 
       # Should be locked due to both manual lock and archive
