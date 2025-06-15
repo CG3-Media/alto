@@ -92,8 +92,9 @@ module Alto
     end
 
     test "default permission values when user exists" do
-      # Ensure clean state for this test
+      # Ensure clean state for this test - set up explicit default permissions
       teardown_alto_permissions
+      setup_alto_permissions(can_manage_boards: false, can_access_admin: false)
       @controller.set_test_user(@user)
 
       # Test default values
@@ -108,8 +109,9 @@ module Alto
     end
 
     test "admin permissions work correctly" do
-      # Ensure clean state for this test
+      # Ensure clean state for this test - set up explicit default permissions
       teardown_alto_permissions
+      setup_alto_permissions(can_manage_boards: false, can_access_admin: false)
       admin_user = MockUser.new(admin: true)
       @controller.set_test_user(admin_user)
 
