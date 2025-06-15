@@ -5,33 +5,26 @@ module Alto
     include Engine.routes.url_helpers
 
     def setup
-      @user = User.create!(email: "commenter@example.com", name: "Comment User")
-      @admin = User.create!(email: "admin@example.com", name: "Admin User")
+      # Use fixtures instead of manual creation
+      @user = users(:one)
+      @admin = users(:admin)
 
-      # Create test status set
-      @status_set = Alto::StatusSet.create!(name: "Comment Test Status Set", is_default: true)
-      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
-      @status_set.statuses.create!(name: "Closed", color: "red", position: 1, slug: "closed")
-
-      @board = Alto::Board.create!(
-        name: "Comment Test Board",
-        slug: "comment-test-board",
-        description: "Board for testing comments",
-        status_set: @status_set,
-        is_admin_only: false,
-        item_label_singular: "ticket"
-      )
+      # Use existing fixture board with proper custom field setup
+      @board = alto_boards(:bugs)
 
       @ticket = @board.tickets.create!(
         title: "Test Ticket for Comments",
         description: "A ticket to test commenting on",
-        user_id: @user.id,
-        user_type: "User"
+        user: @user,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test steps for commenting"
+        }
       )
 
       @comment = @ticket.comments.create!(
         content: "Existing comment for testing",
-        user_id: @user.id
+        user: @user
       )
 
       # Set host for URL generation
@@ -146,11 +139,11 @@ module Alto
     end
 
     test "should not destroy other users comments without admin permission" do
-      # Create comment by different user
-      other_user = User.create!(email: "other@example.com", name: "Other User")
+      # Use fixture user instead of manual creation
+      other_user = users(:two)
       comment = @ticket.comments.create!(
         content: "Other user's comment",
-        user_id: other_user.id
+        user: other_user
       )
 
       assert_no_difference('Alto::Comment.count') do
