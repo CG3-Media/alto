@@ -50,6 +50,8 @@ module Alto
       @controller = TestController.new
       @user = MockUser.new
       @board = Board.new(id: 1, name: "Test Board", slug: "test")
+
+      # Don't set up any permissions - use defaults
     end
 
     def teardown
@@ -90,6 +92,8 @@ module Alto
     end
 
     test "default permission values when user exists" do
+      # Ensure clean state for this test
+      teardown_alto_permissions
       @controller.set_test_user(@user)
 
       # Test default values
@@ -104,6 +108,8 @@ module Alto
     end
 
     test "admin permissions work correctly" do
+      # Ensure clean state for this test
+      teardown_alto_permissions
       admin_user = MockUser.new(admin: true)
       @controller.set_test_user(admin_user)
 
