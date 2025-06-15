@@ -3,22 +3,20 @@ require "test_helper"
 module Alto
   class UpvoteTest < ActiveSupport::TestCase
     def setup
-      # Create test users first
-      @user1 = User.create!(email: "user1@example.com", name: "User One")
-      @user2 = User.create!(email: "user2@example.com", name: "User Two")
+      # Use fixtures instead of manual creation
+      @user1 = users(:one)
+      @user2 = users(:two)
 
-      # Create test data
-      @status_set = ::Alto::StatusSet.create!(
-        name: "Test Status Set",
-        is_default: true
-      )
-      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
-
-      @board = Board.create!(name: "Test Board", status_set: @status_set)
+      # Use existing fixture board and create test data properly
+      @board = alto_boards(:bugs)
       @ticket = @board.tickets.create!(
         title: "Test Ticket",
         description: "Description",
-        user: @user1
+        user: @user1,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test steps"
+        }
       )
       @comment = @ticket.comments.create!(
         content: "Test Comment",
