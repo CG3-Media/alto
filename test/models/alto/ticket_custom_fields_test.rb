@@ -3,9 +3,9 @@ require "test_helper"
 module Alto
   class TicketCustomFieldsTest < ActiveSupport::TestCase
     def setup
-      @user1 = User.find_or_create_by!(id: 1, email: "test1@example.com")
+      @user1 = users(:one)
       @status_set = alto_status_sets(:default)
-      @board = alto_boards(:general)
+      @board = alto_boards(:bugs)  # Using bugs board since general doesn't exist
       @bugs_board = alto_boards(:bugs)
     end
 
@@ -13,12 +13,22 @@ module Alto
       ticket = Ticket.create!(
         title: "Field Ticket",
         description: "Description",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
-        field_values: { "priority" => "High", "browser" => "Chrome" }
+        field_values: {
+          "severity" => "High",
+          "steps_to_reproduce" => "Test steps",
+          "priority" => "High",
+          "browser" => "Chrome"
+        }
       )
 
-      assert_equal({ "priority" => "High", "browser" => "Chrome" }, ticket.field_values)
+      assert_equal({
+        "severity" => "High",
+        "steps_to_reproduce" => "Test steps",
+        "priority" => "High",
+        "browser" => "Chrome"
+      }, ticket.field_values)
     end
 
     test "should get field value by field object" do
@@ -28,9 +38,14 @@ module Alto
       ticket = Ticket.create!(
         title: "Field Ticket",
         description: "Description",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
-        field_values: { "priority" => "High", "browser" => "Safari" }
+        field_values: {
+          "severity" => "Medium",
+          "steps_to_reproduce" => "Test steps for field value",
+          "priority" => "High",
+          "browser" => "Safari"
+        }
       )
 
       assert_equal "High", ticket.field_value(priority_field)
@@ -44,8 +59,12 @@ module Alto
       ticket = Ticket.create!(
         title: "Field Ticket",
         description: "Description",
-        user_id: 1,
-        board: @board
+        user_id: @user1.id,
+        board: @board,
+        field_values: {
+          "severity" => "Low",
+          "steps_to_reproduce" => "Basic test steps"
+        }
       )
 
       ticket.set_field_value(priority_field, "High")
@@ -53,7 +72,12 @@ module Alto
 
       assert_equal "High", ticket.field_value(priority_field)
       assert_equal "Firefox", ticket.field_value(browser_field)
-      assert_equal({ "priority" => "High", "browser" => "Firefox" }, ticket.field_values)
+      assert_equal({
+        "severity" => "Low",
+        "steps_to_reproduce" => "Basic test steps",
+        "priority" => "High",
+        "browser" => "Firefox"
+      }, ticket.field_values)
     end
 
     test "should process multiselect field arrays to comma-separated strings" do
@@ -67,7 +91,7 @@ module Alto
       ticket = Ticket.new(
         title: "Multiselect Test",
         description: "Testing multiselect processing",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
         field_values: {
           "tags" => ["Bug", "Feature"]  # array format
@@ -90,7 +114,7 @@ module Alto
       ticket = Ticket.new(
         title: "Empty Multiselect Test",
         description: "Testing empty multiselect",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
         field_values: {
           "categories" => []  # empty array
@@ -113,7 +137,7 @@ module Alto
       ticket = Ticket.new(
         title: "Blank Filter Test",
         description: "Testing blank value filtering",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
         field_values: {
           "features" => ["A", "", "B", nil, "C"]  # mixed with blanks
@@ -135,7 +159,7 @@ module Alto
       ticket = Ticket.new(
         title: "Non-multiselect Test",
         description: "Testing non-multiselect fields",
-        user_id: 1,
+        user_id: @user1.id,
         board: @board,
         field_values: {
           "description" => ["This", "Should", "Stay", "Array"]  # should remain unchanged
@@ -151,7 +175,7 @@ module Alto
       ticket = Ticket.create!(
         title: "Field Ticket",
         description: "Description",
-        user_id: 1,
+        user_id: @user1.id,
         board: @bugs_board,
         field_values: {
           "severity" => "High",
@@ -173,7 +197,7 @@ module Alto
       ticket = Ticket.new(
         title: "Missing Required Fields",
         description: "Description",
-        user_id: 1,
+        user_id: @user1.id,
         board: @bugs_board
       )
 
@@ -192,7 +216,7 @@ module Alto
       ticket = Ticket.new(
         title: "With Required Fields",
         description: "Description",
-        user_id: 1,
+        user_id: @user1.id,
         board: @bugs_board,
         field_values: {
           "severity" => "High",
