@@ -95,6 +95,7 @@ require_relative "../app/controllers/alto/application_controller"
 
 # Load test support helpers
 require_relative "support/alto_auth_test_helper"
+require_relative "support/alto_callback_test_helper"
 
 # Run migrations directly
 require_relative "../db/migrate/20250115000000_add_alto_trigram_search"
@@ -197,4 +198,9 @@ class ActionDispatch::IntegrationTest
   self.use_transactional_tests = true
 
   include AltoAuthTestHelper
+  include AltoCallbackTestHelper
+end
+
+class ActiveSupport::TestCase
+  include AltoCallbackTestHelper
 end
