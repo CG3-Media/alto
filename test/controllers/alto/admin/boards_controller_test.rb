@@ -77,6 +77,10 @@ module Alto
         get admin_boards_path
         # Should redirect or return 403/401
         assert_response :redirect
+
+        # Restore admin permissions for other tests
+        teardown_alto_permissions
+        setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
       end
 
       test "admin user can access admin area" do

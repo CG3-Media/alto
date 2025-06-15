@@ -26,33 +26,18 @@ module Alto
     # Set host for URL generation
     host! "example.com"
 
-    # Configure Alto permissions for testing
-    ::Alto.configure do |config|
-      config.permission :can_access_alto? do
-        true
-      end
-      config.permission :can_submit_tickets? do
-        true
-      end
-      config.permission :can_access_board? do |board|
-        true
-      end
-      config.permission :can_edit_tickets? do
-        true
-      end
-      config.permission :can_vote? do
-        true
-      end
-      config.permission :can_comment? do
-        true
-      end
-    end
+    # Set up permissions using the standardized helper
+    setup_alto_permissions(can_access_admin: false)
 
     # Mock current_user for testing - use User.find to ensure it exists
     user = @user
     ::Alto::ApplicationController.define_method(:current_user) do
       user
     end
+  end
+
+  def teardown
+    teardown_alto_permissions
   end
 
         # Test the specific route mentioned by user - /boards/internal-issues/tickets/470/edit

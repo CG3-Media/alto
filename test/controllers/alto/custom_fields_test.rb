@@ -28,18 +28,8 @@ module Alto
       # Clear existing fields to avoid conflicts
       @bugs_board.fields.destroy_all
 
-      # Configure Alto permissions for testing
-      ::Alto.configure do |config|
-        config.permission :can_access_alto? do
-          true
-        end
-        config.permission :can_submit_tickets? do
-          true
-        end
-        config.permission :can_access_board? do |board|
-          true
-        end
-      end
+      # Set up permissions using the standardized helper
+      setup_alto_permissions(can_access_admin: false)
 
       # Create required fields for testing - use arrays, serialization will handle JSON conversion
       @severity_field = @bugs_board.fields.create!(
@@ -66,6 +56,10 @@ module Alto
 
       # Set host for URL generation
       host! "example.com"
+    end
+
+    def teardown
+      teardown_alto_permissions
     end
 
     test "should create ticket with valid custom fields" do

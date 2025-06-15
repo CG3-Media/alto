@@ -2,7 +2,7 @@ require "test_helper"
 
 module Alto
   class ApplicationControllerTest < ActionController::TestCase
-    include AltoAuthTestHelper
+    # Don't include AltoAuthTestHelper - this test checks clean defaults
     class MockUser
       attr_accessor :id, :email, :admin
 
@@ -45,8 +45,10 @@ module Alto
     end
 
     def setup
-      # Clean slate - no special permissions configured
-      teardown_alto_permissions
+      # Ensure completely clean slate - clear any global permissions
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
+
       @controller = TestController.new
       @user = MockUser.new
       @board = Board.new(id: 1, name: "Test Board", slug: "test")
@@ -55,10 +57,15 @@ module Alto
     end
 
     def teardown
-      teardown_alto_permissions
+      # Ensure complete cleanup
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
     end
 
     test "permission methods exist and are callable" do
+      # Ensure completely clean state for this test
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
       @controller.set_test_user(@user)
 
       # Test that all permission methods exist and can be called
@@ -73,6 +80,9 @@ module Alto
     end
 
     test "can_access_board? exists and works with board parameter" do
+      # Ensure completely clean state for this test
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
       @controller.set_test_user(@user)
 
       # This is the critical test - can_access_board? should exist
@@ -83,6 +93,9 @@ module Alto
     end
 
     test "can_access_board? works with nil board" do
+      # Ensure completely clean state for this test
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
       @controller.set_test_user(@user)
 
       assert_nothing_raised do
@@ -93,7 +106,8 @@ module Alto
 
     test "default permission values when user exists" do
       # Ensure clean state for this test
-      teardown_alto_permissions
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
       @controller.set_test_user(@user)
 
       # Test default values
@@ -109,7 +123,8 @@ module Alto
 
     test "admin permissions work correctly" do
       # Ensure clean state for this test
-      teardown_alto_permissions
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
       admin_user = MockUser.new(admin: true)
       @controller.set_test_user(admin_user)
 
@@ -125,6 +140,10 @@ module Alto
     end
 
     test "method inheritance chain is working" do
+      # Ensure completely clean state for this test
+      ::Alto.instance_variable_set(:@configuration, nil)
+      ::Alto.configuration.permission_methods.clear
+
       # Verify that ApplicationController methods are available to subclasses
       tickets_controller = TicketsController.new
 

@@ -3,6 +3,7 @@ require "test_helper"
 module Alto
   class UpvotesControllerTest < ActionDispatch::IntegrationTest
     include ::Alto::Engine.routes.url_helpers
+
     def setup
       # Create test users
       @user1 = User.create!(email: "user1@test.com", name: "User One")
@@ -34,20 +35,17 @@ module Alto
         user_type: "User"
       )
 
-      # Configure Alto to allow all access for testing
-      ::Alto.configure do |config|
-        config.permission :can_access_alto? do
-          true
-        end
-        config.permission :can_vote? do
-          true
-        end
-      end
+      # Set up permissions using the standardized helper
+      setup_alto_permissions(can_access_admin: false)
 
       # Create a mock current_user helper for testing
       ::Alto::ApplicationController.define_method(:current_user) do
         Struct.new(:id).new(1)
       end
+    end
+
+    def teardown
+      teardown_alto_permissions
     end
 
     # 🚨 CRITICAL BUG TEST: Removing comment upvote should NOT delete ticket

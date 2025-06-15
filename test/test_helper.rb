@@ -171,6 +171,9 @@ end
 
 # Configure proper Rails fixture loading
 class ActiveSupport::TestCase
+  # Include the AltoAuthTestHelper globally for all tests
+  include AltoAuthTestHelper
+
   # Use transactional rollback for test isolation
   self.use_transactional_tests = true
 

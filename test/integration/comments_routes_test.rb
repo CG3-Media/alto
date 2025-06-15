@@ -1,6 +1,7 @@
 require "test_helper"
 
 class CommentsRoutesTest < ActionDispatch::IntegrationTest
+
   def setup
     # Set host for URL generation
     host! "example.com"
@@ -14,27 +15,8 @@ class CommentsRoutesTest < ActionDispatch::IntegrationTest
     @ticket = @board.tickets.create!(title: "Test Ticket", description: "Test", user_id: @user.id)
     @comment = @ticket.comments.create!(content: "Test comment", user_id: @user.id)
 
-    # Configure Alto permissions for testing
-    ::Alto.configure do |config|
-      config.permission :can_access_alto? do
-        true
-      end
-      config.permission :can_access_board? do |board|
-        true
-      end
-      config.permission :can_comment? do
-        true
-      end
-      config.permission :can_edit_tickets? do
-        true
-      end
-      config.permission :can_submit_tickets? do
-        true
-      end
-      config.permission :can_vote? do
-        true
-      end
-    end
+    # Set up permissions using the standardized helper
+    setup_alto_permissions(can_access_admin: false)
 
     # Store original method for restoration
     @original_current_user_method = Alto::ApplicationController.instance_method(:current_user) if Alto::ApplicationController.method_defined?(:current_user)
@@ -46,6 +28,8 @@ class CommentsRoutesTest < ActionDispatch::IntegrationTest
   end
 
   def teardown
+    teardown_alto_permissions
+
     # Restore original current_user method to prevent test interference
     if @original_current_user_method
       Alto::ApplicationController.define_method(:current_user, @original_current_user_method)
