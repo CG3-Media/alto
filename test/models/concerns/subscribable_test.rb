@@ -23,27 +23,22 @@ module Alto
     end
 
     def setup
-      # Create test users to ensure they exist for validation
-      @user1 = User.find_or_create_by!(id: 1, email: "test1@example.com")
-      @user2 = User.find_or_create_by!(id: 2, email: "test2@example.com")
+      # Use fixtures instead of manual creation
+      @user1 = users(:one)
+      @user2 = users(:two)
 
-      # Create test board with status set
-      @status_set = ::Alto::StatusSet.create!(
-        name: "Test Status Set",
-        is_default: true
-      )
-      @status_set.statuses.create!(name: "Open", color: "green", position: 0, slug: "open")
-
-      @board = Board.create!(
-        name: "Test Board",
-        status_set: @status_set
-      )
+      # Use existing fixture board
+      @board = alto_boards(:bugs)
 
       @ticket = Ticket.create!(
         title: "Test Ticket",
         description: "Test Description",
-        user_id: 1,
-        board: @board
+        user: @user1,
+        board: @board,
+        field_values: {
+          "severity" => "high",
+          "steps_to_reproduce" => "Test subscribable steps"
+        }
       )
     end
 
@@ -55,7 +50,7 @@ module Alto
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -90,7 +85,7 @@ module Alto
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -106,7 +101,7 @@ module Alto
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -122,7 +117,7 @@ module Alto
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -139,7 +134,7 @@ module Alto
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -166,7 +161,7 @@ module Alto
       model = TestSubscribableModel.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -195,7 +190,7 @@ module Alto
       model = minimal_class.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
@@ -223,7 +218,7 @@ module Alto
       model = minimal_class.new(
         title: "Test",
         description: "Test",
-        user_id: 1,
+        user_id: @user1.id,
         user_type: "User",
         board_id: @board.id
       )
