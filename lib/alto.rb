@@ -1,6 +1,5 @@
 require "alto/version"
 require "alto/engine"
-require "alto/database_setup"
 require "alto/configuration"
 
 # Require dependencies

@@ -6,8 +6,7 @@ class AltoWorkflowTest < ActionDispatch::IntegrationTest
   def setup
     setup_alto_permissions(can_manage_boards: true, can_access_admin: true)
 
-    # Setup test database tables
-    ::Alto::DatabaseSetup.force_setup!
+    # Rails' test framework handles database setup automatically via fixtures
 
     # Use fixtures directly - avoiding user without email
     @user1 = users(:one)

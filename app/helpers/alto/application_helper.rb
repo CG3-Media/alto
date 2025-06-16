@@ -1,6 +1,9 @@
 module Alto
   module ApplicationHelper
     include Alto::ImageHelper
+    include Alto::TextHelper
+    include Alto::UserHelper
+    include Alto::BoardHelper
 
     def status_badge(status)
       color_class = case status
@@ -126,17 +129,7 @@ module Alto
       end
     end
 
-    def comment_count_text(count)
-      pluralize(count, "comment")
-    end
 
-    def time_ago_text(timestamp)
-      "#{time_ago_in_words(timestamp)} ago"
-    end
-
-    def truncate_description(description, length: 150)
-      truncate(description, length: length)
-    end
 
     def disabled_upvote_button(upvotable, options = {})
       size = options[:size] || :default
@@ -178,50 +171,9 @@ module Alto
       end
     end
 
-    def user_display_name(user_id)
-      ::Alto.config.user_display_name.call(user_id)
-    end
 
-    def user_profile_avatar_url(user_id)
-      ::Alto.config.user_profile_avatar_url.call(user_id)
-    end
 
-    def has_user_avatar?(user_id)
-      user_profile_avatar_url(user_id).present?
-    end
 
-    def app_name
-      ::Alto.config.app_name
-    end
-
-    def count_nested_replies(replies)
-      replies.sum { |r| 1 + count_nested_replies(r[:replies]) }
-    end
-
-    # Current board helper method
-    def current_board
-      @current_board ||= begin
-        if session[:current_board_slug].present?
-          ::Alto::Board.find_by(slug: session[:current_board_slug]) || default_board || ::Alto::Board.first
-        else
-          default_board || ::Alto::Board.first
-        end
-      end
-    end
-
-    # Default board helper method
-    def default_board
-      @default_board ||= ::Alto::Board.find_by(slug: "feedback")
-    end
-
-    # Board item label helpers
-    def current_board_item_name
-      current_board&.item_name || "ticket"
-    end
-
-    def board_item_name(board)
-      board&.item_name || "ticket"
-    end
 
     # Custom fields helpers
     def ticket_has_custom_field_values?(ticket, board)
@@ -286,18 +238,6 @@ module Alto
       end
     end
 
-    def board_allows_voting?(upvotable)
-      case upvotable
-      when ::Alto::Ticket
-        # For tickets, check the board's voting setting
-        upvotable.board&.allow_voting? != false
-      when ::Alto::Comment
-        # Comments are always upvotable regardless of board setting
-        true
-      else
-        # Default to true for other types
-        true
-      end
-    end
+
   end
 end
