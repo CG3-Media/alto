@@ -189,5 +189,81 @@ module Alto
       }
       assert_response :not_found
     end
+
+    test "admin should be able to update status while posting comment" do
+      setup_alto_permissions(can_access_admin: true)
+
+      assert_difference 'Alto::Comment.count', 1 do
+        post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments",
+             params: {
+               comment: {
+                 content: "Moving to closed status",
+                 status_slug: "closed"  # Use existing fixture status
+               }
+             }
+      end
+
+      assert_response :redirect
+      @ticket.reload
+      assert_equal "closed", @ticket.status_slug
+      assert_equal "Moving to closed status", @ticket.comments.last.content
+    end
+
+    test "non-admin should not be able to update status" do
+      setup_alto_permissions(can_access_admin: false)
+      original_status = @ticket.status_slug
+
+      assert_difference 'Alto::Comment.count', 1 do
+        post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments",
+             params: {
+               comment: {
+                 content: "Just a regular comment",
+                 status_slug: "closed"  # This should be ignored
+               }
+             }
+      end
+
+      assert_response :redirect
+      @ticket.reload
+      assert_equal original_status, @ticket.status_slug  # Status unchanged
+    end
+
+    test "admin comment with empty status should not update status" do
+      setup_alto_permissions(can_access_admin: true)
+      original_status = @ticket.status_slug
+
+      assert_difference 'Alto::Comment.count', 1 do
+        post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments",
+             params: {
+               comment: {
+                 content: "Comment without status change",
+                 status_slug: ""  # Empty string should not update
+               }
+             }
+      end
+
+      assert_response :redirect
+      @ticket.reload
+      assert_equal original_status, @ticket.status_slug  # Status unchanged
+    end
+
+    test "admin comment with invalid status fails atomically" do
+      setup_alto_permissions(can_access_admin: true)
+
+      assert_no_difference 'Alto::Comment.count' do
+        post "/boards/#{@board.slug}/tickets/#{@ticket.id}/comments",
+             params: {
+               comment: {
+                 content: "This should fail",
+                 status_slug: "nonexistent_status"
+               }
+             }
+      end
+
+      assert_response :redirect
+      assert_equal "open", @ticket.reload.status_slug  # Status unchanged from fixture
+    end
+
+
   end
 end

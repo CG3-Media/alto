@@ -11,27 +11,28 @@
     </div>
 
     <!-- Original Thread Comment -->
-    <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
-            <div class="text-sm text-gray-500 mb-2 flex items-center space-x-2">
-        <%= render 'alto/shared/user_avatar', user_id: @root_comment.user_id, size: :sm %>
-        <div>
-          <span class="font-medium text-gray-700"><%= user_display_name(@root_comment.user_id) %></span>
-          started this thread · <%= time_ago_in_words(@root_comment.created_at) %> ago
+    <div class="flex gap-4 justify-between mb-4 bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+      <div>
+        <div class="text-sm text-gray-500 mb-2 flex items-center space-x-2">
+          <%= render 'alto/shared/user_avatar', user_id: @root_comment.user_id, size: :sm %>
+          <div>
+            <span class="font-medium text-gray-700"><%= user_display_name(@root_comment.user_id) %></span>
+            started this thread · <%= time_ago_in_words(@root_comment.created_at) %> ago
+          </div>
         </div>
-      </div>
-      <div class="prose max-w-none mb-3">
-        <p class="text-gray-700 whitespace-pre-wrap"><%= @root_comment.content %></p>
-      </div>
+        <div class="prose max-w-none mb-3">
+          <p class="text-gray-700 whitespace-pre-wrap"><%= @root_comment.content %></p>
+        </div>
 
-      <!-- Attached Image -->
-      <%= render 'alto/shared/attached_image', record: @root_comment, size: :small %>
+        <!-- Attached Image -->
+        <%= render 'alto/shared/attached_image', record: @root_comment, size: :small %>
+      </div>
 
       <!-- Original Comment Upvote -->
       <div class="flex items-center">
         <%= upvote_button(@root_comment, current_user) %>
       </div>
     </div>
-  </div>
 
   <!-- Thread Replies -->
   <div class="bg-white rounded-lg shadow-sm border border-gray-200">

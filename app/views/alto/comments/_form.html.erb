@@ -63,11 +63,24 @@
       </div>
 
       <div class="flex justify-between items-center">
-        <!-- Image Upload for Comments -->
-        <%= render 'alto/shared/image_upload', form: form, record: @comment %>
+        <!-- Left side: Image Upload -->
+        <div class="flex items-center">
+          <%= render 'alto/shared/image_upload', form: form, record: @comment %>
+        </div>
 
-        <%= form.submit button_text,
-            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+        <!-- Right side: Status dropdown (admin only) + Post button -->
+        <div class="flex items-center space-x-3">
+          <% if can_access_admin? && @board.has_status_tracking? %>
+            <% status_options = @board.status_options_for_select_filtered(is_admin: true).map { |name, slug| ["Change to #{name}", slug] } %>
+            <%= form.select :status_slug,
+                options_for_select([["Leave status as-is", ""]] + status_options, ""),
+                {},
+                class: "px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" %>
+          <% end %>
+
+          <%= form.submit button_text,
+              class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+        </div>
       </div>
     <% end %>
   <% end %>

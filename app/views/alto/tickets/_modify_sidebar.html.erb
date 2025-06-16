@@ -1,0 +1,68 @@
+<!-- Modify Ticket Sidebar -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold text-gray-900">Modify Ticket</h2>
+    <%= link_to "Edit Ticket", alto.edit_board_ticket_path(@board, @ticket),
+        class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
+  </div>
+
+  <%= form_with model: [@board, @ticket], local: true, class: "space-y-6" do |form| %>
+    <!-- Status -->
+    <% if @board.has_status_tracking? %>
+      <div>
+        <%= form.label :status_slug, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.select :status_slug,
+            options_for_select(@board.status_options_for_select_filtered(is_admin: true), @ticket.status_slug),
+            {},
+            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" %>
+        <p class="mt-1 text-sm text-gray-500">Update the ticket status to reflect progress</p>
+      </div>
+    <% end %>
+
+    <!-- Tags -->
+    <div>
+      <%#= form.label :tag_ids, "Tags", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= render 'alto/shared/forms/multi_select',
+          form: form,
+          model: @ticket,
+          label: "Tags",
+          field_name: :tag_ids,
+          available_items: @board.tags.ordered,
+          selected_items: @ticket.tags,
+          placeholder: "Search and select tags...",
+          item_display_method: :name,
+          item_icon_method: nil,
+          help_text: nil %>
+    </div>
+
+    <!-- Locked -->
+    <div>
+      <%= form.label :locked, "Locked", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <div class="flex items-start space-x-3">
+        <%= form.check_box :locked, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1" %>
+        <div class="text-sm">
+          <span class="text-gray-700 font-medium">Lock ticket (prevents comments and votes)</span>
+          <p class="text-gray-500 mt-1">Lock to prevent further discussion</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Update Button -->
+    <div class="pt-4">
+      <%= form.submit "Update Ticket",
+          class: "w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+
+      <!-- Archive Section -->
+      <%= link_to "Archive Ticket",
+          alto.archive_board_ticket_path(@board, @ticket),
+          method: :patch,
+          class: "block mt-2  w-full items-center px-3 py-2 border border-amber-300 shadow-sm text-sm text-center leading-4 font-medium rounded-md text-amber-700 bg-white hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
+          data: {
+            confirm: "Are you sure you want to archive this #{board_item_name(@board)}? It will become read-only and cannot be easily undone.",
+            turbo_method: :patch
+          } %>
+    </div>
+
+  <% end %>
+</div>

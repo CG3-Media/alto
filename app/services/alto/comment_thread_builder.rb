@@ -27,15 +27,15 @@ module Alto
     end
 
     # Returns redirect path when comment creation fails
-    def redirect_path_for_failed_reply(comment_params, ticket, board)
-      if comment_params[:parent_id].present?
-        parent_comment = ticket.comments.find(comment_params[:parent_id])
-        root_comment = parent_comment.thread_root
-        [board, ticket, root_comment]
-      else
-        nil # Will render show template
-      end
-    end
+def redirect_path_for_failed_reply(comment_params, ticket, board)
+  if comment_params[:parent_id].present?
+    parent_comment = ticket.comments.find(comment_params[:parent_id])
+    root_comment = parent_comment.thread_root
+    [board, ticket, root_comment]
+  else
+    nil # Will render show template
+  end
+end
 
     # Returns redirect path after deleting a comment
     def redirect_path_for_delete(comment, board, ticket, referrer)

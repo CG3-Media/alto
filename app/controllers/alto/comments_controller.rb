@@ -11,16 +11,31 @@ module Alto
     before_action :ensure_not_archived, only: [:create, :destroy]
 
     def create
-      @comment = @ticket.comments.build(comment_params)
-      @comment.user_id = current_user.id
-      thread_builder = CommentThreadBuilder.new(@ticket)
+          # Extract status_slug parameter before building comment (belongs to ticket, not comment)
+    status_slug_param = params.dig(:comment, :status_slug)
+    should_update_status = can_access_admin? && status_slug_param.present? && @board.has_status_tracking?
 
+    @comment = @ticket.comments.build(comment_params_without_status)
+    @comment.user_id = current_user.id
+    thread_builder = CommentThreadBuilder.new(@ticket)
+
+    ActiveRecord::Base.transaction do
       if @comment.save
+        # Update ticket status if requested by admin
+        if should_update_status
+          @ticket.update!(status_slug: status_slug_param)
+        end
+
         redirect_path = thread_builder.redirect_path_for_reply(@comment, @board, @ticket)
-        redirect_to alto.url_for(redirect_path), notice: success_message_for(@comment)
+        success_message = build_success_message(@comment, should_update_status)
+        redirect_to alto.url_for(redirect_path), notice: success_message
       else
         handle_failed_comment_creation(thread_builder)
       end
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    # Handle any failures (including invalid status) - transaction ensures atomicity
+    redirect_to [@board, @ticket], alert: "Failed to save: #{e.message}"
     end
 
     def show
@@ -53,6 +68,10 @@ module Alto
     end
 
     def comment_params
+      comment_params_without_status
+    end
+
+    def comment_params_without_status
       permitted_params = [:content, :parent_id]
 
       # Allow image uploads if enabled
@@ -79,6 +98,16 @@ module Alto
 
     def success_message_for(comment)
       comment.is_reply? ? "Reply was successfully added." : "Comment was successfully added."
+    end
+
+    def build_success_message(comment, status_updated)
+      base_message = success_message_for(comment)
+      if status_updated
+        status_name = @ticket.status_name
+        base_message + " Status updated to '#{status_name}'."
+      else
+        base_message
+      end
     end
 
     def delete_success_message(comment)
