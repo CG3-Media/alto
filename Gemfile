@@ -10,7 +10,7 @@ gem "puma"
 
 gem "pg"
 
-gem "sqlite3", "~> 1.4"
+gem "sqlite3", "~> 2.7"
 
 gem "propshaft"
 
