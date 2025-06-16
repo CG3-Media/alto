@@ -64,6 +64,16 @@ module Alto
       assert_includes response.body, @ticket.title
     end
 
+    test "should execute index queries without polymorphic errors" do
+      # This test would have caught the original polymorphic bug
+      assert_nothing_raised do
+        @general_board.tickets.active.includes(:board, :upvotes, :tags).to_a
+      end
+
+      get "/boards/#{@general_board.slug}/tickets"
+      assert_response :success
+    end
+
     test "should filter tickets by search" do
       get "/boards/#{@general_board.slug}/tickets", params: { search: "Test Ticket" }
       assert_response :success
@@ -273,7 +283,7 @@ module Alto
 
       assert_response :redirect
       assert_redirected_to "/boards/#{@general_board.slug}/tickets"
-    end
+        end
 
     test "should handle destroying other users ticket based on permission system" do
       # Test depends on permission system - might allow or deny
