@@ -1,0 +1,73 @@
+<%
+  # Default values
+  form ||= nil
+  field_name ||= nil
+  label_text ||= field_name&.to_s&.humanize
+  placeholder ||= ""
+  rows ||= 4
+  required ||= false
+  disabled ||= false
+  additional_classes ||= ""
+  html_options ||= {}
+  show_label ||= true
+  show_errors ||= true
+  model ||= nil  # For error checking
+  helper_text ||= nil
+  # Error checking
+  has_errors = model&.errors&.[](field_name)&.any? || false
+
+  # Base textarea classes
+  base_classes = "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+
+  # State classes
+  if disabled
+    state_classes = "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+  elsif has_errors
+    state_classes = "border-red-300 text-gray-900"
+  else
+    state_classes = "border-gray-300 text-gray-900"
+  end
+
+  # Final classes
+  final_classes = "#{base_classes} #{state_classes} #{additional_classes}".strip
+
+  # Merge html_options
+  textarea_options = {
+    placeholder: placeholder,
+    class: final_classes,
+    required: required,
+    disabled: disabled,
+    rows: rows
+  }.merge(html_options)
+%>
+
+<div class="space-y-2">
+  <% if show_label && label_text.present? %>
+    <% if form && field_name %>
+      <%= form.label field_name, label_text, class: "block text-sm font-medium text-gray-700" %>
+    <% else %>
+      <label class="block text-sm font-medium text-gray-700"><%= label_text %></label>
+    <% end %>
+  <% end %>
+
+  <% if form && field_name %>
+    <%= form.text_area field_name, textarea_options %>
+  <% elsif field_name %>
+    <%= text_area_tag field_name, nil, textarea_options %>
+  <% else %>
+    <!-- No field_name = no form submission, just styling -->
+    <textarea <%= textarea_options.reject { |k, v| (k == :disabled && !v) || (k == :required && !v) }.map { |k, v| "#{k}=\"#{v}\"" }.join(' ').html_safe %>><%= html_options[:value] %></textarea>
+  <% end %>
+
+  <% if helper_text.present? %>
+    <p class="text-sm text-gray-500">
+      <%= helper_text %>
+    </p>
+  <% end %>
+
+  <% if show_errors && has_errors %>
+    <% model.errors[field_name].each do |error| %>
+      <p class="text-sm text-red-600"><%= error %></p>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,87 @@
+<div class="space-y-6">
+  <% actions = [] %>
+  <% if can_submit_tickets? %>
+    <% actions << {
+      type: :link,
+      text: "New #{board_item_name(@board).capitalize}",
+      path: alto.new_board_ticket_path(@board),
+      button_type: :primary
+    } %>
+  <% end %>
+
+  <% if can_access_admin? %>
+    <% actions << {
+      type: :link,
+      text: "Modify Board",
+      path: alto.edit_admin_board_path(@board.slug),
+      button_type: :secondary
+    } %>
+  <% end %>
+
+  <%= render 'alto/shared/page_header',
+      title: @board.name,
+      actions: actions %>
+
+      <!-- Filtering Controls -->
+  <%= render 'filters_bar' %>
+
+  <!-- Search Results Info -->
+  <% if @search_query.present? %>
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+      <div class="flex">
+        <div class="ml-3">
+          <p class="text-sm text-blue-700">
+            <span class="font-medium">Search results for:</span> "<%= @search_query %>"
+            <% if @tickets.respond_to?(:total_count) %>
+              • <%= pluralize(@tickets.total_count, board_item_name(@board)) %> found
+            <% else %>
+              • <%= pluralize(@tickets.count, board_item_name(@board)) %> found
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Card View (Kanban Style) -->
+  <%= render 'card_view', tickets: @tickets, board: @board, statuses: @statuses, view_type: @view_type %>
+
+  <!-- List View (Traditional List) -->
+  <%= render 'list_view', tickets: @tickets, board: @board, search_query: @search_query, view_type: @view_type %>
+
+  <!-- Pagination -->
+  <%= render 'shared/pagination', collection: @tickets %>
+</div>
+
+<style>
+.kanban-view .flex-1::-webkit-scrollbar {
+  width: 4px;
+}
+
+.kanban-view .flex-1::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-view .flex-1::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+}
+
+.kanban-view .flex-1::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+.view-toggle-btn.active {
+  background-color: white;
+  color: #374151;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.view-toggle-btn:not(.active) {
+  color: #6B7280;
+}
+
+.view-toggle-btn:not(.active):hover {
+  color: #374151;
+}
+</style>

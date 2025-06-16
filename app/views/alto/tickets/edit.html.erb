@@ -1,0 +1,36 @@
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Edit Ticket</h1>
+      <p class="text-gray-600">Update ticket details, status, and moderation settings.</p>
+    </div>
+
+    <%= render 'form', context: :edit %>
+  </div>
+
+  <!-- Status Guide -->
+  <% if @board.has_status_tracking? %>
+    <div class="mt-6 bg-gray-50 rounded-lg p-4">
+      <h3 class="text-sm font-medium text-gray-800 mb-3">📋 Status Guide</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <% @board.available_statuses_for_user(is_admin: can_access_admin?).each do |status| %>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 text-xs font-medium rounded-full <%= status.color_classes %>">
+              <%= status.name %>
+            </span>
+            <span class="text-gray-600">
+              <%= case status.slug
+                  when 'open' then 'New feedback, not yet reviewed'
+                  when 'planned' then 'Accepted and scheduled for development'
+                  when 'in_progress' then 'Currently being worked on'
+                  when 'complete' then 'Finished and deployed'
+                  when 'closed' then 'Resolved or no longer relevant'
+                  else "#{status.name} status"
+                  end %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

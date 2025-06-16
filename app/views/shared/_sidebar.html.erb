@@ -1,0 +1,326 @@
+<!-- Sidebar -->
+<div class="w-64 bg-white shadow-sm border-r border-gray-200 h-full fixed left-0 top-0 pt-20 overflow-y-auto z-10 hidden lg:block sleek-scrollbar">
+  <div class="p-4 space-y-6">
+
+    <!-- Recent Activity -->
+    <% activity_collapsed = cookies['sidebar-section-0'] == 'true' %>
+    <div class="feedback-sidebar-section">
+      <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
+        <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Recent Activity</h3>
+        <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors ml-2"><%= activity_collapsed ? '+' : '−' %></span>
+      </div>
+      <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if activity_collapsed %>>
+        <div class="space-y-3">
+          <% if defined?(current_board) && current_board %>
+            <% recent_tickets = current_board.tickets.active.includes(:comments).recent.limit(5) %>
+          <% else %>
+            <% recent_tickets = ::Alto::Ticket.active.includes(:board, :comments).recent.limit(5) %>
+          <% end %>
+          <% recent_tickets.each do |ticket| %>
+            <div class="group">
+              <%= link_to alto.board_ticket_path(ticket.board, ticket),
+                  class: "block hover:bg-gray-50 p-2 rounded-md" do %>
+                <div class="flex items-start">
+                  <span class="w-2 h-2 rounded-full mt-2 mr-2 <%= if ticket.status
+                    case ticket.status.color
+                    when 'green' then 'bg-green-500'
+                    when 'blue' then 'bg-blue-500'
+                    when 'yellow' then 'bg-yellow-500'
+                    when 'red' then 'bg-red-500'
+                    when 'gray' then 'bg-gray-500'
+                    when 'purple' then 'bg-purple-500'
+                    when 'orange' then 'bg-orange-500'
+                    when 'pink' then 'bg-pink-500'
+                    else 'bg-gray-500'
+                    end
+                  else
+                    'bg-gray-500'
+                  end %>"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      <%= truncate(ticket.title, length: 30) %>
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      <%= ticket.board.name %> • <%= time_ago_in_words(ticket.created_at) %> ago
+                    </p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if recent_tickets.empty? %>
+            <p class="text-sm text-gray-500">No recent <%= current_board_item_name.pluralize %></p>
+          <% end %>
+
+          <% if defined?(current_board) && current_board %>
+            <div class="mt-4 pt-3 border-t border-gray-200">
+              <%= link_to alto.board_activity_path(current_board),
+                  class: "text-xs text-blue-600 hover:text-blue-800 font-medium" do %>
+                View all activity →
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boards Section -->
+    <% boards_collapsed = cookies['sidebar-section-1'] == 'true' %>
+    <div class="feedback-sidebar-section">
+      <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
+        <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide flex-1">Boards</h3>
+        <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors ml-2"><%= boards_collapsed ? '+' : '−' %></span>
+      </div>
+            <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if boards_collapsed %>>
+        <nav class="space-y-1">
+          <% accessible_boards = Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered %>
+          <% accessible_boards.each do |board| %>
+            <% ticket_count = board.tickets_count %>
+            <%= link_to alto.board_tickets_path(board),
+                class: "group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md #{ board == current_board ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }" do %>
+              <div class="flex items-center">
+                <span class="truncate">
+                  <%= board.name %>
+                  <% if board.admin_only? %>
+                    <span class="ml-1 text-xs">🔒</span>
+                  <% end %>
+                </span>
+              </div>
+              <span class="ml-2 inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-gray-100 text-gray-600 group-hover:bg-gray-200">
+                <%= ticket_count %>
+              </span>
+            <% end %>
+          <% end %>
+
+          <% if can_access_admin? %>
+            <%= link_to "➕ New Board", alto.new_admin_board_path,
+                class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-500 rounded-md hover:text-gray-700 hover:bg-gray-50" %>
+          <% end %>
+        </nav>
+
+        <% if accessible_boards.count > 1 %>
+          <div class="mt-4 pt-3 border-t border-gray-200">
+            <% if can_access_admin? %>
+              <%= link_to alto.admin_boards_path,
+                  class: "text-xs text-blue-600 hover:text-blue-800 font-medium" do %>
+                View all boards →
+              <% end %>
+            <% else %>
+              <%= link_to alto.boards_path,
+                  class: "text-xs text-blue-600 hover:text-blue-800 font-medium" do %>
+                View all boards →
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Admin Section -->
+    <% if can_access_admin? %>
+      <% admin_collapsed = cookies['sidebar-section-2'] == 'true' %>
+      <div class="feedback-sidebar-section">
+        <div class="flex items-center justify-between cursor-pointer" onclick="toggleSection(this)">
+          <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Admin</h3>
+          <span class="toggle-icon text-gray-500 hover:text-gray-700 transition-colors"><%= admin_collapsed ? '+' : '−' %></span>
+        </div>
+        <div class="section-content mt-3" <%= 'style="display: none;"'.html_safe if admin_collapsed %>>
+          <nav class="space-y-1">
+            <%= link_to alto.admin_dashboard_path,
+                class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Dashboard
+            <% end %>
+
+            <%= link_to alto.admin_boards_path,
+                class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              Manage Boards
+            <% end %>
+
+            <%= link_to alto.admin_settings_path,
+                class: "group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              Settings
+            <% end %>
+          </nav>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div>
+
+<!-- Mobile Sidebar -->
+<div id="mobile-sidebar-overlay" class="fixed inset-0 z-40 sm:hidden hidden">
+  <div class="fixed inset-0 bg-gray-600 bg-opacity-75" onclick="toggleMobileSidebar()"></div>
+  <div class="relative flex-1 flex flex-col w-full bg-white">
+    <div class="absolute top-0 right-0 -mr-12 pt-2">
+      <button type="button" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" onclick="toggleMobileSidebar()">
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="flex-1 h-0 pt-4 pb-4 overflow-y-auto">
+      <div class="space-y-1">
+                <!-- App Name -->
+        <%= link_to "/",
+            class: "flex items-center px-4 py-3 text-base font-semibold text-gray-900 hover:bg-gray-50",
+            onclick: "toggleMobileSidebar()" do %>
+          <%= app_name %>
+        <% end %>
+
+        <!-- Global Search -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <%= form_with url: "/search", method: :get, local: true, class: "w-full" do |form| %>
+            <div class="relative">
+              <%= form.text_field :search,
+                  value: params[:search],
+                  placeholder: "Search all tickets...",
+                  class: "w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm" %>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <%= form.hidden_field :status, value: params[:status] %>
+            <%= form.hidden_field :sort, value: params[:sort] %>
+          <% end %>
+        </div>
+
+        <!-- Admin Section (if admin) -->
+        <% if can_access_admin? %>
+          <%= link_to alto.admin_dashboard_path,
+              class: "flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50",
+              onclick: "toggleMobileSidebar()" do %>
+            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Admin
+          <% end %>
+        <% end %>
+
+        <!-- Board List -->
+        <div class="border-t border-gray-200 pt-2 mt-2">
+          <% accessible_boards = Alto::Board.accessible_to_user(current_user, current_user_is_admin: can_access_admin?).ordered %>
+          <% accessible_boards.each do |board| %>
+            <%= link_to alto.board_tickets_path(board),
+                class: "flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50",
+                onclick: "toggleMobileSidebar()" do %>
+              <div class="flex items-center">
+                <span class="truncate">
+                  <%= board.name %>
+                  <% if board.admin_only? %>
+                    <span class="ml-1 text-xs">🔒</span>
+                  <% end %>
+                </span>
+              </div>
+              <span class="ml-2 inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                <%= board.tickets_count %>
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Sleek custom scrollbar styling */
+.sleek-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.sleek-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+.sleek-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 1024px) {
+  .sleek-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sleek-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+</style>
+
+<script>
+function toggleMobileSidebar() {
+  const overlay = document.getElementById('mobile-sidebar-overlay');
+  overlay.classList.toggle('hidden');
+}
+
+// Collapsible sidebar sections
+function toggleSection(headerElement) {
+  const section = headerElement.parentElement;
+  const content = section.querySelector('.section-content');
+  const icon = headerElement.querySelector('.toggle-icon');
+
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    icon.textContent = '−';
+  } else {
+    content.style.display = 'none';
+    icon.textContent = '+';
+  }
+}
+
+// Enhanced toggle function with cookie persistence
+function toggleSection(headerElement) {
+  const section = headerElement.parentElement;
+  const content = section.querySelector('.section-content');
+  const icon = headerElement.querySelector('.toggle-icon');
+  const sections = Array.from(document.querySelectorAll('.feedback-sidebar-section'));
+  const sectionIndex = sections.indexOf(section);
+  const cookieName = 'sidebar-section-' + sectionIndex;
+
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    icon.textContent = '−';
+    // Remove cookie to indicate expanded state
+    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  } else {
+    content.style.display = 'none';
+    icon.textContent = '+';
+    // Set cookie to indicate collapsed state (expires in 1 year)
+    const expiry = new Date();
+    expiry.setFullYear(expiry.getFullYear() + 1);
+    document.cookie = cookieName + '=true; expires=' + expiry.toUTCString() + '; path=/;';
+  }
+}
+</script>

@@ -1,0 +1,43 @@
+<div class="space-y-6">
+  <%= render 'alto/shared/page_header',
+      title: "✏️ Edit Board: #{@board.name}",
+      actions: [
+        {
+          type: :link,
+          text: "← Back to Boards",
+          path: alto.admin_boards_path,
+          button_type: :secondary
+        },
+        {
+          type: :link,
+          text: "Manage Tags",
+          path: alto.admin_board_tags_path(@board),
+          button_type: :secondary
+        },
+        {
+          type: :link,
+          text: "View Archive",
+          path: alto.board_archive_path(@board),
+          button_type: :secondary
+        },
+      ] %>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <%= render 'form' %>
+  </div>
+
+  <% if @board.slug != 'feedback' %>
+    <div class="bg-white shadow rounded-lg p-6 border-l-4 border-red-400">
+      <h3 class="text-lg font-medium text-gray-900 mb-2">⚠️ Danger Zone</h3>
+      <p class="text-gray-600 mb-4">
+        Deleting this board will permanently remove it and may affect associated tickets.
+      </p>
+      <%= render 'shared/button',
+          text: "Delete Board",
+          url: alto.admin_board_path(@board),
+          method: :delete,
+          confirm: "Are you sure you want to delete '#{@board.name}'? This action cannot be undone.",
+          button_type: :danger %>
+    </div>
+  <% end %>
+</div>

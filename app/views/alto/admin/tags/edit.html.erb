@@ -1,0 +1,64 @@
+<div class="max-w-4xl mx-auto">
+  <nav class="flex mb-8" aria-label="Breadcrumb">
+    <ol role="list" class="flex items-center space-x-4">
+      <li>
+        <div class="flex">
+          <%= link_to "Boards", admin_boards_path, class: "text-sm font-medium text-gray-500 hover:text-gray-700" %>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          <%= link_to @board.name, admin_board_path(@board), class: "ml-4 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          <%= link_to "Tags", admin_board_tags_path(@board), class: "ml-4 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          <span class="ml-4 text-sm font-medium text-gray-900" aria-current="page">Edit <%= @tag.name %></span>
+        </div>
+      </li>
+    </ol>
+  </nav>
+
+  <div class="mb-8">
+    <div class="flex items-center space-x-3">
+      <h1 class="text-2xl font-bold text-gray-900">Edit Tag</h1>
+      <%= render 'alto/shared/tag', tag: @tag %>
+    </div>
+    <p class="mt-2 text-sm text-gray-600">
+      Update the tag settings and appearance.
+    </p>
+  </div>
+
+  <%= render 'form' %>
+
+  <% if @tag.usage_count > 0 %>
+    <div class="mt-8 bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Tag Usage</h3>
+      </div>
+      <div class="px-6 py-4">
+        <p class="text-sm text-gray-600 mb-4">
+          This tag is currently used by <strong><%= @tag.usage_count %></strong>
+          <%= @tag.usage_count == 1 ? @board.item_name : @board.item_name.pluralize %>.
+        </p>
+        <%= link_to "View all tagged #{@board.item_name.pluralize}",
+            admin_board_tag_path(@board, @tag),
+            class: "inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+      </div>
+    </div>
+  <% end %>
+</div>

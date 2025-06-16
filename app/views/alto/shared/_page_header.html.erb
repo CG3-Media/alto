@@ -1,0 +1,45 @@
+<div class="flex flex-col md:flex-row gap-2 md:gap-0 justify-between items-start<%= " #{local_assigns[:container_class]}" if local_assigns[:container_class] %>">
+  <div class="flex-1">
+    <h1 class="text-2xl font-bold text-gray-900<%= " #{local_assigns[:title_class]}" if local_assigns[:title_class] %>">
+      <%= title %>
+    </h1>
+    <% if local_assigns[:subtitle].present? %>
+      <p class="mt-1 text-sm text-gray-500<%= " #{local_assigns[:subtitle_class]}" if local_assigns[:subtitle_class] %>">
+        <%= subtitle %>
+      </p>
+    <% end %>
+  </div>
+
+  <% if local_assigns[:actions].present? %>
+    <div class="flex items-center space-x-4 md:ml-4">
+      <% actions.each do |action| %>
+        <% if action[:type] == :link %>
+          <%= render 'shared/button',
+              text: action[:text],
+              url: action[:path],
+              method: action[:method],
+              button_type: action[:button_type] || :primary,
+              size: action[:size] || "medium",
+              additional_classes: action[:class] || "",
+              html_options: action.fetch(:options, {}) %>
+        <% elsif action[:type] == :button %>
+          <%= render 'alto/shared/button',
+              text: action[:text],
+              url: action[:path],
+              method: action[:method] || :post,
+              button_type: action[:button_type] || :primary,
+              size: action[:size] || "medium",
+              type: action[:form_type] || "button",
+              additional_classes: action[:class] || "",
+              html_options: action.fetch(:options, {}) %>
+        <% else %>
+          <%= raw action[:html] if action[:html] %>
+        <% end %>
+      <% end %>
+    </div>
+  <% elsif block_given? %>
+    <div class="flex items-center space-x-4 ml-4">
+      <%= yield %>
+    </div>
+  <% end %>
+</div>

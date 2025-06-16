@@ -1,0 +1,150 @@
+<div class="space-y-6">
+  <%= render 'alto/shared/page_header',
+      title: "📋 #{@status_set.name}",
+      actions: [
+        {
+          type: :link,
+          text: "← Back to Status Sets",
+          path: alto.admin_status_sets_path,
+          class: "text-gray-600 hover:text-gray-900"
+        },
+        {
+          type: :link,
+          text: "✏️ Edit",
+          path: alto.edit_admin_status_set_path(@status_set),
+          class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        }
+      ] %>
+
+  <!-- Status Set Details -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Details</h3>
+        <dl class="space-y-3">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Name</dt>
+            <dd class="text-sm text-gray-900"><%= @status_set.name %></dd>
+          </div>
+          <% if @status_set.description.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Description</dt>
+              <dd class="text-sm text-gray-900"><%= @status_set.description %></dd>
+            </div>
+          <% end %>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Default Status Set</dt>
+            <dd class="text-sm text-gray-900">
+              <% if @status_set.is_default? %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  ✓ Yes
+                </span>
+              <% else %>
+                <span class="text-gray-600">No</span>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Created</dt>
+            <dd class="text-sm text-gray-900"><%= time_ago_in_words(@status_set.created_at) %> ago</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-medium text-gray-900 mb-4">📊 Usage Statistics</h3>
+        <dl class="space-y-3">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Boards Using This Status Set</dt>
+            <dd class="text-sm text-gray-900">
+              <%= pluralize(@boards_using_status_set.count, 'board') %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Total Statuses</dt>
+            <dd class="text-sm text-gray-900">
+              <%= pluralize(@status_set.statuses.count, 'status') %>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statuses -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">🏷️ Statuses</h3>
+
+    <% if @status_set.statuses.any? %>
+      <div class="space-y-3">
+        <% @status_set.statuses.ordered.each_with_index do |status, index| %>
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <span class="text-sm text-gray-500 font-mono w-6"><%= index + 1 %>.</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= status.color_classes %>">
+                <%= status.name %>
+              </span>
+              <span class="text-sm text-gray-500 font-mono"><%= status.slug %></span>
+            </div>
+            <div class="text-sm text-gray-400">
+              <%= status.publicly_viewable? ? "Public" : "Admin only" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+        <p class="text-sm text-blue-700">
+          💡 <strong>Workflow Preview:</strong>
+          <%= @status_set.statuses.ordered.map(&:name).join(' → ') %>
+        </p>
+      </div>
+    <% else %>
+      <div class="text-center py-8 text-gray-500">
+        <p>No statuses defined for this status set.</p>
+        <p class="mt-2">
+          <%= link_to "Add statuses", alto.edit_admin_status_set_path(@status_set),
+              class: "text-blue-600 hover:text-blue-500" %>
+        </p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Boards Using This Status Set -->
+  <% if @boards_using_status_set.any? %>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">🗂️ Boards Using This Status Set</h3>
+
+      <div class="space-y-2">
+        <% @boards_using_status_set.each do |board| %>
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+            <div>
+              <div class="text-sm font-medium text-gray-900">
+                <%= link_to board.name, alto.board_tickets_path(board),
+                    class: "hover:text-blue-600" %>
+              </div>
+              <div class="text-sm text-gray-500">/<%= board.slug %></div>
+            </div>
+            <div class="text-sm text-gray-400">
+              <%= pluralize(board.tickets_count, 'ticket') %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Danger Zone -->
+  <% unless @boards_using_status_set.any? %>
+    <div class="bg-white shadow rounded-lg p-6 border-l-4 border-red-400">
+      <h3 class="text-lg font-medium text-gray-900 mb-2">⚠️ Danger Zone</h3>
+      <p class="text-gray-600 mb-4">
+        This status set is not being used by any boards and can be safely deleted.
+      </p>
+      <%= link_to "Delete Status Set", alto.admin_status_set_path(@status_set),
+          method: :delete,
+          confirm: "Are you sure you want to delete '#{@status_set.name}'? This action cannot be undone.",
+          class: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+    </div>
+  <% end %>
+</div>

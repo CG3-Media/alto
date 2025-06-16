@@ -1,0 +1,73 @@
+<% unless params[:action] == 'new' %>
+<nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6" aria-label="Breadcrumb">
+  <% if defined?(@board) %>
+    <!-- Board Link -->
+    <%= link_to @board.name, alto.board_tickets_path(@board),
+        class: "hover:text-blue-600 font-medium" %>
+
+    <% if defined?(@ticket) %>
+      <!-- Separator -->
+      <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+      </svg>
+
+      <!-- Ticket Link -->
+      <% if @ticket.persisted? %>
+        <%= link_to truncate(@ticket.title, length: 50), alto.board_ticket_path(@board, @ticket),
+            class: "hover:text-blue-600 font-medium" %>
+
+        <% if controller_name == 'comments' && action_name == 'show' %>
+          <!-- Separator -->
+          <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+          </svg>
+
+          <!-- Comment Thread -->
+          <span class="text-gray-500">Discussion Thread</span>
+        <% elsif controller_name == 'tickets' && action_name == 'edit' %>
+          <!-- Separator -->
+          <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+          </svg>
+
+          <!-- Edit Ticket -->
+          <span class="text-gray-500">Edit</span>
+        <% end %>
+      <% elsif controller_name == 'tickets' && action_name == 'new' %>
+        <!-- Separator -->
+        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+
+        <!-- New Ticket -->
+        <span class="text-gray-500">New <%= current_board_item_name.capitalize %></span>
+      <% end %>
+    <% elsif controller_name == 'tickets' && action_name == 'new' %>
+      <!-- Separator -->
+      <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+      </svg>
+
+      <!-- New Ticket -->
+      <span class="text-gray-500">New <%= current_board_item_name.capitalize %></span>
+    <% elsif controller_name == 'activity' %>
+      <!-- Separator -->
+      <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+      </svg>
+
+      <!-- Activity -->
+      <span class="text-gray-500">Activity</span>
+    <% end %>
+  <% elsif controller_name == 'activity' && !@board %>
+    <!-- Global Activity -->
+    <span class="text-gray-500">Global Activity</span>
+  <% elsif controller_name == 'boards' %>
+    <!-- All Boards -->
+    <span class="text-gray-500">All Boards</span>
+  <% elsif defined?(@boards) || (controller_name == 'dashboard' && defined?(Alto::Admin)) %>
+    <!-- Admin Dashboard -->
+    <span class="text-gray-500">Admin Dashboard</span>
+  <% end %>
+</nav>
+<% end %>

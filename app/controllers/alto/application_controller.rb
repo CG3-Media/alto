@@ -1,0 +1,27 @@
+module Alto
+  # Inherit from host app's ApplicationController if it exists, otherwise ActionController::Base
+  superclass = defined?(::ApplicationController) ? ::ApplicationController : ActionController::Base
+  class ApplicationController < superclass
+    include AltoPermissions
+    include BoardManagement
+    include SubscriptionHelpers
+    include EngineAuthentication
+    include AltoAccessControl
+
+    protect_from_forgery with: :exception
+
+    # Force engine to use its own layout, not host app's layout
+    layout "alto/application"
+
+    before_action :authenticate_user!
+    before_action :check_alto_access!
+
+    rescue_from ActiveRecord::RecordNotFound, with: :not_found
+
+    private
+
+    def not_found
+      render plain: "Not Found", status: :not_found
+    end
+  end
+end

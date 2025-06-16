@@ -1,0 +1,7 @@
+<div class="flex space-x-2">
+  <%= link_to "Recent", filter_url(@board, sort: 'recent'),
+      class: filter_button_classes(active: params[:sort] != 'popular', type: :sort) %>
+
+  <%= link_to "Popular", filter_url(@board, sort: 'popular'),
+      class: filter_button_classes(active: params[:sort] == 'popular', type: :sort) %>
+</div>

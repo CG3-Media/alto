@@ -1,0 +1,59 @@
+# Severity field for bug reports
+severity:
+  id: 1
+  board_id: 1  # alto_boards(:bugs)
+  label: "Severity"
+  field_type: "select"
+  field_options: ["Low", "Medium", "High", "Critical"]
+  position: 0
+  required: true
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+# Browser field for bug reports
+browser:
+  id: 2
+  board_id: 1  # alto_boards(:bugs)
+  label: "Browser/Platform"
+  field_type: "text_input"
+  placeholder: "e.g., Chrome 120, iOS 17.2"
+  position: 1
+  required: false
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+# Steps to reproduce for bug reports
+steps:
+  id: 3
+  board_id: 1  # alto_boards(:bugs)
+  label: "Steps to Reproduce"
+  field_type: "textarea"
+  placeholder: "Please list the steps to reproduce this issue..."
+  position: 2
+  required: true
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+# Priority field for features
+priority:
+  id: 4
+  board_id: 2  # alto_boards(:features)
+  label: "Priority Level"
+  field_type: "select"
+  field_options: ["Nice to have", "Important", "Critical", "Urgent"]
+  position: 0
+  required: true
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+# User types for features (multiselect)
+user_types:
+  id: 5
+  board_id: 2  # alto_boards(:features)
+  label: "Affected User Types"
+  field_type: "multiselect"
+  field_options: ["End Users", "Administrators", "Developers", "Content Creators"]
+  position: 1
+  required: false
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

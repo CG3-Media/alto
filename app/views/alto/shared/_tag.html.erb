@@ -1,0 +1,62 @@
+<%
+  # Default tag styling
+  color = tag.color.presence || "#6B7280"
+  bg_color = color + "20"  # Add transparency
+  text_color = color
+
+  # Size variants
+  size_classes = case local_assigns[:size]
+  when 'sm'
+    "px-2 py-0.5 text-xs"
+  when 'lg'
+    "px-3 py-1 text-sm"
+  else
+    "px-2.5 py-0.5 text-xs"
+  end
+
+  # Additional classes
+  extra_classes = local_assigns[:class] || ""
+
+  # Check if removable (for form contexts)
+  removable = local_assigns[:removable] || false
+  remove_url = local_assigns[:remove_url]
+%>
+
+<span class="inline-flex items-center <%= size_classes %> rounded-full font-medium <%= extra_classes %>"
+      style="background-color: <%= bg_color %>; color: <%= text_color %>;"
+      data-tag-id="<%= tag.id %>"
+      data-tag-name="<%= tag.name %>">
+
+  <% if local_assigns[:link] %>
+    <%= link_to tag.name, local_assigns[:link],
+        style: "color: #{text_color};",
+        class: "hover:underline" %>
+  <% else %>
+    <%= tag.name %>
+  <% end %>
+
+  <% if removable %>
+    <% if remove_url %>
+      <%= link_to remove_url, method: :delete, remote: true,
+          class: "ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-black hover:bg-opacity-10 focus:outline-none focus:bg-black focus:bg-opacity-10",
+          style: "color: #{text_color};" do %>
+        <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+          <path d="M1.5 1.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      <% end %>
+    <% else %>
+      <button type="button"
+              class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-black hover:bg-opacity-10 focus:outline-none focus:bg-black focus:bg-opacity-10 js-remove-tag"
+              style="color: <%= text_color %>;"
+              data-tag-id="<%= tag.id %>">
+        <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+          <path d="M1.5 1.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </button>
+    <% end %>
+  <% end %>
+
+  <% if local_assigns[:show_count] && tag.respond_to?(:usage_count) %>
+    <span class="ml-1 text-xs opacity-75">(<%= tag.usage_count %>)</span>
+  <% end %>
+</span>

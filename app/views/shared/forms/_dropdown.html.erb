@@ -1,0 +1,92 @@
+<%
+  # Default values
+  form ||= nil
+  field_name ||= nil
+  label_text ||= field_name&.to_s&.humanize
+  options ||= []
+  prompt ||= nil
+  include_blank ||= false
+  required ||= false
+  disabled ||= false
+  additional_classes ||= ""
+  html_options ||= {}
+  show_label ||= true
+  show_errors ||= true
+  show_description ||= true
+  model ||= nil  # For error checking
+  description ||= nil
+
+  # Error checking
+  has_errors = model&.errors&.[](field_name)&.any? || false
+
+  # Base select classes
+  base_classes = "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+
+  # State classes
+  if disabled
+    state_classes = "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+  elsif has_errors
+    state_classes = "border-red-300 text-gray-900"
+  else
+    state_classes = "border-gray-300 text-gray-900"
+  end
+
+  # Final classes
+  final_classes = "#{base_classes} #{state_classes} #{additional_classes}".strip
+
+  # Select options
+  select_options = {
+    prompt: prompt,
+    include_blank: include_blank
+  }
+
+  # Merge html_options
+  input_options = {
+    class: final_classes,
+    required: required,
+    disabled: disabled
+  }.merge(html_options)
+%>
+
+<div class="space-y-2">
+  <% if show_label && label_text.present? %>
+    <% if form && field_name %>
+      <%= form.label field_name, label_text, class: "block text-sm font-medium text-gray-700" %>
+    <% else %>
+      <label class="block text-sm font-medium text-gray-700"><%= label_text %></label>
+    <% end %>
+  <% end %>
+
+  <% if show_description && description.present? %>
+    <p class="text-sm text-gray-500">
+      <%= description %>
+    </p>
+  <% end %>
+
+  <% if form && field_name %>
+    <%= form.select field_name, options, select_options, input_options %>
+  <% elsif field_name %>
+    <%= select_tag field_name, options_for_select(options), select_options.merge(input_options) %>
+  <% else %>
+    <!-- No field_name = no form submission, just styling -->
+    <select <%= input_options.reject { |k, v| (k == :disabled && !v) || (k == :required && !v) }.map { |k, v| "#{k}=\"#{v}\"" }.join(' ').html_safe %>>
+      <% if prompt %>
+        <option value=""><%= prompt %></option>
+      <% end %>
+      <% options.each do |option| %>
+        <% if option.is_a?(Array) %>
+          <% text, value = option %>
+          <option value="<%= value %>" <%= 'selected' if html_options[:value] == value %>><%= text %></option>
+        <% else %>
+          <option value="<%= option %>" <%= 'selected' if html_options[:value] == option %>><%= option %></option>
+        <% end %>
+      <% end %>
+    </select>
+  <% end %>
+
+  <% if show_errors && has_errors %>
+    <% model.errors[field_name].each do |error| %>
+      <p class="text-sm text-red-600"><%= error %></p>
+    <% end %>
+  <% end %>
+</div>

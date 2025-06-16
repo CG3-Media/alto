@@ -1,0 +1,6 @@
+<div class="flex items-center gap-2">
+  <%= render 'alto/shared/filter_dropdown',
+      field_name: :tag,
+      options: [['All tags', '']] + (@available_tags&.map { |tag| ["#{tag.name} (#{tag.tickets.count})", tag.name] } || []),
+      current_value: params[:tag] %>
+</div>

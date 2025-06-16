@@ -1,0 +1,233 @@
+<div rf rf-model="status_set" id="status-set-form">
+  <%= form_with(model: [:admin, @status_set], local: true, class: "space-y-6") do |form| %>
+    <% if @status_set.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <h4 class="font-medium">Please fix the following errors:</h4>
+        <ul class="mt-2 list-disc list-inside">
+          <% @status_set.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <!-- Status Set Details -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Status Set Details</h3>
+
+      <%= render 'shared/forms/input',
+          form: form,
+          field_name: :name,
+          placeholder: "Status set name (e.g., 'Development Workflow')",
+          model: @status_set,
+          required: true %>
+
+      <%= render 'shared/forms/text_area',
+          form: form,
+          field_name: :description,
+          placeholder: "Describe when to use this status set",
+          rows: 3,
+          model: @status_set,
+          helper_text: "Help users understand when to use this workflow" %>
+
+      <div>
+        <label class="flex items-center">
+          <%= form.check_box :is_default, class: "rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" %>
+          <span class="ml-2 text-sm text-gray-900">Set as default status set</span>
+        </label>
+        <p class="mt-1 text-sm text-gray-500">The default status set is used for new boards unless specified otherwise</p>
+      </div>
+    </div>
+
+    <!-- Statuses -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-gray-900">🏷️ Statuses</h3>
+        <button type="button" rf-nest-add="statuses" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm font-medium">
+          + Add Status
+        </button>
+      </div>
+
+      <div rf-nest-for="statuses" class="space-y-4">
+        <%= form.fields_for :statuses do |status_form| %>
+          <%= render 'status_field', form: status_form %>
+        <% end %>
+      </div>
+
+      <p class="mt-2 text-sm text-gray-500">
+        💡 Tip: Create statuses in the order you want them to appear. Common workflows: Open → In Progress → Complete
+      </p>
+    </div>
+
+    <div class="flex justify-end space-x-3">
+      <%= render 'shared/buttons/secondary',
+          text: "Cancel",
+          url: alto.admin_status_sets_path %>
+      <%= render 'shared/buttons/primary',
+          text: (@status_set.new_record? ? "Create Status Set" : "Update Status Set"),
+          type: "submit" %>
+    </div>
+  <% end %>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('status-set-form')
+  if (!container) return
+
+  // Listen for RF events to handle our custom functionality
+  container.addEventListener('rf:field:add', function(e) {
+    const { item: fieldContainer } = e.detail
+
+    // Setup initial preview, slug, and position for new fields
+    updatePosition(fieldContainer)
+    generateSlug(fieldContainer)
+    updateColorPreview(fieldContainer)
+    initializeViewableCheckbox(fieldContainer)
+  })
+
+  container.addEventListener('rf:field:remove', function(e) {
+    const { isDestroy } = e.detail
+
+    // Recalculate positions for remaining fields when a field is removed from DOM
+    if (!isDestroy) { // Only for fields actually removed from DOM
+      setTimeout(() => {
+        recalculatePositions(container)
+      }, 100) // Small delay to let DOM update
+    }
+  })
+
+  // Listen for input changes on name and color fields within nested items
+  container.addEventListener('input', function(e) {
+    const target = e.target
+    const fieldContainer = target.closest('[rf-nest-item]')
+
+    if (!fieldContainer) return
+
+    // Handle name changes for slug generation and preview
+    if (target.name && target.name.includes('[name]')) {
+      generateSlug(fieldContainer)
+      updateColorPreview(fieldContainer)
+    }
+  })
+
+  container.addEventListener('change', function(e) {
+    const target = e.target
+    const fieldContainer = target.closest('[rf-nest-item]')
+
+    if (!fieldContainer) return
+
+    // Handle color changes for preview
+    if (target.name && target.name.includes('[color]')) {
+      updateColorPreview(fieldContainer)
+    }
+  })
+
+  // Position management function
+  function updatePosition(fieldContainer) {
+    const statusContainer = container.querySelector('[rf-nest-for="statuses"]')
+    const statusFields = Array.from(statusContainer.children).filter(child =>
+      child.matches('[rf-nest-item]') &&
+      child.style.display !== 'none'
+    )
+
+    const thisFieldIndex = statusFields.indexOf(fieldContainer)
+    const correctPosition = thisFieldIndex
+
+    // Target the position field
+    const positionField = fieldContainer.querySelector('input[name*="[position]"]')
+    const titleElement = fieldContainer.querySelector('[data-nested-title]')
+
+    if (positionField) {
+      positionField.value = correctPosition.toString()
+    }
+
+    // Update dynamic title if present (e.g., "Status 1", "Status 2")
+    if (titleElement) {
+      const titleTemplate = titleElement.dataset.nestedTitle || 'Status {index}'
+      titleElement.textContent = titleTemplate.replace('{index}', (correctPosition + 1).toString())
+    }
+  }
+
+  // Recalculate positions for all remaining fields
+  function recalculatePositions(container) {
+    const statusContainer = container.querySelector('[rf-nest-for="statuses"]')
+    if (!statusContainer) return
+
+    const statusFields = Array.from(statusContainer.children).filter(child =>
+      child.matches('[rf-nest-item]') &&
+      child.style.display !== 'none'
+    )
+
+    statusFields.forEach((fieldContainer, index) => {
+      const positionField = fieldContainer.querySelector('input[name*="[position]"]')
+      const titleElement = fieldContainer.querySelector('[data-nested-title]')
+
+      if (positionField) {
+        positionField.value = index.toString()
+      }
+
+      if (titleElement) {
+        const titleTemplate = titleElement.dataset.nestedTitle || 'Status {index}'
+        titleElement.textContent = titleTemplate.replace('{index}', (index + 1).toString())
+      }
+    })
+  }
+
+  // Slug generation function
+  function generateSlug(fieldContainer) {
+    const nameField = fieldContainer.querySelector('input[name*="[name]"]')
+    const slugField = fieldContainer.querySelector('input[name*="[slug]"]')
+
+    if (nameField && slugField) {
+      const name = nameField.value || ''
+      const slug = name
+        .toLowerCase()                    // Convert to lowercase
+        .trim()                          // Remove leading/trailing whitespace
+        .replace(/[^\w\s-]/g, '')        // Remove special characters except hyphens and spaces
+        .replace(/[\s_-]+/g, '-')        // Replace spaces and underscores with hyphens
+        .replace(/^-+|-+$/g, '')         // Remove leading/trailing hyphens
+
+      slugField.value = slug
+    }
+  }
+
+  // Color preview update function
+  function updateColorPreview(fieldContainer) {
+    const colorField = fieldContainer.querySelector('select[name*="[color]"], input[name*="[color]"]')
+    const nameField = fieldContainer.querySelector('input[name*="[name]"]')
+    const previewElement = fieldContainer.querySelector('[data-color-preview]')
+
+    if (colorField && previewElement) {
+      const color = colorField.value
+      const name = nameField ? nameField.value || 'Status Name' : 'Status Name'
+
+      // Color class mapping
+      const colorClasses = {
+        'green': 'bg-green-100 text-green-800',
+        'blue': 'bg-blue-100 text-blue-800',
+        'yellow': 'bg-yellow-100 text-yellow-800',
+        'red': 'bg-red-100 text-red-800',
+        'gray': 'bg-gray-100 text-gray-800',
+        'purple': 'bg-purple-100 text-purple-800',
+        'orange': 'bg-orange-100 text-orange-800',
+        'pink': 'bg-pink-100 text-pink-800'
+      }
+
+      previewElement.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClasses[color] || 'bg-gray-100 text-gray-800'}`
+      previewElement.textContent = name
+    }
+  }
+
+  // Initialize viewable_by_public checkbox for new fields
+  function initializeViewableCheckbox(fieldContainer) {
+    const checkbox = fieldContainer.querySelector('input[type="checkbox"][name*="[viewable_by_public]"]')
+
+    if (checkbox) {
+      // Set default to checked (true) for new statuses
+      checkbox.checked = true
+    }
+  }
+})
+</script>

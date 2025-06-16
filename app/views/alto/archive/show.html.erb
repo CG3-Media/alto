@@ -1,0 +1,133 @@
+<div class="space-y-6">
+  <% actions = [] %>
+  <% if can_access_admin? %>
+    <% actions << {
+      type: :link,
+      text: "Back to Board",
+      path: alto.board_tickets_path(@board),
+      button_type: :secondary
+    } %>
+  <% end %>
+
+  <%= render 'alto/shared/page_header',
+      title: "#{@board.name} - Archive",
+      subtitle: "Archived #{board_item_name(@board).pluralize} are read-only",
+      actions: actions %>
+
+  <!-- Archive Info Banner -->
+  <div class="bg-amber-50 border-l-4 border-amber-400 p-4">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-amber-700">
+          <span class="font-medium">Archive:</span> These <%= board_item_name(@board).pluralize %> have been archived and are read-only.
+          <% if @tickets.respond_to?(:total_count) %>
+            <%= pluralize(@tickets.total_count, board_item_name(@board)) %> archived.
+          <% else %>
+            <%= pluralize(@tickets.count, board_item_name(@board)) %> archived.
+          <% end %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sort Toggle -->
+  <div class="flex justify-end">
+    <div class="flex space-x-2">
+      <%= link_to "Recent", alto.board_archive_path(@board, sort: 'recent'),
+          class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] != 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] == 'popular'}" %>
+      <%= link_to "Popular", alto.board_archive_path(@board, sort: 'popular'),
+          class: "px-3 py-2 text-sm rounded-md #{'bg-blue-100 text-blue-700' if params[:sort] == 'popular'} #{'text-gray-600 hover:text-gray-900' if params[:sort] != 'popular'}" %>
+    </div>
+  </div>
+
+  <!-- Archived Tickets List -->
+  <div class="space-y-4">
+    <% if @tickets.any? %>
+      <% @tickets.each do |ticket| %>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow opacity-60">
+          <!-- Top row: Title/Description + Voting -->
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <!-- Status and Archive Badges -->
+              <div class="mb-2 flex items-center gap-2">
+                <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                  📦 Archived
+                </span>
+                <% if @board.has_status_tracking? %>
+                  <span class="px-2 py-1 text-xs font-medium rounded-full <%= ticket.status_color_classes %>">
+                    <%= ticket.status_name %>
+                  </span>
+                <% end %>
+              </div>
+
+              <!-- Title -->
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                <%= link_to ticket.title, alto.board_ticket_path(@board, ticket), class: "hover:text-blue-600" %>
+              </h3>
+
+              <!-- Description -->
+              <% if ticket.description.present? %>
+                <div class="text-gray-600 mb-3">
+                  <p><%= truncate(ticket.description, length: 200) %></p>
+                </div>
+              <% end %>
+
+              <!-- Metadata row -->
+              <div class="flex items-center space-x-4 text-sm text-gray-500">
+                <span>
+                  by <%= user_display_name(ticket.user_id) %>
+                </span>
+                <span>•</span>
+                <span>
+                  <%= time_ago_in_words(ticket.created_at) %> ago
+                </span>
+                <% if ticket.comments.count > 0 %>
+                  <span>•</span>
+                  <span>
+                    <%= link_to pluralize(ticket.comments.count, 'comment'),
+                        alto.board_ticket_path(@board, ticket, anchor: 'comments'),
+                        class: "hover:text-blue-600" %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Voting section -->
+            <div class="flex-shrink-0 ml-6">
+              <div class="flex items-center space-x-2">
+                <!-- Disabled upvote display -->
+                <div class="flex flex-col items-center p-2 rounded-lg bg-gray-50 opacity-50">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                  </svg>
+                  <span class="text-xs text-gray-500 mt-1"><%= ticket.upvotes_count %></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Pagination -->
+      <%= render 'shared/pagination', collection: @tickets %>
+    <% else %>
+      <!-- Empty state -->
+      <div class="text-center py-12">
+        <div class="max-w-md mx-auto">
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4m0 0l-4-4m4 4V3"></path>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No archived <%= board_item_name(@board).pluralize %></h3>
+          <p class="text-gray-500">
+            When <%= board_item_name(@board).pluralize %> are archived, they'll appear here.
+          </p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

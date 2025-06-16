@@ -1,0 +1,24 @@
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Submit New <%= @board.item_name.capitalize %> to <%= @board.name %></h1>
+      <p class="text-gray-600">Share your ideas, feedback, or information with the community.</p>
+    </div>
+
+    <%= render 'form', context: :new %>
+  </div>
+
+  <!-- Tips Card -->
+  <div class="mt-6 bg-blue-50 rounded-lg p-4">
+    <h3 class="text-sm font-medium text-blue-800 mb-2">💡 Tips for great <%= @board.item_name.pluralize %></h3>
+    <ul class="text-sm text-blue-700 space-y-1">
+      <li>• Be specific and descriptive in your title</li>
+      <li>• Include relevant details and context</li>
+      <li>• Provide examples or steps when applicable</li>
+      <li>• Keep one main idea per <%= @board.item_name %> for better organization</li>
+      <% if @board.fields.any? %>
+        <li>• Fill out the additional fields to help others understand your <%= @board.item_name %></li>
+      <% end %>
+    </ul>
+  </div>
+</div>

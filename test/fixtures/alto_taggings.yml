@@ -1,0 +1,25 @@
+# Model class: Alto::Tagging (join table for tickets and tags)
+
+test_ticket_feature:
+  id: 1
+  tag_id: 1  # alto_tags(:feature)
+  taggable_type: Alto::Ticket
+  taggable_id: 1  # test_ticket
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+test_ticket_bug:
+  id: 2
+  tag_id: 2  # alto_tags(:bug)
+  taggable_type: Alto::Ticket
+  taggable_id: 1  # test_ticket
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+feature_ticket_feature:
+  id: 3
+  tag_id: 1  # alto_tags(:feature)
+  taggable_type: Alto::Ticket
+  taggable_id: 2  # feature_ticket
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

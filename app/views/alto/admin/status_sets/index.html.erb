@@ -1,0 +1,105 @@
+
+
+<div class="space-y-6">
+  <%= render 'alto/shared/page_header',
+      title: "🎯 Manage Status Sets",
+      actions: [
+        {
+          type: :link,
+          text: "New Status Set",
+          path: alto.new_admin_status_set_path,
+          button_type: :primary
+        },
+        {
+          type: :link,
+          text: "Dashboard",
+          path: alto.admin_dashboard_path,
+          button_type: :secondary
+        }
+      ] %>
+
+  <!-- Status Sets Table -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Status Set
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Statuses
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Boards Using
+          </th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @status_sets.each do |status_set| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div>
+                <div class="text-sm font-medium text-gray-900">
+                  <%= link_to status_set.name, alto.admin_status_set_path(status_set),
+                      class: "hover:text-blue-600" %>
+                  <% if status_set.is_default? %>
+                    <span class="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      Default
+                    </span>
+                  <% end %>
+                </div>
+                <% if status_set.description.present? %>
+                  <div class="text-sm text-gray-500 mt-1">
+                    <%= truncate(status_set.description, length: 60) %>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex flex-wrap gap-1">
+                <% if status_set.statuses.any? %>
+                  <% status_set.statuses.each do |status| %>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full <%= status.color_classes %>">
+                      <%= status.name %>
+                    </span>
+                  <% end %>
+                <% else %>
+                  <span class="text-sm text-gray-500 italic">No status tracking</span>
+                <% end %>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">
+                <%= pluralize(status_set.boards.count, 'board') %>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+              <%= link_to "View", alto.admin_status_set_path(status_set),
+                  class: "text-blue-600 hover:text-blue-900" %>
+              <%= link_to "Edit", alto.edit_admin_status_set_path(status_set),
+                  class: "text-blue-600 hover:text-blue-900" %>
+              <% unless status_set.boards.any? %>
+                <%= link_to "Delete", alto.admin_status_set_path(status_set),
+                    method: :delete,
+                    confirm: "Are you sure? This will delete the status set permanently.",
+                    class: "text-red-600 hover:text-red-900" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if @status_sets.empty? %>
+    <div class="text-center py-12">
+      <div class="text-gray-500">
+        <p class="text-lg">No status sets found</p>
+        <p class="mt-2">Create your first status set to get started!</p>
+      </div>
+    </div>
+  <% end %>
+</div>

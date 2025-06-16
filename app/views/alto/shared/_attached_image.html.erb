@@ -1,0 +1,23 @@
+<% if should_display_images?(record) %>
+  <% size = local_assigns[:size] || :medium %>
+  <div class="mt-4">
+    <% record.images.each do |image| %>
+      <% image_data = image_display_data(image, size: size) %>
+      <% next unless image_data %>
+
+      <div class="relative inline-block">
+        <a href="<%= image_data[:full_size_url] %>" target="_blank"
+           class="block rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors">
+          <img src="<%= image_data[:image_url] %>"
+               class="max-w-full h-auto <%= image_data[:size_class] %> object-contain"
+               loading="lazy"
+               alt="Attached image"
+               <%= local_assigns[:html_options]&.map { |k, v| "#{k}='#{v}'" }&.join(' ')&.html_safe %>>
+        </a>
+        <div class="mt-1 text-xs text-gray-500">
+          <%= image_data[:filename] %> (<%= number_to_human_size(image_data[:file_size]) %>)
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

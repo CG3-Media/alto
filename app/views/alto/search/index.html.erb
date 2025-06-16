@@ -1,0 +1,99 @@
+<div class="space-y-6">
+  <%= render 'alto/shared/page_header',
+      title: @search_query.present? ? "Search Results" : "All Tickets",
+      subtitle: @search_query.present? ? "Results for: \"#{@search_query}\"" : "Tickets from all boards" %>
+
+  <!-- Search Results Info -->
+  <% if @search_query.present? %>
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+      <div class="flex">
+        <div class="ml-3">
+          <p class="text-sm text-blue-700">
+            <span class="font-medium">Global search results for:</span> "<%= @search_query %>"
+            • <%= pluralize(@tickets.total_count, 'ticket') %> found across <%= pluralize(@tickets_by_board.keys.size, 'board') %>
+            <% if @tickets.total_pages > 1 %>
+              • Page <%= @tickets.current_page %> of <%= @tickets.total_pages %>
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <% if @tickets_by_board.any? %>
+      <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
+        <div class="flex">
+          <div class="ml-3">
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">All tickets:</span>
+              <%= pluralize(@tickets.total_count, 'ticket') %> across <%= pluralize(@tickets_by_board.keys.size, 'board') %>
+              <% if @tickets.total_pages > 1 %>
+                • Page <%= @tickets.current_page %> of <%= @tickets.total_pages %>
+              <% end %>
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+
+
+  <!-- Grouped Results by Board -->
+  <% if @tickets_by_board.any? %>
+    <% @tickets_by_board.each do |board, board_tickets| %>
+      <div class="space-y-4">
+        <!-- Board Header -->
+        <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+          <div class="flex items-center space-x-3">
+            <h3 class="text-lg font-semibold text-gray-900">
+              <%= link_to board.name, alto.board_tickets_path(board),
+                  class: "hover:text-blue-600" %>
+            </h3>
+            <% if board.admin_only? %>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                🔒 Admin Only
+              </span>
+            <% end %>
+          </div>
+          <div class="text-sm text-gray-500">
+            <%= pluralize(board_tickets.size, board_item_name(board)) %>
+            <% if board_tickets.size < board.tickets_count %>
+              of <%= board.tickets_count %> total
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Board Description (if present) -->
+        <% if board.description.present? %>
+          <p class="text-sm text-gray-600 -mt-2 mb-4"><%= board.description %></p>
+        <% end %>
+
+        <!-- Render tickets using the existing list_view partial -->
+        <%= render 'alto/tickets/list_view',
+            tickets: board_tickets,
+            board: board,
+            search_query: @search_query,
+            view_type: 'list' %>
+      </div>
+    <% end %>
+
+    <!-- Pagination -->
+    <%= render 'shared/pagination', collection: @tickets %>
+  <% else %>
+    <div class="text-center py-12">
+      <% if @search_query.present? %>
+        <div class="text-gray-400 text-6xl mb-4">🔍</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets found</h3>
+        <p class="text-gray-500 mb-4">
+          No tickets match your search for "<%= @search_query %>".
+          <br>Try different keywords or
+          <%= link_to "browse all tickets", alto.search_path, class: "text-blue-600 hover:text-blue-500" %>.
+        </p>
+      <% else %>
+        <div class="text-gray-400 text-6xl mb-4">📝</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No tickets yet</h3>
+        <p class="text-gray-500 mb-4">No tickets have been created yet across any boards.</p>
+      <% end %>
+    </div>
+  <% end %>
+</div>
