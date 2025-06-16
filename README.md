@@ -258,6 +258,23 @@ end
 ```
 
 
+## Widget System
+
+Generate embeddable widgets for any board:
+
+```bash
+rails generate alto:widget
+```
+
+This creates a partial at `app/views/shared/alto/_BOARD_widget.html.erb` that you can embed anywhere:
+
+```erb
+<!-- In any view -->
+<%= render 'shared/alto/feature_requests_widget' %>
+```
+
+The generated widget is a complete feedback form using your board's custom fields. Customize the HTML/CSS as needed!
+
 ## Customization
 
 ### Styling

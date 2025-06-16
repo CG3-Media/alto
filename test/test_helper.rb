@@ -17,7 +17,7 @@ SimpleCov.start 'rails' do
   add_group 'Libraries', 'lib'
 
   # Set minimum coverage threshold
-  # minimum_coverage 50
+  minimum_coverage 65
 end
 
 # Configure Rails Environment

@@ -39,9 +39,23 @@ module Alto
       @ticket.process_multiselect_fields!
 
       if @ticket.save
-        redirect_to [ @board, @ticket ], notice: "Ticket was successfully created."
+        respond_to do |format|
+          format.html { redirect_to [ @board, @ticket ], notice: "Ticket was successfully created." }
+          format.json { render json: {
+            ticket: @ticket,
+            success: true,
+            redirect_url: url_for([ @board, @ticket ]),
+            message: "Ticket was successfully created."
+          }, status: :created }
+        end
       else
-        render :new
+        respond_to do |format|
+          format.html { render :new }
+          format.json { render json: {
+            errors: @ticket.errors.full_messages,
+            success: false
+          }, status: :unprocessable_entity }
+        end
       end
     end
 
@@ -56,15 +70,35 @@ module Alto
       @ticket.process_multiselect_fields!
 
       if @ticket.save
-        redirect_to [ @board, @ticket ], notice: "Ticket was successfully updated."
+        respond_to do |format|
+          format.html { redirect_to [ @board, @ticket ], notice: "Ticket was successfully updated." }
+          format.json { render json: {
+            ticket: @ticket,
+            success: true,
+            redirect_url: url_for([ @board, @ticket ]),
+            message: "Ticket was successfully updated."
+          }, status: :ok }
+        end
       else
-        render :edit
+        respond_to do |format|
+          format.html { render :edit }
+          format.json { render json: {
+            errors: @ticket.errors.full_messages,
+            success: false
+          }, status: :unprocessable_entity }
+        end
       end
     end
 
     def destroy
       @ticket.destroy
-      redirect_to [ @board, :tickets ], notice: "Ticket was successfully deleted."
+      respond_to do |format|
+        format.html { redirect_to [ @board, :tickets ], notice: "Ticket was successfully deleted." }
+        format.json { render json: {
+          success: true,
+          message: "Ticket was successfully deleted."
+        }, status: :ok }
+      end
     end
 
     private
