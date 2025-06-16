@@ -49,8 +49,10 @@
   <!-- List View (Traditional List) -->
   <%= render 'list_view', tickets: @tickets, board: @board, search_query: @search_query, view_type: @view_type %>
 
-  <!-- Pagination -->
-  <%= render 'shared/pagination', collection: @tickets %>
+  <!-- Pagination (only show in list view, not in card/kanban view) -->
+  <% unless @view_type == 'card' %>
+    <%= render 'shared/pagination', collection: @tickets %>
+  <% end %>
 </div>
 
 <style>

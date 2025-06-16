@@ -12,11 +12,18 @@ module Alto
 
     def index
       base_tickets = @board.tickets.active.includes(:board, :upvotes, :tags)
-      @tickets = apply_ticket_filters(base_tickets).page(params[:page]).per(25)
+      filtered_tickets = apply_ticket_filters(base_tickets)
 
       view_result = determine_view_type(@board)
       @view_type = view_result.view_type
       @show_toggle = view_result.show_toggle
+
+      # Only paginate in list view, load all tickets in card view for kanban display
+      @tickets = if @view_type == 'card'
+        filtered_tickets.limit(500) # Reasonable limit to prevent performance issues
+      else
+        filtered_tickets.page(params[:page]).per(25)
+      end
 
       setup_filter_data
     end
