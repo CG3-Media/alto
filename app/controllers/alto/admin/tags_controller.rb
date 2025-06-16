@@ -15,7 +15,7 @@ module Alto
       end
 
       def show
-        @tagged_tickets = @tag.tickets.includes(:user, :board).limit(10)
+        @tagged_tickets = @tag.tickets.includes(:board).limit(10)
       end
 
       def new

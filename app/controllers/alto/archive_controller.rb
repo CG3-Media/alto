@@ -5,7 +5,7 @@ module Alto
 
     def show
       @tickets = @board.tickets.archived
-                      .includes(:user, :upvotes)
+                      .includes(:upvotes)
                       .recent
                       .page(params[:page])
     end

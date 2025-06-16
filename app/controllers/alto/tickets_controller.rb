@@ -11,7 +11,7 @@ module Alto
     before_action :ensure_not_archived, only: [ :edit, :update, :destroy ]
 
     def index
-      base_tickets = @board.tickets.active.includes(:user, :board, :upvotes, :tags)
+      base_tickets = @board.tickets.active.includes(:board, :upvotes, :tags)
       @tickets = apply_ticket_filters(base_tickets).page(params[:page]).per(25)
 
       view_result = determine_view_type(@board)
