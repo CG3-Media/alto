@@ -54,16 +54,12 @@
       <%= form.submit "Update #{board_item_name(@board)}",
           class: "w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
 
+    </div>
+  <% end %>
+
       <!-- Archive Section -->
-      <%= link_to "Archive #{board_item_name(@board)}",
+      <%= button_to "Archive #{board_item_name(@board)}",
           alto.archive_board_ticket_path(@board, @ticket),
           method: :patch,
-          class: "block mt-2  w-full items-center px-3 py-2 border border-amber-300 shadow-sm text-sm text-center leading-4 font-medium rounded-md text-amber-700 bg-white hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
-          data: {
-            confirm: "Are you sure you want to archive this #{board_item_name(@board)}? It will become read-only and cannot be easily undone.",
-            turbo_method: :patch
-          } %>
-    </div>
-
-  <% end %>
+          class: "block mt-2  w-full items-center px-3 py-2 border border-amber-300 shadow-sm text-sm text-center leading-4 font-medium rounded-md text-amber-700 bg-white hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500" %>
 </div>
