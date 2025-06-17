@@ -159,7 +159,7 @@
 
           <% if @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?) && !@ticket.archived? %>
             <%= render 'shared/button',
-                text: "Edit Ticket",
+                text: "Edit #{board_item_name(@board)}",
                 url: alto.edit_board_ticket_path(@board, @ticket),
                 button_type: :secondary %>
           <% end %>

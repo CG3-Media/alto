@@ -1,8 +1,8 @@
 <div class="max-w-2xl mx-auto">
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Edit Ticket</h1>
-      <p class="text-gray-600">Update ticket details, status, and moderation settings.</p>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Edit <%= board_item_name(@board) %></h1>
+      <p class="text-gray-600">Update <%= board_item_name(@board) %> details, status, and moderation settings.</p>
     </div>
 
     <%= render 'form', context: :edit %>
