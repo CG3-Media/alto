@@ -95,15 +95,15 @@ module Alto
       get search_path
       assert_response :success
 
-      # Should show pagination info
-      assert_select ".text-sm.text-gray-700", text: /Showing/
+      # Should work without errors (no longer showing pagination info)
+      assert_select "h1", "All Tickets"
     end
 
     test "should respect custom per_page parameter" do
       get search_path, params: { per_page: 10 }
       assert_response :success
 
-      # Should handle custom per_page without errors
+      # Should handle custom per_page without errors (but ignore per_page since we simplified)
       assert_select "h1", "All Tickets"
     end
 
@@ -111,7 +111,7 @@ module Alto
       get search_path, params: { per_page: 500 }
       assert_response :success
 
-      # Should handle large per_page values gracefully
+      # Should handle large per_page values gracefully (but ignore since we simplified)
       assert_select "h1", "All Tickets"
     end
 
@@ -165,8 +165,8 @@ module Alto
       get search_path
       assert_response :success
 
-      # Should show board groupings in the response
-      assert_select ".text-lg.font-semibold.text-gray-900", minimum: 1  # Board headers
+      # Should show tickets (no longer grouped by board)
+      assert_select ".bg-white.rounded-lg.border", minimum: 1  # Ticket cards
     end
 
     # Test viewable statuses (integration with permissions)

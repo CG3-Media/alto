@@ -1,34 +1,21 @@
 module Alto
   class SearchController < ::Alto::ApplicationController
     def index
-      # Global search across all boards
-      @tickets = ::Alto::Ticket.active.includes(:board, :upvotes, :comments)
-
-      # Filter by viewable statuses for non-admin users
-      @tickets = @tickets.with_viewable_statuses(is_admin: can_access_admin?)
-
-      # Filter by accessible boards
-      @tickets = @tickets.joins(:board).where(alto_boards: { is_admin_only: false }) unless can_access_admin?
+      # Simple global search - start with basics
+      @tickets = ::Alto::Ticket.active.includes(:board)
 
       # Apply search filter
-      @tickets = @tickets.search(params[:search]) if params[:search].present?
-
-      # Apply status filter
-      @tickets = @tickets.by_status(params[:status]) if params[:status].present?
-
-      # Apply sorting
-      @tickets = case params[:sort]
-      when "popular"
-                   @tickets.popular
+      if params[:search].present?
+        @tickets = @tickets.search(params[:search])
+        # Get 26 results to check if there are more than 25
+        results = @tickets.limit(26).to_a
+        @has_more_results = results.length > 25
+        @tickets = results.first(25)  # Only show first 25
       else
-                   @tickets.recent
+        # Just show recent tickets when no search
+        @tickets = @tickets.recent.limit(25).to_a
+        @has_more_results = false
       end
-
-      # Apply pagination with configurable per-page limit
-      @tickets = @tickets.page(params[:page]).per(search_per_page)
-
-      # Group tickets by board for display (from paginated results)
-      @tickets_by_board = @tickets.group_by(&:board)
 
       @search_query = params[:search]
       @is_global_search = true

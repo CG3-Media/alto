@@ -41,7 +41,7 @@
 
     <!-- Center section: Search Bar (1/3) -->
     <div class="hidden sm:flex flex-1 justify-center px-4">
-      <%= form_with url: "/search", method: :get, local: true, class: "flex w-full max-w-md", role: "search", "aria-label": "Search tickets" do |form| %>
+      <%= form_with url: alto.search_path, method: :get, local: true, class: "flex w-full max-w-md", role: "search", "aria-label": "Search tickets" do |form| %>
         <div class="relative flex-1">
           <label for="global-search-input" class="sr-only">Search all tickets</label>
           <%= form.text_field :search,

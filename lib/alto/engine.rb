@@ -1,3 +1,5 @@
+require 'pg_search'
+
 module Alto
   class Engine < ::Rails::Engine
     isolate_namespace Alto

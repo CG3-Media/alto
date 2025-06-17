@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 7.0.1", "< 9.0"
   spec.add_dependency "kaminari", "~> 1.2"
+  spec.add_dependency "pg_search", "~> 2.3"
 
   spec.add_development_dependency "simplecov", "~> 0.22"
 end

@@ -1,8 +1,28 @@
 module Alto
   class Ticket < ApplicationRecord
     include ::Alto::Subscribable
-    include ::Alto::Searchable
+    include ::PgSearch::Model
     include ::Alto::ImageAttachable
+
+    # Configure search - database agnostic
+    if ActiveRecord::Base.connection.adapter_name.downcase.include?('postgresql')
+      # PostgreSQL: Use advanced trigram + tsearch
+      pg_search_scope :search,
+        against: [:title, :description],
+        using: {
+          tsearch: { prefix: true, any_word: true },  # exact word matching first
+          trigram: {
+            threshold: 0.3,           # higher threshold for better precision
+            word_similarity: true     # match individual words but more strictly
+          }
+        }
+    else
+      # SQLite3/MySQL: Use simple LIKE search
+      scope :search, ->(query) {
+        return all if query.blank?
+        where("title LIKE ? OR description LIKE ?", "%#{query}%", "%#{query}%")
+      }
+    end
 
     belongs_to :board
     belongs_to :user, polymorphic: true
@@ -52,10 +72,6 @@ module Alto
       end
     }
 
-
-
-
-
     # Tagging scopes
     scope :tagged_with, ->(tag_names) {
       tag_names = Array(tag_names)
@@ -81,8 +97,6 @@ module Alto
     scope :untagged, -> {
       left_joins(:taggings).where(alto_taggings: { id: nil })
     }
-
-
 
     def upvoted_by?(user)
       return false unless user

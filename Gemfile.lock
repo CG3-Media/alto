@@ -3,6 +3,7 @@ PATH
   specs:
     alto (1.1.0)
       kaminari (~> 1.2)
+      pg_search (~> 2.3)
       rails (>= 7.0.1, < 9.0)
 
 GEM
@@ -132,6 +133,9 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.5.9)
+    pg_search (2.3.7)
+      activerecord (>= 6.1)
+      activesupport (>= 6.1)
     prism (1.4.0)
     propshaft (1.1.0)
       actionpack (>= 7.0.0)
@@ -158,10 +162,6 @@ GEM
       activesupport (= 7.0.1)
       bundler (>= 1.15.0)
       railties (= 7.0.1)
-    rails-controller-testing (1.0.5)
-      actionpack (>= 5.0.1.rc1)
-      actionview (>= 5.0.1.rc1)
-      activesupport (>= 5.0.1.rc1)
     rails-dom-testing (2.3.0)
       activesupport (>= 5.0.0)
       minitest
@@ -239,7 +239,6 @@ DEPENDENCIES
   pg
   propshaft
   puma
-  rails-controller-testing (~> 1.0)
   rubocop-rails-omakase
   simplecov (~> 0.22)
   sqlite3 (~> 1.4)

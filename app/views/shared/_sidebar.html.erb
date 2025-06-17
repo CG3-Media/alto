@@ -185,7 +185,7 @@
 
         <!-- Global Search -->
         <div class="px-4 py-3 border-b border-gray-100">
-          <%= form_with url: "/search", method: :get, local: true, class: "w-full" do |form| %>
+          <%= form_with url: alto.search_path, method: :get, local: true, class: "w-full" do |form| %>
             <div class="relative">
               <%= form.text_field :search,
                   value: params[:search],
