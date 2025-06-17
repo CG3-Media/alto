@@ -12,8 +12,8 @@ module Alto
       user_profile_avatar_url(user_id).present?
     end
 
-    def app_name
-      ::Alto.config.app_name
-    end
+      def app_name
+    ::Alto.config.app_name
+  end
   end
 end

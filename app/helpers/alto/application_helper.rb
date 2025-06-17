@@ -5,6 +5,16 @@ module Alto
     include Alto::UserHelper
     include Alto::BoardHelper
 
+    # Set page title in views: <% page_title "My Page" %>
+    def page_title(title)
+      content_for :title, title
+    end
+
+    # Get current page title
+    def current_page_title
+      content_for(:title)
+    end
+
     def status_badge(status)
       color_class = case status
       when "open" then "bg-green-100 text-green-800"
