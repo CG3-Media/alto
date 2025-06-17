@@ -14,10 +14,46 @@
     when :lg then 'w-10 h-10'
     else 'w-6 h-6' # fallback to small
   end
+
+  text_size_classes = case size
+    when :sm then 'text-xs'
+    when :md then 'text-sm'
+    when :lg then 'text-base'
+    else 'text-xs'
+  end
+
+  # Get user display name for fallback avatar
+  display_name = user_display_name(user_id)
+
+  # Smart first letter extraction - skip numbers and find first letter
+  first_letter = if display_name&.strip.present?
+    # Skip leading numbers/special chars, find first letter
+    match = display_name.strip.match(/[A-Za-z]/)
+    match ? match[0].upcase : '?'
+  else
+    '?'
+  end
+
+  # Generate consistent color based on first letter
+  color_families = [
+    'green', 'sky', 'blue', 'indigo', 'violet',
+    'purple', 'emerald', 'slate', 'orange', 'amber', 'stone'
+  ]
+
+  color_index = first_letter.ord % color_families.length
+  color_family = color_families[color_index]
+  avatar_bg_color = "bg-#{color_family}-100"
+  avatar_text_color = "text-#{color_family}-500"
 %>
 
 <% if has_user_avatar?(user_id) %>
   <img src="<%= user_profile_avatar_url(user_id) %>"
-       alt="<%= user_display_name(user_id) %>"
-       class="<%= size_classes %> rounded-full border border-gray-200 flex-shrink-0">
+       alt="<%= display_name %>"
+       class="<%= size_classes %> rounded-full flex-shrink-0">
+<% else %>
+  <div class="<%= size_classes %> <%= avatar_bg_color %> rounded-full flex-shrink-0 flex items-center justify-center">
+         <span class="<%= text_size_classes %> font-semibold <%= avatar_text_color %>">
+      <%= first_letter %>
+    </span>
+  </div>
 <% end %>
