@@ -6,6 +6,8 @@
         class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
   </div>
 
+  <hr class="my-4" />
+
   <%= form_with model: [@board, @ticket], local: true, class: "space-y-6" do |form| %>
     <!-- Status -->
     <% if @board.has_status_tracking? %>

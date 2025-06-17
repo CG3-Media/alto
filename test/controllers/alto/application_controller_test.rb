@@ -32,6 +32,11 @@ module Alto
         @test_user = user
       end
 
+      # Mock session for testing view_as functionality
+      def session
+        @session ||= {}
+      end
+
       # Bypass authenticate_user! for testing
       private
 
