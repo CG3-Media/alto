@@ -162,10 +162,13 @@
 <!-- Mobile Sidebar -->
 <div id="mobile-sidebar-overlay" class="fixed inset-0 z-40 sm:hidden hidden">
   <div class="fixed inset-0 bg-gray-600 bg-opacity-75" onclick="toggleMobileSidebar()"></div>
-  <div class="relative flex-1 flex flex-col w-full bg-white">
+  <nav id="mobile-sidebar" class="relative flex-1 flex flex-col w-full bg-white" aria-label="Mobile navigation">
     <div class="absolute top-0 right-0 -mr-12 pt-2">
-      <button type="button" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" onclick="toggleMobileSidebar()">
-        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <button type="button"
+              class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              onclick="toggleMobileSidebar()"
+              aria-label="Close navigation menu">
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -234,7 +237,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 </div>
 
 <style>
