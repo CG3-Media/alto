@@ -1,205 +1,204 @@
 <% page_title @ticket.title %>
 
-<div class="<%= 'opacity-60' if @ticket.archived? %>">
-  <!-- Archive Banner -->
-  <% if @ticket.archived? %>
-    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6" role="alert" aria-live="polite">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-amber-700">
-            <span class="font-medium">📦 <span class="sr-only">Archived: </span>This <%= board_item_name(@board) %> is archived</span> - it is read-only and cannot be modified.
-          </p>
-        </div>
+
+<!-- Archive Banner -->
+<% if @ticket.archived? %>
+  <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6" role="alert" aria-live="polite">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-amber-700">
+          <span class="font-medium">📦 <span class="sr-only">Archived: </span>This <%= board_item_name(@board) %> is archived</span> - it is read-only and cannot be modified.
+        </p>
       </div>
     </div>
-  <% end %>
+  </div>
+<% end %>
 
-  <!-- Main Layout: Content + Sidebar -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Content (2/3 width) -->
-    <article class="<%= can_access_admin? ? 'lg:col-span-2' : 'lg:col-span-3' %> space-y-6">
-      <!-- Ticket Header -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <!-- Top row: Title/Description + Voting -->
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex-1">
-            <!-- Status Badge and Tags -->
-            <div class="mb-3 flex items-center gap-2 flex-wrap">
-              <% if @ticket.archived? %>
-                <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600"
-                      role="status"
-                      aria-label="Ticket is archived">
-                  📦 <span class="sr-only">Archived: </span>Archived
-                </span>
-              <% end %>
-              <% if @board.has_status_tracking? %>
-                <span class="px-3 py-1 text-sm font-medium rounded-full <%= @ticket.status_color_classes %>"
-                      role="status"
-                      aria-label="Ticket status: <%= @ticket.status_name %>">
-                  <%= @ticket.status_name %>
-                </span>
-              <% end %>
-              <% if @ticket.locked? && !@ticket.archived? %>
-                <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800"
-                      role="status"
-                      aria-label="Ticket is locked">
-                  🔒 <span class="sr-only">Locked: </span>Locked
-                </span>
-              <% end %>
-            </div>
-
-            <!-- Title -->
-            <div class="mb-4">
-              <h1 class="text-2xl font-bold text-gray-900"><%= @ticket.title %></h1>
-            </div>
-
-            <div class="prose max-w-none">
-              <p class="text-gray-700 whitespace-pre-wrap"><%= @ticket.description %></p>
-            </div>
-
-            <!-- Attached Image -->
-            <%= render 'alto/shared/attached_image', record: @ticket %>
-
-            <!-- Custom Fields Display -->
-            <%= render 'alto/tickets/custom_fields_display', ticket: @ticket, board: @board %>
+<!-- Main Layout: Content + Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Main Content (2/3 width) -->
+  <article class="<%= can_access_admin? ? 'lg:col-span-2' : 'lg:col-span-3' %> space-y-6">
+    <!-- Ticket Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <!-- Top row: Title/Description + Voting -->
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex-1">
+          <!-- Status Badge and Tags -->
+          <div class="mb-3 flex items-center gap-2 flex-wrap">
+            <% if @ticket.archived? %>
+              <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600"
+                    role="status"
+                    aria-label="Ticket is archived">
+                📦 <span class="sr-only">Archived: </span>Archived
+              </span>
+            <% end %>
+            <% if @board.has_status_tracking? %>
+              <span class="px-3 py-1 text-sm font-medium rounded-full <%= @ticket.status_color_classes %>"
+                    role="status"
+                    aria-label="Ticket status: <%= @ticket.status_name %>">
+                <%= @ticket.status_name %>
+              </span>
+            <% end %>
+            <% if @ticket.locked? && !@ticket.archived? %>
+              <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800"
+                    role="status"
+                    aria-label="Ticket is locked">
+                🔒 <span class="sr-only">Locked: </span>Locked
+              </span>
+            <% end %>
           </div>
 
-          <!-- Upvote Button - only show if voting is enabled -->
-          <% if @board.allow_voting? %>
-            <div class="flex flex-col items-center ml-6" role="region" aria-label="Voting">
-              <%= upvote_button(@ticket, current_user, large: true) %>
-            </div>
-          <% end %>
+          <!-- Title -->
+          <div class="mb-4">
+            <h1 class="text-2xl font-bold text-gray-900"><%= @ticket.title %></h1>
+          </div>
+
+          <div class="prose max-w-none">
+            <p class="text-gray-700 whitespace-pre-wrap"><%= @ticket.description %></p>
+          </div>
+
+          <!-- Attached Image -->
+          <%= render 'alto/shared/attached_image', record: @ticket %>
+
+          <!-- Custom Fields Display -->
+          <%= render 'alto/tickets/custom_fields_display', ticket: @ticket, board: @board %>
         </div>
 
-        <!-- Tags -->
-        <% if @ticket.tags.any? %>
-          <div class="-mt-2 mb-6">
-            <h2 class="sr-only">Tags</h2>
-            <div class="flex flex-wrap gap-2" role="list" aria-label="Ticket tags">
-              <% @ticket.tags.each do |tag| %>
-                <div role="listitem">
-                  <%= render 'alto/shared/tag', tag: tag,
-                      link: board_tickets_path(@board, tag: tag.name),
-                      size: 'sm' %>
-                </div>
-              <% end %>
-            </div>
+        <!-- Upvote Button - only show if voting is enabled -->
+        <% if @board.allow_voting? %>
+          <div class="flex flex-col items-center ml-6" role="region" aria-label="Voting">
+            <%= upvote_button(@ticket, current_user, large: true) %>
           </div>
         <% end %>
-
-        <!-- Bottom row: Metadata -->
-        <div class="flex items-center space-x-4 text-sm text-gray-500">
-          <div class="flex items-center space-x-2">
-            <%= render 'alto/shared/user_avatar', user_id: @ticket.user_id, size: :sm %>
-            <span>By <span class="font-medium text-gray-700"><%= user_display_name(@ticket.user_id) %></span></span>
-          </div>
-          <time datetime="<%= @ticket.created_at.iso8601 %>"><%= time_ago_in_words(@ticket.created_at) %> ago</time>
-          <span><%= link_to pluralize(@ticket.comments.count, 'comment'),
-              '#comments',
-              class: "text-gray-500 hover:text-blue-600 font-medium",
-              "aria-label": "Jump to #{pluralize(@ticket.comments.count, 'comment')}" %></span>
-        </div>
       </div>
 
-      <!-- Comments Section -->
-      <section id="comments" class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">
-            Comments (<%= @ticket.comments.count %>)
-          </h2>
-        </div>
-
-        <!-- Comment Form -->
-        <% if can_comment? && @ticket.can_be_commented_on? && !@ticket.archived? %>
-          <%= render 'alto/comments/form', context: :comment, autofocus: true %>
-        <% elsif @ticket.archived? %>
-          <div class="p-6 border-b border-gray-200 bg-amber-50" role="alert">
-            <p class="text-amber-700 text-sm">📦 <span class="sr-only">Notice: </span>This ticket is archived. No new comments can be added.</p>
+      <!-- Tags -->
+      <% if @ticket.tags.any? %>
+        <div class="-mt-2 mb-6">
+          <h2 class="sr-only">Tags</h2>
+          <div class="flex flex-wrap gap-2" role="list" aria-label="Ticket tags">
+            <% @ticket.tags.each do |tag| %>
+              <div role="listitem">
+                <%= render 'alto/shared/tag', tag: tag,
+                    link: board_tickets_path(@board, tag: tag.name),
+                    size: 'sm' %>
+              </div>
+            <% end %>
           </div>
-        <% elsif @ticket.locked? %>
-          <div class="p-6 border-b border-gray-200 bg-red-50" role="alert">
-            <p class="text-red-600 text-sm">🔒 <span class="sr-only">Notice: </span>This ticket is locked. No new comments can be added.</p>
+        </div>
+      <% end %>
+
+      <!-- Bottom row: Metadata -->
+      <div class="flex items-center space-x-4 text-sm text-gray-500">
+        <div class="flex items-center space-x-2">
+          <%= render 'alto/shared/user_avatar', user_id: @ticket.user_id, size: :sm %>
+          <span>By <span class="font-medium text-gray-700"><%= user_display_name(@ticket.user_id) %></span></span>
+        </div>
+        <time datetime="<%= @ticket.created_at.iso8601 %>"><%= time_ago_in_words(@ticket.created_at) %> ago</time>
+        <span><%= link_to pluralize(@ticket.comments.count, 'comment'),
+            '#comments',
+            class: "text-gray-500 hover:text-blue-600 font-medium",
+            "aria-label": "Jump to #{pluralize(@ticket.comments.count, 'comment')}" %></span>
+      </div>
+    </div>
+
+    <!-- Comments Section -->
+    <section id="comments" class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">
+          Comments (<%= @ticket.comments.count %>)
+        </h2>
+      </div>
+
+      <!-- Comment Form -->
+      <% if can_comment? && @ticket.can_be_commented_on? && !@ticket.archived? %>
+        <%= render 'alto/comments/form', context: :comment, autofocus: true %>
+      <% elsif @ticket.archived? %>
+        <div class="p-6 border-b border-gray-200 bg-amber-50" role="alert">
+          <p class="text-amber-700 text-sm">📦 <span class="sr-only">Notice: </span>This ticket is archived. No new comments can be added.</p>
+        </div>
+      <% elsif @ticket.locked? %>
+        <div class="p-6 border-b border-gray-200 bg-red-50" role="alert">
+          <p class="text-red-600 text-sm">🔒 <span class="sr-only">Notice: </span>This ticket is locked. No new comments can be added.</p>
+        </div>
+      <% end %>
+
+      <!-- Threaded Comments List -->
+      <div class="divide-y divide-gray-200">
+        <% if @threaded_comments.any? %>
+          <% @threaded_comments.each do |comment_data| %>
+            <%= render 'alto/comments/threaded_comment',
+                comment: comment_data[:comment],
+                replies: comment_data[:replies] %>
+          <% end %>
+        <% else %>
+          <div class="p-6 text-center text-gray-500">
+            <div class="text-4xl mb-2" aria-hidden="true">💬</div>
+            <p>No comments yet. Be the first to comment!</p>
           </div>
         <% end %>
+      </div>
+    </section>
 
-        <!-- Threaded Comments List -->
-        <div class="divide-y divide-gray-200">
-          <% if @threaded_comments.any? %>
-            <% @threaded_comments.each do |comment_data| %>
-              <%= render 'alto/comments/threaded_comment',
-                  comment: comment_data[:comment],
-                  replies: comment_data[:replies] %>
-            <% end %>
-          <% else %>
-            <div class="p-6 text-center text-gray-500">
-              <div class="text-4xl mb-2" aria-hidden="true">💬</div>
-              <p>No comments yet. Be the first to comment!</p>
-            </div>
-          <% end %>
-        </div>
-      </section>
+    <!-- Back Link -->
+    <nav class="flex justify-between items-center" aria-label="Ticket actions">
+      <% if @ticket.user_subscribed?(current_user) %>
+        <%= render 'shared/button',
+            text: "Unsubscribe",
+            url: alto.unsubscribe_board_ticket_subscribers_path(@board, @ticket),
+            method: :delete,
+            button_type: :secondary,
+            html_options: {
+              data: {
+                confirm: "Are you sure you want to unsubscribe from this ticket?",
+                turbo_method: :delete
+              },
+              "aria-label": "Unsubscribe from ticket notifications"
+            } %>
+      <% end %>
 
-      <!-- Back Link -->
-      <nav class="flex justify-between items-center" aria-label="Ticket actions">
-        <% if @ticket.user_subscribed?(current_user) %>
+      <div class="flex items-center space-x-2">
+        <% if can_access_admin? && !@ticket.archived? %>
           <%= render 'shared/button',
-              text: "Unsubscribe",
-              url: alto.unsubscribe_board_ticket_subscribers_path(@board, @ticket),
-              method: :delete,
+              text: "Manage Subscribers",
+              url: alto.board_ticket_subscribers_path(@board, @ticket),
+              button_type: :secondary %>
+        <% end %>
+
+        <% if @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?) && !@ticket.archived? %>
+          <%= render 'shared/button',
+              text: "Edit #{board_item_name(@board)}",
+              url: alto.edit_board_ticket_path(@board, @ticket),
+              button_type: :secondary %>
+        <% end %>
+
+        <% if can_access_admin? && @ticket.archived? %>
+          <%= render 'shared/button',
+              text: "Unarchive",
+              url: alto.unarchive_board_ticket_path(@board, @ticket),
+              method: :patch,
               button_type: :secondary,
               html_options: {
                 data: {
-                  confirm: "Are you sure you want to unsubscribe from this ticket?",
-                  turbo_method: :delete
+                  confirm: "Are you sure you want to unarchive this #{board_item_name(@board)}?",
+                  turbo_method: :patch
                 },
-                "aria-label": "Unsubscribe from ticket notifications"
+                "aria-label": "Unarchive this #{board_item_name(@board)}"
               } %>
         <% end %>
-
-        <div class="flex items-center space-x-2">
-          <% if can_access_admin? && !@ticket.archived? %>
-            <%= render 'shared/button',
-                text: "Manage Subscribers",
-                url: alto.board_ticket_subscribers_path(@board, @ticket),
-                button_type: :secondary %>
-          <% end %>
-
-          <% if @ticket.editable_by?(current_user, can_edit_any_ticket: can_edit_tickets?) && !@ticket.archived? %>
-            <%= render 'shared/button',
-                text: "Edit #{board_item_name(@board)}",
-                url: alto.edit_board_ticket_path(@board, @ticket),
-                button_type: :secondary %>
-          <% end %>
-
-          <% if can_access_admin? && @ticket.archived? %>
-            <%= render 'shared/button',
-                text: "Unarchive",
-                url: alto.unarchive_board_ticket_path(@board, @ticket),
-                method: :patch,
-                button_type: :secondary,
-                html_options: {
-                  data: {
-                    confirm: "Are you sure you want to unarchive this #{board_item_name(@board)}?",
-                    turbo_method: :patch
-                  },
-                  "aria-label": "Unarchive this #{board_item_name(@board)}"
-                } %>
-          <% end %>
-        </div>
-      </nav>
-    </article>
-
-    <!-- Modify Ticket Sidebar (1/3 width, Admin only) -->
-    <% if can_access_admin? && !@ticket.archived? %>
-      <div class="lg:col-span-1">
-        <%= render 'alto/tickets/modify_sidebar', ticket: @ticket, board: @board %>
       </div>
-    <% end %>
-  </div>
+    </nav>
+  </article>
+
+  <!-- Modify Ticket Sidebar (1/3 width, Admin only) -->
+  <% if can_access_admin? %>
+    <div class="lg:col-span-1">
+      <%= render 'alto/tickets/modify_sidebar', ticket: @ticket, board: @board %>
+    </div>
+  <% end %>
 </div>
