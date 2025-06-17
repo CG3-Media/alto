@@ -28,6 +28,15 @@ module Alto
       super
     end
 
+    # Override can_edit_tickets? to support view_as functionality
+    def can_edit_tickets?
+      # If viewing as user, return false regardless of actual permissions
+      return false if viewing_as_user?
+
+      # Otherwise use normal permission check
+      super
+    end
+
     # Helper methods for view_as functionality
     def viewing_as_user?
       session[:view_as] == 'user'
