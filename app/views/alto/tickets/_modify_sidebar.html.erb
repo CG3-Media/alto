@@ -1,5 +1,5 @@
 <!-- Modify Ticket Sidebar -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-[100px]">
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-lg font-semibold text-gray-900">Modify <%= board_item_name(@board) %></h2>
     <%= link_to "Edit", alto.edit_board_ticket_path(@board, @ticket),
@@ -44,14 +44,13 @@
         <%= form.check_box :locked, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1" %>
         <div class="text-sm">
           <span class="text-gray-700 font-medium">Lock <%= board_item_name(@board) %> (prevents comments and votes)</span>
-          <p class="text-gray-500 mt-1">Lock to prevent further discussion</p>
         </div>
       </div>
     </div>
 
 
     <!-- Update Button -->
-    <div class="pt-4">
+    <div class="pt-0">
       <%= form.submit "Update #{board_item_name(@board)}",
           class: "w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
 

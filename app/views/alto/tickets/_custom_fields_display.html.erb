@@ -1,6 +1,6 @@
 <% if ticket_has_custom_field_values?(ticket, board) %>
   <div class="mt-6 border-t border-gray-200 pt-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Additional Information</h3>
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
     <div class="space-y-3">
       <% visible_custom_fields(ticket, board).each do |field| %>
         <div class="flex items-start">

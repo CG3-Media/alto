@@ -192,6 +192,8 @@ module Alto
         format_multiselect_value(value)
       when "date"
         format_date_value(value)
+      when "text_area", "textarea"
+        value.to_s.gsub("\n", "<br>").html_safe
       else
         value.to_s
       end
