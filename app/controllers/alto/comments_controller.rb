@@ -10,33 +10,17 @@ module Alto
     before_action :validate_parent_comment, only: [:create], if: -> { params[:comment]&.dig(:parent_id).present? }
     before_action :ensure_not_archived, only: [:create, :destroy]
 
-    def create
-          # Extract status_slug parameter before building comment (belongs to ticket, not comment)
-    status_slug_param = params.dig(:comment, :status_slug)
-    should_update_status = can_access_admin? && status_slug_param.present? && @board.has_status_tracking?
-
-    @comment = @ticket.comments.build(comment_params_without_status)
-    @comment.user_id = current_user.id
-    thread_builder = CommentThreadBuilder.new(@ticket)
-
+      def create
     ActiveRecord::Base.transaction do
-      if @comment.save
-        # Update ticket status if requested by admin
-        if should_update_status
-          @ticket.update!(status_slug: status_slug_param)
-        end
-
-        redirect_path = thread_builder.redirect_path_for_reply(@comment, @board, @ticket)
-        success_message = build_success_message(@comment, should_update_status)
-        redirect_to alto.url_for(redirect_path), notice: success_message
+      if process_comment
+        redirect_to comment_redirect_path, notice: comment_success_message
       else
-        handle_failed_comment_creation(thread_builder)
+        handle_comment_creation_failure
       end
     end
   rescue ActiveRecord::RecordInvalid => e
-    # Handle any failures (including invalid status) - transaction ensures atomicity
     redirect_to [@board, @ticket], alert: "Failed to save: #{e.message}"
-    end
+  end
 
     def show
       @root_comment = @comment.thread_root
@@ -84,7 +68,46 @@ module Alto
       params.require(:comment).permit(*permitted_params)
     end
 
-    def handle_failed_comment_creation(thread_builder)
+      def process_comment
+    @comment = build_comment
+    return false unless @comment.save
+
+    update_ticket_status_if_requested
+    true
+  end
+
+    def build_comment
+      comment = @ticket.comments.build(comment_params_without_status)
+      comment.user_id = current_user.id
+      comment
+    end
+
+    def update_ticket_status_if_requested
+      return unless should_update_status?
+
+      @ticket.update!(status_slug: status_slug_param)
+    end
+
+    def should_update_status?
+      can_access_admin? && status_slug_param.present? && @board.has_status_tracking?
+    end
+
+    def status_slug_param
+      @status_slug_param ||= params.dig(:comment, :status_slug)
+    end
+
+    def comment_redirect_path
+      thread_builder.redirect_path_for_reply(@comment, @board, @ticket)
+    end
+
+    def comment_success_message
+      base_message = @comment.is_reply? ? "Reply was successfully added." : "Comment was successfully added."
+      return base_message unless should_update_status?
+
+      "#{base_message} Status updated to '#{@ticket.status_name}'."
+    end
+
+    def handle_comment_creation_failure
       redirect_path = thread_builder.redirect_path_for_failed_reply(comment_params, @ticket, @board)
 
       if redirect_path
@@ -96,18 +119,8 @@ module Alto
       end
     end
 
-    def success_message_for(comment)
-      comment.is_reply? ? "Reply was successfully added." : "Comment was successfully added."
-    end
-
-    def build_success_message(comment, status_updated)
-      base_message = success_message_for(comment)
-      if status_updated
-        status_name = @ticket.status_name
-        base_message + " Status updated to '#{status_name}'."
-      else
-        base_message
-      end
+    def thread_builder
+      @thread_builder ||= CommentThreadBuilder.new(@ticket)
     end
 
     def delete_success_message(comment)
