@@ -1,67 +1,7 @@
 <div id="row-view" class="space-y-3" <%= 'style="display: none;"'.html_safe if view_type == 'card' %>>
   <% if tickets.any? %>
     <% tickets.each do |ticket| %>
-      <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-all">
-        <div class="flex items-start gap-4">
-          <!-- Upvote Section - only show if voting is enabled -->
-          <% if board.allow_voting? %>
-            <div class="flex flex-col items-center flex-shrink-0 pt-1">
-              <%= upvote_button(ticket, current_user, size: :compact) %>
-            </div>
-          <% end %>
-
-          <!-- Main Content -->
-          <div class="flex-1 min-w-0">
-            <!-- Header with title and status -->
-            <div class="flex items-start justify-between mb-2 gap-2">
-              <div class="flex-1 min-w-0">
-                <h3 class="text-lg font-semibold text-gray-900 leading-tight">
-                  <%= link_to ticket.title, alto.board_ticket_path(board, ticket), class: "hover:text-blue-600" %>
-                </h3>
-              </div>
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <% if board.has_status_tracking? %>
-                  <span class="px-3 py-1 text-sm font-medium rounded-full <%= ticket.status_color_classes %>">
-                    <%= ticket.status_name %>
-                  </span>
-                <% end %>
-                <% if ticket.locked? %>
-                  <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                    🔒 Locked
-                  </span>
-                <% end %>
-              </div>
-            </div>
-
-            <!-- Description -->
-            <% if ticket.description.present? %>
-              <div class="border-b-0 md:border-b border-gray-100 md:pb-3 md:mb-3">
-                <p class="text-gray-600 text-sm line-clamp-2">
-                  <%= truncate(ticket.description, length: 120) %>
-                </p>
-              </div>
-            <% end %>
-
-            <!-- Footer with metadata and tags -->
-            <div class="hidden md:flex items-center justify-between">
-              <!-- Left side: User and metadata -->
-              <div class="flex items-center space-x-4 text-xs text-gray-500">
-                <div class="flex items-center space-x-2">
-                  <%= render 'alto/shared/user_avatar', user_id: ticket.user_id, size: :sm %>
-                  <span>by <%= user_display_name(ticket.user_id) %> —
-                  <span><%= time_ago_in_words(ticket.created_at) %> ago</span>
-                </div>
-                <span><%= link_to pluralize(ticket.comments.count, 'comment'),
-                    alto.board_ticket_path(board, ticket, anchor: 'comments'),
-                    class: "text-gray-500 hover:text-blue-600 underline" %></span>
-              </div>
-
-              <!-- Right side: Tags -->
-              <%= render 'alto/tickets/ticket_tags', ticket: ticket, board: board %>
-            </div>
-          </div>
-        </div>
-      </div>
+      <%= render 'alto/tickets/ticket_list_item', ticket: ticket, board: board, show_voting: true %>
     <% end %>
   <% else %>
     <div class="text-center py-12">
