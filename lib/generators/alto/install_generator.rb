@@ -5,7 +5,6 @@ module Alto
         Install Alto - complete setup in one command!
 
         This automatically handles everything:
-        • Asks about database preference (same or separate database)
         • Installs database migrations
         • Runs migrations
         • Creates configuration file
@@ -14,23 +13,14 @@ module Alto
 
         Examples:
           rails generate alto:install                              # Interactive install (recommended)
-          rails generate alto:install --separate-database          # Use separate database
-          rails generate alto:install --no-separate-database       # Use same database (default)
           rails generate alto:install --skip-migrations            # Skip database setup
       DESC
 
       class_option :skip_migrations, type: :boolean, default: false, desc: "Skip running database migrations"
-      class_option :separate_database, type: :boolean, default: nil, desc: "Use separate database for Alto (prompted if not specified)"
 
       def install_alto
         say "Installing Alto...", :green
         say ""
-
-        # Ask about separate database preference (unless already specified or skipping migrations)
-        @use_separate_database = determine_database_preference unless options[:skip_migrations]
-
-        # Setup separate database configuration if requested
-        setup_database_configuration if @use_separate_database && !options[:skip_migrations]
 
         # Install and run migrations using Rails conventions
         install_migrations unless options[:skip_migrations]
@@ -49,205 +39,7 @@ module Alto
 
       private
 
-      def determine_database_preference
-        # If option was explicitly set via command line, use it
-        return options[:separate_database] unless options[:separate_database].nil?
-
-        # Otherwise, ask the user
-        say ""
-        say "═" * 70, :cyan
-        say "🗄️  DATABASE CONFIGURATION", :cyan
-        say "═" * 70, :cyan
-        say ""
-        say "Alto can store its data in either:", :blue
-        say ""
-        say "  1️⃣  Same database as your app (recommended)", :green
-        say "     ✅ Simple setup, zero deployment complexity", :green
-        say "     ✅ Works with any hosting platform", :green
-        say "     ✅ Standard Rails engine pattern", :green
-        say ""
-        say "  2️⃣  Separate database (advanced)", :yellow
-        say "     ⚠️  Requires additional database provisioning", :yellow
-        say "     ⚠️  Cannot join queries across databases", :yellow
-        say "     ⚠️  More complex backup/deployment", :yellow
-        say "     ✅ Complete data isolation", :yellow
-        say "     ✅ Independent scaling/backups", :yellow
-        say ""
-
-        response = ask("Use separate database for Alto? (y/N):", :cyan, limited_to: ["y", "Y", "n", "N", ""])
-
-        use_separate = ["y", "Y"].include?(response)
-
-        say ""
-        if use_separate
-          say "✅ Will configure separate database for Alto", :green
-        else
-          say "✅ Will use same database as your app (standard pattern)", :green
-        end
-        say ""
-
-        use_separate
-      end
-
-      def setup_database_configuration
-        say "🗄️  Setting up separate database for Alto...", :blue
-
-        # Check if database.yml already has alto configuration
-        database_yml_path = Rails.root.join("config", "database.yml")
-        database_content = File.read(database_yml_path) if File.exist?(database_yml_path)
-
-        if database_content && database_content.include?("alto:")
-          say "✅ Alto database configuration already exists in database.yml", :green
-        else
-          say "📝 Adding Alto database configuration to database.yml...", :blue
-          add_alto_database_config(database_yml_path, database_content)
-          say "✅ Added Alto database configuration", :green
-        end
-
-        # Create storage directory if it doesn't exist
-        storage_dir = Rails.root.join("storage")
-        FileUtils.mkdir_p(storage_dir) unless Dir.exist?(storage_dir)
-
-        say ""
-      end
-
-      def add_alto_database_config(database_yml_path, existing_content)
-        # Backup existing database.yml
-        backup_path = "#{database_yml_path}.alto_backup_#{Time.current.to_i}"
-        File.write(backup_path, existing_content) if existing_content
-
-        # Detect primary database configuration to mirror
-        primary_config = detect_primary_database_config(existing_content)
-
-        # Add Alto database configuration using same adapter as primary
-        alto_config = generate_alto_config(primary_config)
-
-        # Append to existing database.yml
-        File.write(database_yml_path, existing_content + alto_config)
-
-        say "💾 Created backup: #{backup_path}", :yellow if existing_content
-      end
-
-      def detect_primary_database_config(database_content)
-        # Parse the database.yml to find primary configuration
-        begin
-          parsed = YAML.load_file(Rails.root.join("config", "database.yml"))
-          primary_dev = parsed.dig("development", "primary") || parsed["development"]
-
-          {
-            adapter: primary_dev["adapter"],
-            host: primary_dev["host"],
-            port: primary_dev["port"],
-            username: primary_dev["username"],
-            password: primary_dev["password"],
-            encoding: primary_dev["encoding"]
-          }.compact
-        rescue => e
-          say "⚠️  Could not parse database.yml, using defaults: #{e.message}", :yellow
-          { adapter: "postgresql" }  # Safe default
-        end
-      end
-
-      def generate_alto_config(primary_config)
-        adapter = primary_config[:adapter] || "postgresql"
-
-        case adapter
-        when "postgresql"
-          generate_postgresql_alto_config(primary_config)
-        when "mysql2"
-          generate_mysql_alto_config(primary_config)
-        when "sqlite3"
-          generate_sqlite_alto_config
-        else
-          generate_postgresql_alto_config(primary_config)  # Default to PostgreSQL
-        end
-      end
-
-      def generate_postgresql_alto_config(primary_config)
-        <<~YAML
-
-          # Alto Feedback Engine - Separate Database
-          # Uses same adapter as your primary database
-          alto:
-            development:
-              <<: *default
-              database: alto_development
-              #{"host: #{primary_config[:host]}" if primary_config[:host]}
-              #{"port: #{primary_config[:port]}" if primary_config[:port]}
-              #{"username: #{primary_config[:username]}" if primary_config[:username]}
-              #{"password: #{primary_config[:password]}" if primary_config[:password]}
-
-            test:
-              <<: *default
-              database: alto_test
-              #{"host: #{primary_config[:host]}" if primary_config[:host]}
-              #{"port: #{primary_config[:port]}" if primary_config[:port]}
-              #{"username: #{primary_config[:username]}" if primary_config[:username]}
-              #{"password: #{primary_config[:password]}" if primary_config[:password]}
-
-            production:
-              <<: *default
-              database: alto_production
-              #{"host: #{primary_config[:host]}" if primary_config[:host]}
-              #{"port: #{primary_config[:port]}" if primary_config[:port]}
-              username: <%= ENV["ALTO_DATABASE_USERNAME"] || "#{primary_config[:username]}" %>
-              password: <%= ENV["ALTO_DATABASE_PASSWORD"] %>
-        YAML
-      end
-
-      def generate_mysql_alto_config(primary_config)
-        <<~YAML
-
-          # Alto Feedback Engine - Separate Database
-          # Uses same adapter as your primary database
-          alto:
-            development:
-              <<: *default
-              database: alto_development
-              #{"host: #{primary_config[:host]}" if primary_config[:host]}
-              #{"port: #{primary_config[:port]}" if primary_config[:port]}
-              #{"username: #{primary_config[:username]}" if primary_config[:username]}
-              #{"password: #{primary_config[:password]}" if primary_config[:password]}
-
-            test:
-              <<: *default
-              database: alto_test
-              #{"host: #{primary_config[:host]}" if primary_config[:host]}
-              #{"port: #{primary_config[:port]}" if primary_config[:port]}
-              #{"username: #{primary_config[:username]}" if primary_config[:username]}
-              #{"password: #{primary_config[:password]}" if primary_config[:password]}
-
-            production:
-              <<: *default
-              database: alto_production
-              #{"host: #{primary_config[:host]}" if primary_config[:host]}
-              #{"port: #{primary_config[:port]}" if primary_config[:port]}
-              username: <%= ENV["ALTO_DATABASE_USERNAME"] || "#{primary_config[:username]}" %>
-              password: <%= ENV["ALTO_DATABASE_PASSWORD"] %>
-        YAML
-      end
-
-      def generate_sqlite_alto_config
-        <<~YAML
-
-          # Alto Feedback Engine - Separate Database
-          # Uses SQLite like your primary database
-          alto:
-            development:
-              <<: *default
-              database: storage/alto_development.sqlite3
-
-            test:
-              <<: *default
-              database: storage/alto_test.sqlite3
-
-            production:
-              <<: *default
-              database: storage/alto_production.sqlite3
-        YAML
-      end
-
-                              def install_migrations
+      def install_migrations
         say "📦 Installing database migrations...", :blue
 
         begin
@@ -391,51 +183,26 @@ module Alto
       end
 
       def handle_single_database_migration
-        if @use_separate_database
-          say "⚡ Running database migrations on Alto database...", :blue
+        say "⚡ Running database migrations...", :blue
 
-          # Check if tables already exist before migrating
-          if alto_tables_exist?
-            say "✅ Alto tables already exist - skipping migration", :green
-          else
-            # Create the Alto database first
-            begin
-              rake "db:create:alto"
-              say "✅ Created Alto database", :green
-            rescue => e
-              say "⚠️  Database creation: #{e.message}", :yellow
-            end
-
-            # Run migrations on the Alto database
-            rake "db:migrate:alto"
-            say "✅ Database setup complete on Alto database!", :green
-          end
+        # Check if tables already exist before migrating
+        if alto_tables_exist?
+          say "✅ Alto tables already exist - skipping migration", :green
         else
-          say "⚡ Running database migrations on primary database...", :blue
-
-          # Check if tables already exist before migrating
-          if alto_tables_exist?
-            say "✅ Alto tables already exist - skipping migration", :green
-          else
-            # Run migrations on the primary database
-            rake "db:migrate"
-            say "✅ Database setup complete on primary database!", :green
-          end
+          # Run migrations on the primary database
+          rake "db:migrate"
+          say "✅ Database setup complete!", :green
         end
       end
 
       def show_migration_troubleshooting_help
         say "💡 Troubleshooting Tips:", :yellow
         say ""
-        say "For Alto separate database setup, try:", :blue
-        say "   rails db:create:alto", :cyan
-        say "   rails db:migrate:alto", :cyan
-        say ""
-        say "For multi-database setups, also try:", :blue
+        say "For multi-database setups, try:", :blue
         say "   rails db:migrate:primary", :cyan
         say "   # or", :blue
         say "   rake railties:install:migrations SOURCE=alto", :cyan
-        say "   rails db:migrate:alto", :cyan
+        say "   rails db:migrate", :cyan
         say ""
         say "Then re-run with --skip-migrations:", :blue
         say "   rails generate alto:install --skip-migrations", :cyan
@@ -616,7 +383,7 @@ module Alto
         begin
           connection = ::Alto::ApplicationRecord.connection
           if connection.table_exists?("alto_boards")
-            say "✅ Database: All Alto tables ready in separate database", :green
+            say "✅ Database: All Alto tables ready", :green
           else
             say "⚠️  Database: Tables may not be ready", :yellow
 
@@ -710,46 +477,12 @@ module Alto
       end
 
       def create_initializer
-        separate_db_section = if @use_separate_database
-          <<~SEPARATE_DB
-            # ===== SEPARATE DATABASE CONFIGURATION =====
-                # Alto is configured to use a separate database (configured in database.yml as 'alto:')
-                # This keeps Alto's feedback data completely separate from your main app data.
-                config.use_separate_database = true
-
-                # Commands for Alto database management:
-                #   rails db:create:alto                    # Create Alto database
-                #   rails db:migrate:alto                   # Run Alto migrations
-                #   rails db:rollback:alto                  # Rollback Alto migrations
-                #   rails db:reset:alto                     # Reset Alto database
-                #
-                # Alto uses the same database adapter as your primary database.
-                # The database names will be: alto_development, alto_test, alto_production
-                #
-                # Alto tables (all prefixed with 'alto_'):
-                #   alto_boards, alto_tickets, alto_comments, alto_upvotes,
-                #   alto_subscriptions, alto_status_sets, alto_statuses,
-                #   alto_settings, alto_fields, alto_tags, alto_taggings
-          SEPARATE_DB
-        else
-          <<~SAME_DB
-            # ===== DATABASE CONFIGURATION =====
-                # Alto uses the same database as your main application (standard Rails engine pattern)
-                # All Alto tables are prefixed with 'alto_' to avoid conflicts.
-                config.use_separate_database = false
-
-                # If you want to switch to a separate database later:
-                # 1. Set config.use_separate_database = true
-                # 2. Add alto: section to config/database.yml
-                # 3. Run: rails db:create:alto && rails db:migrate:alto
-                # 4. Restart your app
-          SAME_DB
-        end
-
         initializer_content = <<~RUBY
           # Alto Configuration
           Alto.configure do |config|
-            #{separate_db_section.strip.gsub(/^/, '  ')}
+            # ===== DATABASE CONFIGURATION =====
+            # Alto uses the same database as your main application (standard Rails engine pattern)
+            # All Alto tables are prefixed with 'alto_' to avoid conflicts.
 
             # User model configuration
             config.user_model = "User"

@@ -54,92 +54,13 @@ rails generate alto:install
 ```
 
 This creates:
-- Database tables (you choose: same database or separate database)
+- Database tables (using your app's main database)
 - Configuration file at `config/initializers/alto.rb`
 - Default feedback boards
 
 **The installer is safe to run multiple times.**
 
-During installation, you'll be asked whether to use a **separate database** or the **same database** as your app.
-
-### 🗄️ Database Options
-
-Alto gives you the choice between two database architectures:
-
-#### Option 1: Same Database (Recommended - Default)
-
-- ✅ **Simple setup** - Zero deployment complexity
-- ✅ **Works everywhere** - Any hosting platform, no extra databases needed
-- ✅ **Standard pattern** - How most Rails engines work
-- ✅ **Easy joins** - Can query across Alto and your app tables
-- ✅ **Single backup** - One database to manage
-
-All Alto tables use the `alto_` prefix to avoid conflicts.
-
-#### Option 2: Separate Database (Advanced)
-
-- ✅ **Complete isolation** - Alto data in its own database
-- ✅ **Independent scaling** - Scale feedback database separately
-- ✅ **Flexible deployment** - Host on different infrastructure
-- ⚠️ **Requires provisioning** - Need to create an additional database
-- ⚠️ **No cross-database joins** - Cannot join between Alto and app tables
-- ⚠️ **More complex** - Separate backups, migrations, connection pools
-
-**When to use separate database:**
-- Expecting massive feedback volume (millions of tickets)
-- Need strict data isolation for compliance/security
-- Want different backup schedules for feedback data
-- Planning to move Alto to a separate service later
-
-#### Switching Between Modes
-
-You can change your choice later:
-
-**To switch TO separate database:**
-```ruby
-# 1. Update config/initializers/alto.rb
-config.use_separate_database = true
-
-# 2. Add alto: section to config/database.yml (see installer output for example)
-
-# 3. Create and migrate
-rails db:create:alto
-rails db:migrate:alto
-
-# 4. Migrate data (you'll need to write a custom migration)
-
-# 5. Restart app
-```
-
-**To switch FROM separate database:**
-```ruby
-# 1. Update config/initializers/alto.rb
-config.use_separate_database = false
-
-# 2. Migrate data to primary database (you'll need to write a custom migration)
-
-# 3. Remove alto: section from database.yml
-
-# 4. Restart app
-```
-
-#### Separate Database Management
-
-If using separate database, use these specialized rake tasks:
-
-```bash
-# Create Alto database
-rails db:create:alto
-
-# Run Alto migrations
-rails db:migrate:alto
-
-# Rollback Alto migrations
-rails db:rollback:alto
-
-# Reset Alto database (careful!)
-rails db:reset:alto
-```
+Alto uses the standard Rails engine pattern - all tables are stored in your main database with the `alto_` prefix to avoid conflicts.
 
 ### 3. Configure permissions
 

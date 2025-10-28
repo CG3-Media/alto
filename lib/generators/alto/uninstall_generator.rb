@@ -75,6 +75,10 @@ module Alto
         say "  • alto_tickets", :blue
         say "  • alto_comments", :blue
         say "  • alto_upvotes", :blue
+        say "  • alto_subscriptions", :blue
+        say "  • alto_taggings", :blue
+        say "  • alto_tags", :blue
+        say "  • alto_fields", :blue
         say "  • alto_settings", :blue
         say ""
         say "⚠️  WARNING: This will permanently delete ALL feedback data!", :red
@@ -104,14 +108,20 @@ module Alto
 
               say "🗑️  Removing Alto tables and indexes..."
 
-              # Remove tables in dependency order (children first)
-              remove_table_safely(:alto_upvotes)
-              remove_table_safely(:alto_comments)
-              remove_table_safely(:alto_tickets)
-              remove_table_safely(:alto_statuses)
-              remove_table_safely(:alto_boards)
-              remove_table_safely(:alto_status_sets)
-              remove_table_safely(:alto_settings)
+              # Remove all Alto tables (CASCADE handles dependencies automatically)
+              [
+                :alto_upvotes,
+                :alto_comments,
+                :alto_subscriptions,
+                :alto_taggings,
+                :alto_tickets,
+                :alto_tags,
+                :alto_fields,
+                :alto_statuses,
+                :alto_boards,
+                :alto_status_sets,
+                :alto_settings
+              ].each { |table| remove_table_safely(table) }
 
               say "✅ Alto database tables removed successfully"
             end
@@ -131,21 +141,28 @@ module Alto
             private
 
             def remove_table_safely(table_name)
-              if table_exists?(table_name)
-                say "  • Removing \#{table_name}..."
+              return unless table_exists?(table_name)
 
-                # Remove foreign key constraints first
-                foreign_keys(table_name).each do |fk|
-                  remove_foreign_key table_name, name: fk.name
-                end
+              say "  • Removing \#{table_name}..."
 
-                # Remove the table (indexes are automatically removed)
-                drop_table table_name
+              # Use database-specific CASCADE for bulletproof removal
+              if connection.adapter_name.downcase.include?('postgresql')
+                # PostgreSQL: Use CASCADE to automatically drop dependent objects
+                execute "DROP TABLE IF EXISTS \#{table_name} CASCADE"
+              elsif connection.adapter_name.downcase.include?('mysql')
+                # MySQL: Disable foreign key checks temporarily
+                execute "SET FOREIGN_KEY_CHECKS=0"
+                drop_table table_name, if_exists: true
+                execute "SET FOREIGN_KEY_CHECKS=1"
               else
-                say "  • \#{table_name} not found (skipping)"
+                # SQLite and others: Drop normally (SQLite handles foreign keys differently)
+                drop_table table_name, if_exists: true
               end
+
+              say "    ✓ Removed", :green
             rescue => e
               say "  ⚠️  Could not remove \#{table_name}: \#{e.message}", :yellow
+              # Continue anyway - don't let one table failure stop the whole uninstall
             end
           end
         RUBY

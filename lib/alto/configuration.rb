@@ -2,7 +2,7 @@ module Alto
   class Configuration
     attr_accessor :user_model, :default_board_name, :default_board_slug,
                   :allow_board_deletion_with_tickets, :current_user_proc,
-                  :image_uploads_enabled, :use_separate_database
+                  :image_uploads_enabled
 
     # Permission method blocks - much cleaner than delegation!
     attr_accessor :permission_methods
@@ -24,9 +24,6 @@ module Alto
 
       # Image upload configuration
       @image_uploads_enabled = false
-
-      # Database configuration - defaults to same database (standard Rails engine pattern)
-      @use_separate_database = false
 
       # Initialize permission methods hash
       @permission_methods = {}
