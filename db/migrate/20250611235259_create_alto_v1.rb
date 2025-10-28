@@ -1,5 +1,5 @@
 class CreateAltoV1 < ActiveRecord::Migration[7.0]
-  def change
+  def up
     # Status Sets - templates for status workflows
     create_table :alto_status_sets, if_not_exists: true do |t|
       t.string :name, null: false
